@@ -39,23 +39,6 @@ function generateRandomNumber(min: number, max: number) {
   });
 }
 
-export async function GET(req: NextRequest) {
-  try {
-    // Get optional parameters from query
-    const { searchParams } = new URL(req.url);
-    const min = parseInt(searchParams.get("min") || "1");
-    const max = parseInt(searchParams.get("max") || "100");
-
-    return generateRandomNumber(min, max);
-  } catch (error) {
-    console.error("Error generating random number:", error);
-    return NextResponse.json(
-      { error: "Failed to generate random number" },
-      { status: 500 }
-    );
-  }
-}
-
 export async function POST(req: NextRequest) {
   try {
     // Get parameters from request body

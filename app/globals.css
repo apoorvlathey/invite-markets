@@ -24,3 +24,29 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* RainbowKit custom spacing improvements */
+[data-rk] .iekbcc0 {
+  gap: 12px !important;
+}
+
+/* Chain button spacing */
+[data-rk] button[aria-label*="Chain"] {
+  gap: 8px !important;
+  padding: 8px 12px !important;
+}
+
+/* Account button - prevent address wrapping */
+[data-rk] [data-testid="rk-account-button"] {
+  min-width: 200px !important;
+}
+
+/* Force single line for balance and address */
+[data-rk] [data-testid="rk-account-button"] * {
+  white-space: nowrap !important;
+}
+
+/* Ensure proper flex layout */
+[data-rk] div[style*="display: flex"] {
+  flex-wrap: nowrap !important;
+}

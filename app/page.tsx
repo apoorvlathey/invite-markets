@@ -1,3 +1,7 @@
+"use client";
+
+import { RandomNumberGenerator } from "./components/RandomNumberGenerator";
+
 export default function Home() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-linear-to-b from-zinc-900 to-black font-sans">
@@ -10,6 +14,8 @@ export default function Home() {
             Payment-gated API powered by x402 protocol
           </p>
         </div>
+
+        <RandomNumberGenerator />
 
         <div className="w-full max-w-2xl bg-zinc-800/50 backdrop-blur-sm rounded-2xl border border-zinc-700 p-8 space-y-6">
           <div>

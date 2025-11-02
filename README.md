@@ -6,6 +6,8 @@ A Next.js API for random number generation protected by [x402 payment middleware
 
 - 🎲 Random number generation API
 - 💰 Payment-gated access via x402 middleware (0.01 USDC per request)
+- 🔌 **Interactive UI with wallet connection** - Try the API directly from your browser
+- 👛 Multiple wallet support via RainbowKit (MetaMask, WalletConnect, Coinbase Wallet, etc.)
 - ⚡ Built with Next.js 16 and TypeScript
 - 🎨 Modern UI with Tailwind CSS
 - 🔒 Secure payment verification on Base and Base Sepolia networks
@@ -16,6 +18,7 @@ A Next.js API for random number generation protected by [x402 payment middleware
 
 - Node.js 18+ and pnpm
 - A wallet address on Base or Base Sepolia for receiving USDC payments
+- A WalletConnect Project ID (get one free at https://cloud.walletconnect.com)
 
 ### Installation
 
@@ -34,10 +37,10 @@ pnpm install
 
 3. Configure environment variables:
 
-Copy `.env.example` to `.env.local` and fill in your configuration:
+Copy `example.env.local` to `.env.local` and fill in your configuration:
 
 ```bash
-cp .env.example .env.local
+cp example.env.local .env.local
 ```
 
 Edit `.env.local`:
@@ -48,6 +51,9 @@ X402_WALLET_ADDRESS=0xYourWalletAddressHere
 
 # Network to use: "base" or "base-sepolia"
 X402_NETWORK=base-sepolia
+
+# WalletConnect Project ID (get one at https://cloud.walletconnect.com)
+NEXT_PUBLIC_WC_PROJECT_ID=your_walletconnect_project_id
 ```
 
 **Note:** The cost is fixed at 0.01 USDC per request and is configured in `middleware.ts`.
@@ -94,6 +100,39 @@ curl -X POST http://localhost:3000/api/random \
 }
 ```
 
+## Interactive UI (Browser-Based Payments)
+
+The homepage features an interactive UI that allows you to try the API directly from your browser:
+
+1. **Connect Your Wallet** - Click "Connect Wallet" and choose from multiple wallet options:
+
+   - MetaMask
+   - WalletConnect
+   - Coinbase Wallet
+   - Rainbow
+   - And more via RainbowKit
+
+2. **Configure Parameters** - Set your desired min and max values for the random number range
+
+3. **Pay & Generate** - Click "Generate Random Number" to:
+   - See the cost (0.01 USDC) upfront
+   - Sign the USDC transfer in your wallet
+   - Receive the random number result as JSON
+
+The interactive UI uses [x402-axios](https://www.npmjs.com/package/x402-axios) to automatically handle the payment flow:
+
+- Detects the 402 Payment Required response
+- Creates a payment header using your connected wallet
+- Retries the request with proof of payment
+- Displays the API response
+
+**Supported Networks:**
+
+- Base Mainnet (for production)
+- Base Sepolia (for testing)
+
+Make sure your wallet is connected to the correct network and has sufficient USDC balance.
+
 ## How x402 Works
 
 The x402 middleware intercepts API requests and verifies payment before allowing access to the protected endpoint. Here's how it works:
@@ -114,12 +153,17 @@ x402-random-number/
 ├── app/
 │   ├── api/
 │   │   └── random/
-│   │       └── route.ts      # Random number API endpoint
+│   │       └── route.ts      # Random number API endpoint (POST only)
+│   ├── components/
+│   │   └── RandomNumberGenerator.tsx  # Interactive payment UI component
 │   ├── layout.tsx             # Root layout
-│   └── page.tsx               # Home page with API documentation
+│   ├── page.tsx               # Home page with interactive UI
+│   └── providers.tsx          # Wagmi & RainbowKit providers
+├── lib/
+│   └── wagmi.ts               # Wagmi configuration
 ├── middleware.ts              # x402 payment middleware configuration
 ├── public/                    # Static assets
-├── .env.example               # Environment variables template
+├── example.env.local          # Environment variables template
 ├── .env.local                 # Your local environment variables (git-ignored)
 ├── package.json               # Dependencies
 ├── tailwind.config.ts         # Tailwind configuration
@@ -179,7 +223,11 @@ This is a standard Next.js application and can be deployed to any platform that 
 ## Technologies Used
 
 - [Next.js 16](https://nextjs.org/) - React framework
-- [x402-next](https://www.npmjs.com/package/x402-next) - Payment middleware
+- [x402-next](https://www.npmjs.com/package/x402-next) - Payment middleware for API protection
+- [x402-axios](https://www.npmjs.com/package/x402-axios) - Browser-side payment client
+- [Wagmi](https://wagmi.sh/) - React Hooks for Ethereum
+- [RainbowKit](https://www.rainbowkit.com/) - Wallet connection UI
+- [Viem](https://viem.sh/) - TypeScript interface for Ethereum
 - [TypeScript](https://www.typescriptlang.org/) - Type safety
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [Base](https://base.org/) - Layer 2 blockchain for fast, low-cost USDC payments
