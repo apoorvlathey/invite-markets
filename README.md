@@ -65,10 +65,10 @@ pnpm dev
 ### Endpoint
 
 ```
-GET /api/random
+POST /api/random
 ```
 
-### Query Parameters
+### Request Body Parameters
 
 - `min` (optional): Minimum value for random number (default: 1)
 - `max` (optional): Maximum value for random number (default: 100)
@@ -76,7 +76,9 @@ GET /api/random
 ### Example Request
 
 ```bash
-curl http://localhost:3000/api/random?min=1&max=100
+curl -X POST http://localhost:3000/api/random \
+  -H "Content-Type: application/json" \
+  -d '{"min": 1, "max": 100}'
 ```
 
 ### Example Response

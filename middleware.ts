@@ -1,5 +1,5 @@
-import { paymentMiddleware } from "x402-next";
-import { payai } from "facilitators";
+import { paymentMiddleware } from "x402-next"; // https://github.com/coinbase/x402/tree/main/typescript/packages/x402-next
+import { payai } from "facilitators"; // https://github.com/Merit-Systems/x402scan/tree/main/packages/facilitators
 
 /**
  * x402 Payment Middleware Configuration
@@ -24,42 +24,38 @@ export const middleware = paymentMiddleware(
           "Random Number Generation Service - Returns a random number within the specified range",
         mimeType: "application/json",
         maxTimeoutSeconds: 60,
+        discoverable: true,
+        inputSchema: {
+          bodyType: "json",
+          bodyFields: {
+            min: {
+              type: "number",
+              description: "Minimum value for random number (default: 1)",
+              default: 1,
+            },
+            max: {
+              type: "number",
+              description: "Maximum value for random number (default: 100)",
+              default: 100,
+            },
+          },
+        },
         outputSchema: {
           type: "object",
-          description: "Generates a random number between min and max values",
+          description: "Random number generation result",
           properties: {
-            queryParameters: {
+            success: { type: "boolean" },
+            randomNumber: { type: "number" },
+            range: {
               type: "object",
               properties: {
-                min: {
-                  type: "number",
-                  description: "Minimum value for random number (default: 1)",
-                  default: 1,
-                },
-                max: {
-                  type: "number",
-                  description: "Maximum value for random number (default: 100)",
-                  default: 100,
-                },
+                min: { type: "number" },
+                max: { type: "number" },
               },
             },
-            response: {
-              type: "object",
-              properties: {
-                success: { type: "boolean" },
-                randomNumber: { type: "number" },
-                range: {
-                  type: "object",
-                  properties: {
-                    min: { type: "number" },
-                    max: { type: "number" },
-                  },
-                },
-                timestamp: { type: "string", format: "date-time" },
-                cost: { type: "string" },
-                network: { type: "string" },
-              },
-            },
+            timestamp: { type: "string", format: "date-time" },
+            cost: { type: "string" },
+            network: { type: "string" },
           },
         },
       },

@@ -17,13 +17,13 @@ export default function Home() {
               API Endpoint
             </h2>
             <div className="bg-black/50 rounded-lg p-4 font-mono text-sm text-green-400 overflow-x-auto">
-              GET /api/random
+              POST /api/random
             </div>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold text-white mb-3">
-              Query Parameters
+              Request Body Parameters
             </h3>
             <div className="space-y-2 text-zinc-300">
               <div className="flex gap-2">
@@ -46,7 +46,9 @@ export default function Home() {
               Example Request
             </h3>
             <div className="bg-black/50 rounded-lg p-4 font-mono text-sm text-zinc-300 overflow-x-auto">
-              curl http://localhost:3000/api/random?min=1&max=100
+              {`curl -X POST http://localhost:3000/api/random \\
+  -H "Content-Type: application/json" \\
+  -d '{"min": 1, "max": 100}'`}
             </div>
           </div>
 
