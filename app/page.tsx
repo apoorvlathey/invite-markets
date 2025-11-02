@@ -7,7 +7,7 @@ export default function Home() {
             x402 Random Number API
           </h1>
           <p className="text-xl text-zinc-400">
-            Monetize your API with x402 payment middleware
+            Payment-gated API powered by x402 protocol
           </p>
         </div>
 
