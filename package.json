@@ -14,23 +14,29 @@
     "axios": "^1.13.1",
     "facilitators": "^0.0.7",
     "framer-motion": "^12.23.26",
-    "next": "16.0.1",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
+    "next": "15.4.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "viem": "2.x",
     "wagmi": "^2.19.2",
-    "x402-axios": "^0.7.0",
-    "x402-next": "^0.7.1"
+    "x402-axios": "^1.0.0",
+    "x402-next": "^1.0.0",
+    "@solana/sysvars": "^5.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
     "eslint": "^9",
-    "eslint-config-next": "16.0.1",
+    "eslint-config-next": "15.4.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
-  "packageManager": "pnpm@9.12.0+sha512.4abf725084d7bcbafbd728bfc7bee61f2f791f977fd87542b3579dcb23504d170d46337945e4c66485cd12d588a0c0e570ed9c477e7ccdd8507cf05f3f92eaca"
+  "overrides": {
+    "x402": "0.7.3",
+    "@solana/sysvars": "^5.0",
+    "ws": "^8.18.0"
+  }
 }
