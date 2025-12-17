@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
@@ -13,9 +13,11 @@
     "@tanstack/react-query": "^5.90.6",
     "axios": "^1.13.1",
     "facilitators": "^0.0.7",
-    "next": "16.0.1",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
+    "mongoose": "^9.0.1",
+    "nanoid": "^5.1.6",
+    "next": "16.0.10",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
     "viem": "2.x",
     "wagmi": "^2.19.2",
     "x402-axios": "^0.7.0",
@@ -27,7 +29,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.0.1",
+    "eslint-config-next": "16.0.10",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
