@@ -154,7 +154,7 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 
 ## Environment Variables Required
 ```env
-MONGODB_URL=mongodb+srv://xxxxx.mongodb.net/InviteMarkets?appName=Cluster0
+MONGODB_URL=mongodb+srv://xxxxx.mongodb.net/?appName=Cluster0
 ```
 
 ## Dependencies Added
