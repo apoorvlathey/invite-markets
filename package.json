@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.9",
+    "@solana/sysvars": "^5.0.0",
     "@tanstack/react-query": "^5.90.6",
     "axios": "^1.13.1",
     "facilitators": "^0.0.7",
