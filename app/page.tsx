@@ -72,9 +72,10 @@ interface Invite {
   price: string;
   seller: string;
   address: string;
-  ethos: number;
+  ethos: number | null;
   color: string;
   slug: string;
+  sellerAddress: string;
 }
 
 /* ---------- Helper to transform API -> UI ---------- */
@@ -106,9 +107,10 @@ function transformListing(listing: Listing): Invite {
     price: `$${listing.priceUsdc}`,
     seller: `${listing.sellerAddress.slice(0, 8)}.eth`,
     address: shortAddr,
-    ethos: Math.floor(Math.random() * 20) + 80, // placeholder
+    ethos: null, // Will be fetched from Ethos API
     color,
     slug: listing.slug,
+    sellerAddress: listing.sellerAddress,
   };
 }
 
@@ -120,6 +122,36 @@ export default function Home() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    const fetchEthosScores = async (addresses: string[]): Promise<Record<string, number>> => {
+      const scoreMap: Record<string, number> = {};
+      
+      if (addresses.length === 0) return scoreMap;
+
+      try {
+        const response = await fetch("https://api.ethos.network/api/v2/score/addresses", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ addresses }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // The API returns an object with addresses as keys
+          Object.keys(data).forEach((address) => {
+            if (data[address]?.score !== undefined) {
+              scoreMap[address.toLowerCase()] = data[address].score;
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching Ethos scores:", err);
+      }
+
+      return scoreMap;
+    };
+
     const fetchListings = async () => {
       try {
         setLoading(true);
@@ -132,7 +164,23 @@ export default function Home() {
 
         const listings: Listing[] = data.listings || [];
         const active = listings.filter((l) => l.status === "active");
-        setInvites(active.map(transformListing));
+        const transformedInvites = active.map(transformListing);
+
+        // Get unique seller addresses
+        const uniqueAddresses = [
+          ...new Set(transformedInvites.map((invite) => invite.sellerAddress)),
+        ];
+
+        // Fetch Ethos scores for all addresses
+        const scoreMap = await fetchEthosScores(uniqueAddresses);
+
+        // Update invites with Ethos scores
+        const invitesWithScores = transformedInvites.map((invite) => ({
+          ...invite,
+          ethos: scoreMap[invite.sellerAddress.toLowerCase()] ?? null,
+        }));
+
+        setInvites(invitesWithScores);
         setError("");
       } catch (err) {
         setError(
@@ -217,10 +265,16 @@ export default function Home() {
                         </p>
                       </div>
                       <div className="flex items-center gap-1 text-sm">
-                        <span className="w-2 h-2 rounded-full bg-green-500" />
-                        <span className="font-semibold text-green-600">
-                          {invite.ethos}
-                        </span>
+                        {invite.ethos !== null ? (
+                          <>
+                            <span className="w-2 h-2 rounded-full bg-green-500" />
+                            <span className="font-semibold text-green-600">
+                              {invite.ethos}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-xs text-gray-400">No score</span>
+                        )}
                       </div>
                     </div>
 
