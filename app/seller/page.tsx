@@ -2,13 +2,22 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAccount, useSignTypedData, useChainId } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import {
+  getEIP712Domain,
+  EIP712_TYPES,
+  type ListingMessage,
+} from "@/lib/signature";
 
 export default function SellerPage() {
   const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const { signTypedDataAsync } = useSignTypedData();
   const [formData, setFormData] = useState({
     inviteUrl: "",
     priceUsdc: "",
-    sellerAddress: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -17,9 +26,35 @@ export default function SellerPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!isConnected || !address) {
+      setError("Please connect your wallet first");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      // Generate a nonce (timestamp) to prevent replay attacks
+      const nonce = BigInt(Date.now());
+
+      // Prepare the message to sign
+      const message: ListingMessage = {
+        inviteUrl: formData.inviteUrl,
+        priceUsdc: formData.priceUsdc,
+        sellerAddress: address,
+        nonce,
+      };
+
+      // Sign the typed data
+      const signature = await signTypedDataAsync({
+        domain: getEIP712Domain(chainId),
+        types: EIP712_TYPES,
+        primaryType: "CreateListing",
+        message,
+      });
+
+      // Submit to backend with signature
       const response = await fetch("/api/listings", {
         method: "POST",
         headers: {
@@ -28,7 +63,10 @@ export default function SellerPage() {
         body: JSON.stringify({
           inviteUrl: formData.inviteUrl,
           priceUsdc: parseFloat(formData.priceUsdc),
-          sellerAddress: formData.sellerAddress,
+          sellerAddress: address,
+          nonce: nonce.toString(),
+          chainId,
+          signature,
         }),
       });
 
@@ -40,7 +78,21 @@ export default function SellerPage() {
 
       setCreatedSlug(data.listing.slug);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create listing");
+      if (err instanceof Error) {
+        // Check if user rejected the signature
+        if (
+          err.message.includes("User rejected") ||
+          err.message.includes("user rejected")
+        ) {
+          setError(
+            "Signature rejected. Please sign the message to create a listing."
+          );
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError("Failed to create listing");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -88,7 +140,7 @@ export default function SellerPage() {
             <button
               onClick={() => {
                 setCreatedSlug("");
-                setFormData({ inviteUrl: "", priceUsdc: "", sellerAddress: "" });
+                setFormData({ inviteUrl: "", priceUsdc: "" });
               }}
               className="w-full mt-3 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
             >
@@ -103,6 +155,9 @@ export default function SellerPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-2xl mx-auto">
+        <div className="flex justify-end mb-4">
+          <ConnectButton />
+        </div>
         <div className="bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Create a Listing
@@ -152,28 +207,14 @@ export default function SellerPage() {
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="sellerAddress"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Your Wallet Address
-              </label>
-              <input
-                type="text"
-                id="sellerAddress"
-                name="sellerAddress"
-                value={formData.sellerAddress}
-                onChange={handleChange}
-                required
-                placeholder="0x..."
-                pattern="^0x[a-fA-F0-9]{40}$"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-gray-900 placeholder:text-gray-400"
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                This is where you'll receive payment
-              </p>
-            </div>
+            {isConnected && address && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Payment recipient:</span>{" "}
+                  <span className="font-mono text-blue-600">{address}</span>
+                </p>
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -183,10 +224,14 @@ export default function SellerPage() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !isConnected}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Creating Listing..." : "Create Listing"}
+              {!isConnected
+                ? "Connect Wallet to Continue"
+                : isSubmitting
+                ? "Creating Listing..."
+                : "Create Listing"}
             </button>
           </form>
         </div>
@@ -194,4 +239,3 @@ export default function SellerPage() {
     </div>
   );
 }
-
