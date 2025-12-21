@@ -72,7 +72,9 @@ export default function ListingPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
             Listing Not Found
           </h2>
-          <p className="text-gray-600 mb-6">{error || "This listing doesn't exist"}</p>
+          <p className="text-gray-600 mb-6">
+            {error || "This listing doesn't exist"}
+          </p>
           <Link
             href="/"
             className="inline-block bg-blue-600 text-white py-2 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors"
@@ -186,7 +188,7 @@ export default function ListingPage() {
                   <label className="block text-sm font-medium text-gray-600 mb-1">
                     Seller Address
                   </label>
-                  <div className="bg-gray-50 p-3 rounded-lg font-mono text-sm break-all">
+                  <div className="bg-gray-50 p-3 rounded-lg font-mono text-sm text-gray-900 break-all">
                     {listing.sellerAddress}
                   </div>
                 </div>
@@ -196,13 +198,17 @@ export default function ListingPage() {
                     <label className="block text-sm font-medium text-gray-600 mb-1">
                       Listed On
                     </label>
-                    <p className="text-gray-900">{formatDate(listing.createdAt)}</p>
+                    <p className="text-gray-900">
+                      {formatDate(listing.createdAt)}
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">
                       Last Updated
                     </label>
-                    <p className="text-gray-900">{formatDate(listing.updatedAt)}</p>
+                    <p className="text-gray-900">
+                      {formatDate(listing.updatedAt)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -217,7 +223,7 @@ export default function ListingPage() {
                   Purchase for ${listing.priceUsdc} USDC
                 </button>
                 <p className="text-center text-sm text-gray-500 mt-3">
-                  Secure payment via smart contract
+                  Secure gasless payment via x402
                 </p>
               </div>
             )}
@@ -227,4 +233,3 @@ export default function ListingPage() {
     </div>
   );
 }
-
