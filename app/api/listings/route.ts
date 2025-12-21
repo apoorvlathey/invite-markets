@@ -8,6 +8,35 @@ import { getEIP712Domain, EIP712_TYPES, type ListingMessage } from "@/lib/signat
 // Create a custom nanoid with URL-safe characters
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 8);
 
+export async function GET(request: NextRequest) {
+  try {
+    await connectDB();
+
+    const listings = await Listing.find({})
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return NextResponse.json({
+      success: true,
+      listings: listings.map((listing: any) => ({
+        slug: listing.slug,
+        inviteUrl: listing.inviteUrl,
+        priceUsdc: listing.priceUsdc,
+        sellerAddress: listing.sellerAddress,
+        status: listing.status,
+        createdAt: listing.createdAt,
+        updatedAt: listing.updatedAt,
+      })),
+    });
+  } catch (error) {
+    console.error("Error fetching listings:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
