@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
       success: true,
       listings: listings.map((listing: any) => ({
         slug: listing.slug,
-        inviteUrl: listing.inviteUrl,
         priceUsdc: listing.priceUsdc,
         sellerAddress: listing.sellerAddress,
         status: listing.status,

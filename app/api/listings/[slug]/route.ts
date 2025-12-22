@@ -24,7 +24,6 @@ export async function GET(
       success: true,
       listing: {
         slug: listing.slug,
-        inviteUrl: listing.inviteUrl,
         priceUsdc: listing.priceUsdc,
         sellerAddress: listing.sellerAddress,
         status: listing.status,
