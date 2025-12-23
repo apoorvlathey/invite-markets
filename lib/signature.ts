@@ -12,6 +12,8 @@ export const EIP712_TYPES = {
     { name: "inviteUrl", type: "string" },
     { name: "priceUsdc", type: "string" },
     { name: "sellerAddress", type: "address" },
+    { name: "appId", type: "string" },
+    { name: "appName", type: "string" },
     { name: "nonce", type: "uint256" },
   ],
 } as const;
@@ -20,5 +22,7 @@ export interface ListingMessage {
   inviteUrl: string;
   priceUsdc: string;
   sellerAddress: `0x${string}`;
+  appId: string;
+  appName: string;
   nonce: bigint;
 }
