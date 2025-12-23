@@ -20,12 +20,11 @@ export default function ListingPage() {
   const params = useParams();
   const slug = params?.slug as string;
 
-  const { address } = useAccount();
+  const { isConnected } = useAccount();
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -92,7 +91,7 @@ export default function ListingPage() {
     <div className="min-h-screen bg-black text-zinc-100">
       <div className="max-w-5xl mx-auto py-12 px-4 md:px-6">
 
-        {/* Wallet connect (optional) */}
+        {/* Wallet connect */}
         <div className="flex justify-end mb-6">
           <ConnectButton />
         </div>
@@ -105,7 +104,6 @@ export default function ListingPage() {
         </Link>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -133,21 +131,23 @@ export default function ListingPage() {
                   </div>
                 </div>
 
-                {/* Purchase Button BELOW seller address */}
+                {/* Purchase Button */}
                 {listing.status === "active" && (
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="group relative w-full rounded-2xl py-4 px-6 font-bold text-lg overflow-hidden cursor-pointer"
+                    whileHover={{ scale: isConnected ? 1.02 : 1 }}
+                    whileTap={{ scale: isConnected ? 0.98 : 1 }}
+                    disabled={!isConnected}
+                    className="group relative w-full rounded-2xl py-4 px-6 font-bold text-lg overflow-hidden
+                               disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => {
+                      if (!isConnected) return;
                       alert("x402 purchase flow coming next");
                     }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 transition-transform group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500" />
                     <span className="relative z-10 text-black">
-                      Purchase Now
+                      {isConnected ? "Purchase Now" : "Connect Wallet to Purchase"}
                     </span>
-                    <div className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl bg-gradient-to-r from-cyan-500 to-blue-500" />
                   </motion.button>
                 )}
               </div>
