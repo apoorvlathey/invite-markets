@@ -3,27 +3,31 @@ import { connectDB } from "@/lib/mongoose";
 import { Listing } from "@/models/listing";
 import { customAlphabet } from "nanoid";
 import { verifyTypedData } from "viem";
-import { getEIP712Domain, EIP712_TYPES, type ListingMessage } from "@/lib/signature";
+import {
+  getEIP712Domain,
+  EIP712_TYPES,
+  type ListingMessage,
+} from "@/lib/signature";
 
 // Create a custom nanoid with URL-safe characters
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 8);
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     await connectDB();
 
-    const listings = await Listing.find({})
-      .sort({ createdAt: -1 })
-      .lean();
+    const listings = await Listing.find({}).sort({ createdAt: -1 }).lean();
 
     return NextResponse.json({
       success: true,
-      listings: listings.map((listing: any) => ({
+      listings: listings.map((listing) => ({
         slug: listing.slug,
         inviteUrl: listing.inviteUrl,
         priceUsdc: listing.priceUsdc,
         sellerAddress: listing.sellerAddress,
         status: listing.status,
+        appId: listing.appId,
+        appName: listing.appName,
         createdAt: listing.createdAt,
         updatedAt: listing.updatedAt,
       })),
@@ -42,14 +46,58 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { inviteUrl, priceUsdc, sellerAddress, nonce, chainId, signature } = body;
+    const {
+      inviteUrl,
+      priceUsdc,
+      sellerAddress,
+      nonce,
+      chainId,
+      signature,
+      appId,
+      appName,
+    } = body;
+
+    // Debug logging
+    console.log("Received data:", { appId, appName });
+    console.log(
+      "appId type:",
+      typeof appId,
+      "value:",
+      appId,
+      "trimmed:",
+      appId?.trim()
+    );
+    console.log(
+      "appName type:",
+      typeof appName,
+      "value:",
+      appName,
+      "trimmed:",
+      appName?.trim()
+    );
 
     // Validate required fields
-    if (!inviteUrl || !priceUsdc || !sellerAddress || !nonce || !chainId || !signature) {
+    if (
+      !inviteUrl ||
+      !priceUsdc ||
+      !sellerAddress ||
+      !nonce ||
+      !chainId ||
+      !signature
+    ) {
       return NextResponse.json(
         {
-          error: "Missing required fields: inviteUrl, priceUsdc, sellerAddress, nonce, chainId, signature",
+          error:
+            "Missing required fields: inviteUrl, priceUsdc, sellerAddress, nonce, chainId, signature",
         },
+        { status: 400 }
+      );
+    }
+
+    // Validate that either appId or appName is provided
+    if (!appId && !appName) {
+      return NextResponse.json(
+        { error: "Either appId or appName must be provided" },
         { status: 400 }
       );
     }
@@ -75,6 +123,8 @@ export async function POST(request: NextRequest) {
       inviteUrl,
       priceUsdc: priceUsdc.toString(),
       sellerAddress: sellerAddress as `0x${string}`,
+      appId: appId || "",
+      appName: appName || "",
       nonce: BigInt(nonce),
     };
 
@@ -89,7 +139,9 @@ export async function POST(request: NextRequest) {
 
     if (!isValid) {
       return NextResponse.json(
-        { error: "Invalid signature. Please sign the message with your wallet." },
+        {
+          error: "Invalid signature. Please sign the message with your wallet.",
+        },
         { status: 401 }
       );
     }
@@ -130,13 +182,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Create listing
-    const listing = await Listing.create({
+    const listingData = {
       slug,
       inviteUrl,
       priceUsdc,
       sellerAddress: sellerAddress.toLowerCase(),
-      status: "active",
-    });
+      status: "active" as const,
+      ...(appId && appId.trim() ? { appId: appId.trim() } : {}),
+      ...(appName && appName.trim() ? { appName: appName.trim() } : {}),
+    };
+
+    console.log("Creating listing with data:", listingData);
+
+    const listing = await Listing.create(listingData);
 
     return NextResponse.json(
       {
@@ -147,6 +205,8 @@ export async function POST(request: NextRequest) {
           priceUsdc: listing.priceUsdc,
           sellerAddress: listing.sellerAddress,
           status: listing.status,
+          appId: listing.appId,
+          appName: listing.appName,
           createdAt: listing.createdAt,
         },
       },

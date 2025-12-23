@@ -28,6 +28,8 @@ export async function GET(
         priceUsdc: listing.priceUsdc,
         sellerAddress: listing.sellerAddress,
         status: listing.status,
+        appId: listing.appId,
+        appName: listing.appName,
         createdAt: listing.createdAt,
         updatedAt: listing.updatedAt,
       },
