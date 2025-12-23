@@ -1,46 +1,87 @@
 # styling.md — invite.markets
 
 This document defines the visual style + Tailwind conventions for **invite.markets**.
-Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**, **memorable**.
+Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**, **memorable**, **intentional**.
 
 ---
 
 ## Brand vibe
 
-**Keywords:** premium, modern, confident, striking, "web3 luxury without being tacky".
+**Keywords:** premium, modern, confident, striking, "web3 luxury without being tacky", intentional, editorial.
 
-**Embrace:** glassmorphism, gradient accents, subtle animations, depth, glow effects, polished interactions.
+**Embrace:** Solid colors with strategic accent gradients, varied border radius (not everything rounded-3xl), intentional whitespace, strong typography hierarchy, asymmetric layouts, subtle animations, personality.
 
-**Avoid:** flat design, harsh neons, meme aesthetics, excessive noise, slow animations.
+**Avoid:** Gradient overload, everything glassmorphism, generic spacing, flat design, harsh neons, meme aesthetics, excessive noise, slow animations, "vibecoded" aesthetic.
+
+---
+
+## Design anti-patterns to avoid
+
+**The "AI-generated" look:**
+- ❌ Gradients on everything (buttons, text, cards, backgrounds)
+- ❌ Everything rounded-3xl or rounded-2xl
+- ❌ Glassmorphism on every surface
+- ❌ Generic 8px spacing everywhere
+- ❌ Purple + cyan gradient on repeat
+- ❌ No visual hierarchy
+- ❌ Too many animations
+- ❌ Every card looks identical
+
+**Instead:**
+- ✅ Gradients used sparingly for emphasis (hero text, primary CTA only)
+- ✅ Mix of sharp edges (rounded-lg, rounded-xl) with occasional rounded corners
+- ✅ Mostly solid backgrounds with subtle borders
+- ✅ Intentional spacing that creates rhythm
+- ✅ Varied color palette with purpose
+- ✅ Clear visual hierarchy
+- ✅ Animations only on interaction
+- ✅ Each section has unique personality
 
 ---
 
 ## Core design principles
 
-1. **Dark + Depth**
+1. **Dark + Intentional Depth**
 
    - Pure black (`#000000`) background for maximum contrast
-   - Layered effects: blurred orbs, gradients, glassmorphic surfaces
-   - Premium shadows that respond to interaction
+   - Subtle layered effects: background orbs stay in background, content is solid
+   - Use borders and solid surfaces primarily, not glass everywhere
+   - Premium shadows on key elements only
 
-2. **Gradient accents**
+2. **Strategic Gradient Use**
 
-   - Primary: Cyan to blue (`#06b6d4` → `#3b82f6`)
-   - Use gradients for buttons, headers, and emphasis
-   - Each card can have unique gradient combinations for visual variety
+   - **Gradients only for:**
+     - Hero title text
+     - Primary CTA button
+     - Background orbs
+   - **NOT for:**
+     - Every button
+     - Every card header
+     - Body text
+     - Secondary elements
+   - Primary gradient: Cyan to blue (`#06b6d4` → `#3b82f6`)
+   - Each gradient should feel intentional, not decorative
 
-3. **Glassmorphism**
+3. **Solid over Glass**
 
-   - Frosted glass effects for navigation, cards, overlays
-   - Subtle backdrop blur with semi-transparent backgrounds
-   - Combine with gradients for depth
+   - Default to solid backgrounds: `bg-zinc-900`, `bg-zinc-950`
+   - Use subtle borders: `border border-zinc-800` or `border-zinc-700`
+   - Glass effect reserved for navbar and modals only
+   - Most cards should be solid with good shadows
 
-4. **Micro-interactions**
-   - Scale transforms on hover/tap
-   - Smooth color transitions
-   - Icon animations
-   - Glow effects on interaction
-   - Pulsing status indicators
+4. **Varied Border Radius**
+   - Hero elements: `rounded-xl` to `rounded-2xl`
+   - Cards: `rounded-xl` or `rounded-2xl` (not 3xl)
+   - Buttons: `rounded-lg` to `rounded-xl`
+   - Badges/pills: `rounded-full`
+   - Don't use rounded-3xl by default
+
+5. **Micro-interactions (minimal)**
+   - Hover: subtle scale (1.02) or translate-y
+   - Focus states with ring
+   - Icon animations on hover only
+   - No constant pulsing or animating
+   - Glow effects on hover only
 
 ---
 
@@ -49,56 +90,73 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 ### Background + surfaces
 
 - **Page background:** `bg-black` (pure black)
-- **Glass surfaces:** `glass` or `glass-strong` utility classes
-- **Solid surfaces:** `bg-zinc-950/90` or `bg-zinc-900/50` with opacity
-- **Borders:** `border-white/10` (standard), `border-white/20` (hover)
+- **Card backgrounds:** `bg-zinc-950` or `bg-zinc-900` (solid, not glass)
+- **Card borders:** `border border-zinc-800` (subtle), `border-zinc-700` (medium)
+- **Interactive borders:** `hover:border-zinc-600` or `hover:border-cyan-500/50`
+- **Elevated surfaces:** `bg-zinc-900` with `shadow-xl`
+- **Glass (use sparingly):** navbar, modals, overlays only
 
 ### Text hierarchy
 
-- **Primary text:** `text-zinc-100` or `text-white`
-- **Secondary text:** `text-zinc-400`
-- **Muted/meta:** `text-zinc-500` or `text-zinc-600`
-- **Gradient text:** `bg-gradient-to-br from-white to-zinc-400 bg-clip-text text-transparent`
+- **Hero/Display:** `text-white` (pure white for maximum impact)
+- **Headings:** `text-zinc-100` or `text-white`
+- **Body text:** `text-zinc-300` or `text-zinc-400`
+- **Secondary text:** `text-zinc-500`
+- **Muted/meta:** `text-zinc-600`
+- **Gradient text (hero only):** `bg-gradient-to-br from-white to-zinc-400 bg-clip-text text-transparent`
 
 ### Accent colors
 
-**Primary: Cyan-Blue gradient**
+**Primary: Cyan** (used strategically)
 
-- Cyan: `#06b6d4` (cyan-500)
-- Blue: `#3b82f6` (blue-500)
+- Main cyan: `#06b6d4` (cyan-500)
 - Light cyan: `#22d3ee` (cyan-400)
-- RGB values: `--accent-rgb: 6, 182, 212`
+- For: links, primary CTAs, focus states, key icons
+- RGB: `--accent-rgb: 6, 182, 212`
 
-**Secondary: Purple** (for variety)
+**Secondary: Blue** (supporting accent)
+
+- Blue: `#3b82f6` (blue-500)
+- For: gradients with cyan, secondary CTAs
+- RGB: `--blue-rgb: 59, 130, 246`
+
+**Tertiary: Purple** (variety only, used sparingly)
 
 - Purple: `#a855f7` (purple-500)
-- Light purple: `#c084fc` (purple-400)
-- RGB values: `--purple-rgb: 168, 85, 247`
+- For: occasional card accents, background orbs
+- Don't overuse - save for special elements
 
 **Status colors:**
 
-- Success: `emerald-400/500`
-- Error: `red-400/500`
-- Warning: `amber-400/500`
-- Info: `cyan-400/500`
+- Success: `emerald-500` - solid, not gradient
+- Error: `red-500` - solid, not gradient
+- Warning: `amber-500` - solid, not gradient
+- Info: `cyan-500` - solid, not gradient
 
-### Gradient combinations for cards
+### Cards should NOT all use gradient headers
 
-```css
-/* Indigo to Purple */
-from-indigo-500 to-purple-500
+**Default card style (most cards):**
 
-/* Cyan to Blue */
-from-cyan-500 to-blue-500
+```html
+<div class="rounded-xl bg-zinc-950 border border-zinc-800 shadow-lg hover:border-zinc-700 transition-all">
+  <!-- Solid background, subtle border, clean -->
+</div>
+```
 
-/* Emerald to Cyan */
-from-emerald-500 to-cyan-500
+**Special/featured card with accent:**
 
-/* Amber to Red */
-from-amber-500 to-red-500
+```html
+<div class="rounded-xl bg-zinc-950 border border-cyan-500/30 shadow-xl">
+  <!-- Use colored border for emphasis, not gradient background -->
+</div>
+```
 
-/* Pink to Purple */
-from-pink-500 to-purple-500
+**AVOID:**
+```html
+<!-- Don't do this to every card -->
+<div class="rounded-3xl glass-strong">
+  <div class="bg-gradient-to-br from-purple-500 to-pink-500">...</div>
+</div>
 ```
 
 ---
@@ -172,90 +230,54 @@ from-pink-500 to-purple-500
 
 ## Components
 
-### Glassmorphism utilities
-
-**Standard glass:**
-
-```css
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-```
-
-**Strong glass:**
-
-```css
-.glass-strong {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-```
-
 ### Buttons
 
-**Primary button with gradient:**
+**Primary button (gradient - use for ONE main CTA only):**
 
 ```html
-<button
-  class="group relative inline-flex items-center justify-center rounded-2xl px-10 py-5 font-semibold text-lg overflow-hidden"
->
-  <!-- Gradient background -->
-  <div
-    class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 transition-transform group-hover:scale-110"
-  />
-  <!-- Text -->
-  <span class="relative z-10 text-black">Button Text</span>
-  <!-- Glow effect -->
-  <div
-    class="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl bg-gradient-to-r from-cyan-500 to-blue-500"
-  />
+<button class="group relative px-8 py-3 rounded-xl font-semibold text-black bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all">
+  Button Text
 </button>
 ```
 
-**Secondary button (glass):**
+**Secondary button (solid, most buttons should be this):**
 
 ```html
-<button
-  class="glass-strong rounded-2xl px-10 py-5 font-semibold hover:bg-white/10 transition-all"
->
+<button class="px-8 py-3 rounded-xl font-semibold bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 transition-all">
+  Button Text
+</button>
+```
+
+**Ghost button:**
+
+```html
+<button class="px-8 py-3 rounded-xl font-semibold border border-zinc-700 hover:bg-zinc-900 hover:border-zinc-600 transition-all">
   Button Text
 </button>
 ```
 
 ### Cards
 
-**Premium invite card:**
+**Standard card:**
 
 ```html
-<div
-  class="rounded-3xl overflow-hidden shadow-premium hover:shadow-premium-hover transition-all duration-300 group"
->
-  <!-- Gradient header -->
-  <div class="relative h-48 p-6 bg-gradient-to-br from-cyan-500 to-blue-500">
-    <!-- Shimmer overlay -->
-    <div class="absolute inset-0 shimmer opacity-0 group-hover:opacity-100" />
-    <!-- Content -->
-    <div class="relative z-10">
-      <!-- Header content -->
-    </div>
-  </div>
-
-  <!-- Body -->
-  <div class="bg-zinc-950/90 backdrop-blur-xl border-t border-white/5 p-6">
-    <!-- Card content -->
-  </div>
+<div class="rounded-xl bg-zinc-950 border border-zinc-800 p-6 hover:border-zinc-700 transition-colors">
+  <!-- Content -->
 </div>
 ```
 
-**Glass card:**
+**Elevated card:**
 
 ```html
-<div class="rounded-3xl glass-strong shadow-premium p-8">
+<div class="rounded-xl bg-zinc-900 border border-zinc-800 p-6 shadow-xl">
+  <!-- Content -->
+</div>
+```
+
+**Featured card (use sparingly):**
+
+```html
+<div class="rounded-xl bg-zinc-950 border border-cyan-500/30 p-6 shadow-lg shadow-cyan-500/10">
   <!-- Content -->
 </div>
 ```
@@ -265,60 +287,42 @@ from-pink-500 to-purple-500
 ```html
 <input
   type="text"
-  class="w-full px-5 py-4 rounded-2xl bg-zinc-900/50 border border-white/10 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/30 transition-all hover:border-white/20"
+  class="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
   placeholder="Enter text..."
 />
 ```
 
 ### Badges
 
-**Status badge:**
+**Status badge (simple, no gradient):**
 
 ```html
-<div
-  class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 backdrop-blur-sm border border-emerald-400/30"
->
-  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-  <span class="text-sm font-semibold text-emerald-300">Active</span>
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+  <span class="text-sm font-medium text-emerald-300">Active</span>
 </div>
 ```
 
 **Info badge:**
 
 ```html
-<div
-  class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border-cyan-500/30"
->
-  <span class="relative flex h-2 w-2">
-    <span
-      class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"
-    ></span>
-    <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-  </span>
-  <span class="text-cyan-300 font-medium">Live</span>
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30">
+  <span class="text-sm font-medium text-cyan-300">Live</span>
 </div>
 ```
 
 ### Navigation
 
+**Glass navbar (only place to use glass heavily):**
+
 ```html
-<nav class="sticky top-0 z-50 glass-strong border-b border-white/10">
-  <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-    <div class="flex items-center justify-between h-20">
-      <!-- Logo with gradient icon -->
-      <a href="/" class="group flex items-center gap-2">
-        <div
-          class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center font-bold text-white shadow-lg group-hover:shadow-cyan-500/50 transition-all"
-        >
-          I
-        </div>
-        <span
-          class="text-xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent group-hover:from-cyan-400 group-hover:to-blue-400 transition-all"
-        >
-          Invite.markets
-        </span>
-      </a>
-      <!-- Nav items -->
+<nav class="sticky top-0 z-50 border-b border-white/10">
+  <div class="absolute inset-0 bg-black/30 backdrop-blur-xl" />
+  <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-purple-500/10" />
+  
+  <div class="relative max-w-7xl mx-auto px-6">
+    <div class="flex items-center justify-between h-16">
+      <!-- Content -->
     </div>
   </div>
 </nav>
@@ -519,12 +523,16 @@ from-pink-500 to-purple-500
 
 ## Quick reference
 
-**Button:** `rounded-2xl px-10 py-5 font-semibold bg-gradient-to-r from-cyan-500 to-blue-500`
+**Primary CTA:** `rounded-xl px-8 py-3 font-semibold bg-gradient-to-r from-cyan-500 to-blue-500`
 
-**Card:** `rounded-3xl glass-strong shadow-premium`
+**Secondary button:** `rounded-xl px-8 py-3 font-semibold bg-zinc-800 border border-zinc-700`
 
-**Input:** `rounded-2xl px-5 py-4 bg-zinc-900/50 border border-white/10`
+**Card:** `rounded-xl bg-zinc-950 border border-zinc-800`
 
-**Badge:** `rounded-full px-4 py-2 glass border-cyan-500/30`
+**Input:** `rounded-lg px-4 py-3 bg-zinc-900 border border-zinc-700`
 
-**Gradient text:** `bg-gradient-to-br from-white to-zinc-400 bg-clip-text text-transparent`
+**Badge:** `rounded-full px-3 py-1 bg-cyan-500/10 border border-cyan-500/30`
+
+**Heading:** `text-white font-bold tracking-tight`
+
+**Body text:** `text-zinc-300`
