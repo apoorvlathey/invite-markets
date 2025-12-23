@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { featuredApps } from "@/data/featuredApps";
 
 /* ---------- Types ---------- */
 
@@ -12,16 +14,18 @@ interface Listing {
   priceUsdc: number;
   sellerAddress: string;
   status: "active" | "sold" | "cancelled";
+  appId?: string;
+  appName?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 interface Invite {
   app: string;
+  appIconUrl?: string;
   description: string;
   price: string;
   seller: string;
-  address: string;
   ethos: number | null;
   gradientFrom: string;
   gradientTo: string;
@@ -32,11 +36,27 @@ interface Invite {
 /* ---------- Helper to transform API -> UI ---------- */
 
 function transformListing(listing: Listing): Invite {
+  // Get app name from appId or appName
   let host = "App";
-  try {
-    host = new URL(listing.inviteUrl).hostname.split(".")[0] || "App";
-  } catch {
-    // keep default
+  let appIconUrl: string | undefined;
+
+  if (listing.appId) {
+    const featuredApp = featuredApps.find((app) => app.id === listing.appId);
+    if (featuredApp) {
+      host = featuredApp.appName;
+      appIconUrl = featuredApp.appIconUrl;
+    } else {
+      host = listing.appId;
+    }
+  } else if (listing.appName) {
+    host = listing.appName;
+  } else {
+    // Fallback to extracting from URL
+    try {
+      host = new URL(listing.inviteUrl).hostname.split(".")[0] || "App";
+    } catch {
+      // keep default
+    }
   }
 
   const gradients = [
@@ -55,10 +75,10 @@ function transformListing(listing: Listing): Invite {
 
   return {
     app: host.charAt(0).toUpperCase() + host.slice(1),
+    appIconUrl,
     description: `Early access invite to ${host}`,
     price: `$${listing.priceUsdc}`,
-    seller: `${listing.sellerAddress.slice(0, 8)}.eth`,
-    address: shortAddr,
+    seller: shortAddr,
     ethos: null,
     gradientFrom: gradient.from,
     gradientTo: gradient.to,
@@ -243,19 +263,55 @@ export default function Home() {
 
       {/* Trending */}
       <section className="relative px-4 md:px-6 lg:px-8 pb-24 md:pb-32 max-w-7xl mx-auto">
-        <div className="flex items-baseline justify-between mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Trending Invites
-          </h2>
-          <span className="text-sm text-zinc-500">Updated just now</span>
-        </div>
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-12">
+          Trending Invites
+        </h2>
 
         {loading && (
-          <div className="flex items-center justify-center py-32">
-            <div className="relative w-16 h-16">
-              <div className="absolute inset-0 rounded-full border-2 border-zinc-800" />
-              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-cyan-500 border-r-purple-500 animate-spin" />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="relative rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 shadow-lg animate-pulse"
+              >
+                {/* Top accent bar skeleton */}
+                <div className="h-1 bg-zinc-800" />
+
+                <div className="p-6">
+                  {/* Header skeleton */}
+                  <div className="flex items-start justify-between mb-4">
+                    {/* App icon skeleton */}
+                    <div className="w-12 h-12 rounded-lg bg-zinc-900 border border-zinc-800" />
+
+                    {/* Price skeleton */}
+                    <div className="text-right space-y-1">
+                      <div className="h-7 w-16 bg-zinc-800 rounded" />
+                      <div className="h-3 w-10 bg-zinc-800 rounded ml-auto" />
+                    </div>
+                  </div>
+
+                  {/* Title skeleton */}
+                  <div className="h-7 w-3/4 bg-zinc-800 rounded mb-2" />
+
+                  {/* Description skeleton */}
+                  <div className="space-y-2 mb-6">
+                    <div className="h-4 w-full bg-zinc-800 rounded" />
+                    <div className="h-4 w-2/3 bg-zinc-800 rounded" />
+                  </div>
+
+                  {/* Seller info skeleton */}
+                  <div className="mb-6 pb-6 border-b border-zinc-800">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="h-4 w-32 bg-zinc-800 rounded" />
+                      <div className="h-6 w-20 bg-zinc-800 rounded-full" />
+                    </div>
+                  </div>
+
+                  {/* Button skeleton */}
+                  <div className="h-11 w-full bg-zinc-900 border border-zinc-800 rounded-lg" />
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
@@ -305,9 +361,20 @@ export default function Home() {
                     {/* Header */}
                     <div className="p-6">
                       <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center font-bold text-xl text-white">
-                          {invite.app.charAt(0)}
-                        </div>
+                        {invite.appIconUrl ? (
+                          <div className="w-12 h-12 rounded-lg overflow-hidden border-2 border-zinc-800 bg-zinc-900 relative">
+                            <Image
+                              src={invite.appIconUrl}
+                              alt={`${invite.app} icon`}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center font-bold text-xl text-white">
+                            {invite.app.charAt(0)}
+                          </div>
+                        )}
                         <div className="text-right">
                           <div className="text-2xl font-bold text-white">
                             {invite.price}
@@ -329,11 +396,8 @@ export default function Home() {
                       <div className="mb-6 pb-6 border-b border-zinc-800">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <p className="font-medium text-sm text-zinc-300 mb-1">
+                            <p className="font-medium text-sm text-zinc-300 font-mono">
                               {invite.seller}
-                            </p>
-                            <p className="text-xs text-zinc-600 font-mono">
-                              {invite.address}
                             </p>
                           </div>
                           {invite.ethos !== null && (
