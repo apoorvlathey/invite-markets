@@ -182,14 +182,13 @@ export default function RootLayout({
 function Navigation() {
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10">
-      {/* Navbar background with gradient */}
+      {/* Navbar background */}
       <div className="absolute inset-0 bg-black/30 backdrop-blur-xl" />
-      <div className="absolute inset-0 bg-linear-to-r from-cyan-500/10 via-transparent to-purple-500/10" />
 
       <div className="relative max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <Link href="/" className="group flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg group-hover:shadow-cyan-500/50 transition-all">
+            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg transition-all">
               <Image
                 src="/icon.png"
                 alt="Invite.markets"

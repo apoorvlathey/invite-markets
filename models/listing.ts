@@ -6,6 +6,10 @@ export interface IListing {
   priceUsdc: number;
   sellerAddress: string;
   status: "active" | "sold" | "cancelled";
+  // For featured apps, appId will be set (e.g., "ethos", "base-app")
+  // For custom apps, appName will be set (user input)
+  appId?: string;
+  appName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,6 +41,14 @@ const ListingSchema = new mongoose.Schema<IListing>(
       enum: ["active", "sold", "cancelled"],
       default: "active",
     },
+    appId: {
+      type: String,
+      required: false,
+    },
+    appName: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,
@@ -45,10 +57,11 @@ const ListingSchema = new mongoose.Schema<IListing>(
 
 let Listing: Model<IListing>;
 
-try {
-  Listing = mongoose.model<IListing>("Listing");
-} catch {
-  Listing = mongoose.model<IListing>("Listing", ListingSchema);
+// Delete the model from mongoose cache if it exists to ensure schema updates are applied
+if (mongoose.models.Listing) {
+  delete mongoose.models.Listing;
 }
+
+Listing = mongoose.model<IListing>("Listing", ListingSchema);
 
 export { Listing };

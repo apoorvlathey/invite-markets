@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
+import { featuredApps } from "@/data/featuredApps";
 
 interface Listing {
   slug: string;
@@ -11,6 +13,8 @@ interface Listing {
   priceUsdc: number;
   sellerAddress: string;
   status: "active" | "sold" | "cancelled";
+  appId?: string;
+  appName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -151,6 +155,27 @@ export default function ListingPage() {
 
   const statusConfig = getStatusConfig(listing.status);
 
+  // Get app display name
+  const getAppDisplayName = () => {
+    if (listing.appId) {
+      const featuredApp = featuredApps.find((app) => app.id === listing.appId);
+      return featuredApp ? featuredApp.appName : listing.appId;
+    }
+    return listing.appName || "Unknown App";
+  };
+
+  const isFeaturedApp = !!listing.appId;
+
+  // Get featured app data including icon
+  const getFeaturedAppData = () => {
+    if (listing.appId) {
+      return featuredApps.find((app) => app.id === listing.appId);
+    }
+    return null;
+  };
+
+  const featuredAppData = getFeaturedAppData();
+
   return (
     <div className="min-h-screen text-zinc-100">
       <div className="max-w-5xl mx-auto py-12 px-4 md:px-6">
@@ -185,10 +210,37 @@ export default function ListingPage() {
               {/* Header */}
               <div className="p-8 border-b border-zinc-800 bg-zinc-900/50">
                 <div className="flex items-start justify-between gap-4 mb-6">
-                  <div>
-                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3 text-white">
-                      Invite Listing
-                    </h1>
+                  <div className="flex-1">
+                    {/* App info with icon */}
+                    <div className="flex items-center gap-4 mb-4">
+                      {featuredAppData?.appIconUrl && (
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-zinc-700 bg-zinc-800 shrink-0 relative">
+                          <Image
+                            src={featuredAppData.appIconUrl}
+                            alt={`${getAppDisplayName()} icon`}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
+                          {getAppDisplayName()}
+                        </h1>
+                        {isFeaturedApp && (
+                          <span className="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-lg bg-cyan-500/20 border border-cyan-500/30 text-xs text-cyan-400 font-medium">
+                            <svg
+                              className="w-3 h-3"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            Featured App
+                          </span>
+                        )}
+                      </div>
+                    </div>
                     <div className="flex items-center gap-2">
                       <p className="text-sm text-zinc-500 font-mono">
                         ID: {listing.slug}
