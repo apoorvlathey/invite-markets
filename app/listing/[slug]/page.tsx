@@ -6,6 +6,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { createThirdwebClient } from "thirdweb";
+import { useFetchWithPayment } from "thirdweb/react";
 
 interface Listing {
   slug: string;
@@ -16,6 +18,10 @@ interface Listing {
   updatedAt: string;
 }
 
+const thirdwebClient = createThirdwebClient({
+  clientId: process.env.CLIENT_ID
+});
+
 export default function ListingPage() {
   const params = useParams();
   const slug = params?.slug as string;
@@ -25,6 +31,8 @@ export default function ListingPage() {
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { fetchWithPayment, isPending } =
+  useFetchWithPayment(thirdwebClient);
 
   useEffect(() => {
     if (!slug) return;
@@ -48,6 +56,26 @@ export default function ListingPage() {
 
     fetchListing();
   }, [slug]);
+
+  const handlePurchase = async () => {
+    if (!listing) return;
+
+    try {
+      const res = await fetchWithPayment(
+        `/api/purchase/${listing.slug}`,
+        { method: "POST" }
+      );
+
+      console.log("res", res)
+
+      if (res?.inviteUrl) {
+        window.location.href = res.inviteUrl;
+      }
+    } catch (err) {
+      console.error("Purchase failed", err);
+      alert("Payment failed or was cancelled");
+    }
+  };
 
   if (loading) {
     return (
@@ -136,17 +164,14 @@ export default function ListingPage() {
                   <motion.button
                     whileHover={{ scale: isConnected ? 1.02 : 1 }}
                     whileTap={{ scale: isConnected ? 0.98 : 1 }}
-                    disabled={!isConnected}
+                    disabled={!isConnected || isPending}
+                    onClick={handlePurchase}
                     className="group relative w-full rounded-2xl py-4 px-6 font-bold text-lg overflow-hidden
                                disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => {
-                      if (!isConnected) return;
-                      alert("x402 purchase flow coming next");
-                    }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500" />
                     <span className="relative z-10 text-black">
-                      {isConnected ? "Purchase Now" : "Connect Wallet to Purchase"}
+                      {isPending ? "Processing payment..." : "Purchase Now"}
                     </span>
                   </motion.button>
                 )}
