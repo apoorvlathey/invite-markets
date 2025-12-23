@@ -21,6 +21,7 @@
     "nextjs-toploader": "^3.9.17",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "thirdweb": "^5.116.1",
     "viem": "2.x",
     "wagmi": "^2.19.2",
     "ws": "^8.18.0",
