@@ -103,12 +103,7 @@ export default function SellerPage() {
 
   if (createdSlug) {
     return (
-      <div className="min-h-screen bg-black text-zinc-100 flex items-center justify-center p-4">
-        <div className="fixed inset-0 -z-10">
-          <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        </div>
-
+      <div className="min-h-screen text-zinc-100 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -121,7 +116,7 @@ export default function SellerPage() {
               transition={{ delay: 0.2, type: "spring" }}
               className="mb-8"
             >
-              <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20 border border-emerald-500/30 flex items-center justify-center relative">
+              <div className="w-24 h-24 mx-auto rounded-full bg-linear-to-br from-emerald-500/20 to-green-500/20 border border-emerald-500/30 flex items-center justify-center relative">
                 <svg
                   className="w-12 h-12 text-emerald-400"
                   fill="none"
@@ -138,7 +133,7 @@ export default function SellerPage() {
                 <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-ping" />
               </div>
             </motion.div>
-            <h2 className="text-3xl font-bold mb-3 bg-gradient-to-br from-white to-zinc-400 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold mb-3 bg-linear-to-br from-white to-zinc-400 bg-clip-text text-transparent">
               Listing Created!
             </h2>
             <p className="text-zinc-400 mb-10 text-lg">
@@ -151,14 +146,24 @@ export default function SellerPage() {
                 onClick={() => router.push(`/listing/${createdSlug}`)}
                 className="group relative w-full rounded-2xl py-4 px-6 font-semibold overflow-hidden cursor-pointer"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 transition-transform group-hover:scale-110" />
+                <div className="absolute inset-0 bg-linear-to-r from-cyan-500 to-blue-500 transition-transform group-hover:scale-110" />
                 <span className="relative z-10 text-black flex items-center justify-center gap-2">
                   View Your Listing
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
                   </svg>
                 </span>
-                <div className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl bg-gradient-to-r from-cyan-500 to-blue-500" />
+                <div className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl bg-linear-to-r from-cyan-500 to-blue-500" />
               </motion.button>
               <button
                 onClick={() => {
@@ -177,14 +182,7 @@ export default function SellerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100">
-      {/* Background effects */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,black,transparent)]" />
-      </div>
-
+    <div className="min-h-screen text-zinc-100">
       <div className="max-w-3xl mx-auto py-16 px-4 md:px-6">
         <div className="flex justify-end mb-8">
           <ConnectButton />
@@ -195,7 +193,7 @@ export default function SellerPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-12 text-center"
         >
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 bg-gradient-to-br from-white to-zinc-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 bg-linear-to-br from-white to-zinc-400 bg-clip-text text-transparent">
             List Your Invite
           </h1>
           <p className="text-lg text-zinc-400">
@@ -213,10 +211,20 @@ export default function SellerPage() {
             <div>
               <label
                 htmlFor="inviteUrl"
-                className="block text-sm font-semibold text-zinc-300 mb-3 flex items-center gap-2"
+                className="flex items-center gap-2 text-sm font-semibold text-zinc-300 mb-3"
               >
-                <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                <svg
+                  className="w-4 h-4 text-cyan-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                  />
                 </svg>
                 Invite URL
               </label>
@@ -230,16 +238,28 @@ export default function SellerPage() {
                 placeholder="https://app.example.com/invite/..."
                 className="w-full px-5 py-4 rounded-2xl bg-zinc-900/50 border border-white/10 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/30 transition-all duration-150 hover:border-white/20"
               />
-              <p className="mt-2 text-xs text-zinc-500">The unique invite link you want to sell</p>
+              <p className="mt-2 text-xs text-zinc-500">
+                The unique invite link you want to sell
+              </p>
             </div>
 
             <div>
               <label
                 htmlFor="priceUsdc"
-                className="block text-sm font-semibold text-zinc-300 mb-3 flex items-center gap-2"
+                className="flex items-center gap-2 text-sm font-semibold text-zinc-300 mb-3"
               >
-                <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-4 h-4 text-cyan-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 Price (USDC)
               </label>
@@ -256,26 +276,42 @@ export default function SellerPage() {
                   placeholder="10.00"
                   className="w-full px-5 py-4 rounded-2xl bg-zinc-900/50 border border-white/10 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/30 transition-all duration-150 hover:border-white/20"
                 />
-                <span className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">USDC</span>
+                <span className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">
+                  USDC
+                </span>
               </div>
-              <p className="mt-2 text-xs text-zinc-500">Set a competitive price for your invite</p>
+              <p className="mt-2 text-xs text-zinc-500">
+                Set a competitive price for your invite
+              </p>
             </div>
 
             {isConnected && address && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 p-5"
+                className="rounded-2xl bg-linear-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 p-5"
               >
                 <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-cyan-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-5 h-5 text-cyan-400 mt-0.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <div className="flex-1">
                     <p className="text-sm text-zinc-300 mb-1">
                       <span className="font-semibold">Payment recipient:</span>
                     </p>
-                    <p className="font-mono text-cyan-400 text-sm break-all">{address}</p>
+                    <p className="font-mono text-cyan-400 text-sm break-all">
+                      {address}
+                    </p>
                   </div>
                 </div>
               </motion.div>
@@ -285,11 +321,21 @@ export default function SellerPage() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 p-5"
+                className="rounded-2xl bg-linear-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 p-5"
               >
                 <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-red-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-5 h-5 text-red-400 mt-0.5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <p className="text-sm text-red-400">{error}</p>
                 </div>
@@ -305,14 +351,24 @@ export default function SellerPage() {
             >
               {isConnected && !isSubmitting ? (
                 <>
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 transition-transform group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-linear-to-r from-cyan-500 to-blue-500 transition-transform group-hover:scale-110" />
                   <span className="relative z-10 text-black flex items-center justify-center gap-2">
                     Create Listing
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
                     </svg>
                   </span>
-                  <div className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl bg-gradient-to-r from-cyan-500 to-blue-500" />
+                  <div className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl bg-linear-to-r from-cyan-500 to-blue-500" />
                 </>
               ) : (
                 <>
@@ -332,22 +388,38 @@ export default function SellerPage() {
           {/* Info section */}
           <div className="mt-10 pt-8 border-t border-white/10">
             <h3 className="text-sm font-semibold text-zinc-300 mb-4 flex items-center gap-2">
-              <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-4 h-4 text-cyan-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               How it works
             </h3>
             <ul className="space-y-3 text-sm text-zinc-400">
               <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-xs font-bold text-cyan-400">1</span>
+                <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-xs font-bold text-cyan-400">
+                  1
+                </span>
                 <span>Sign the message to create your listing</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-xs font-bold text-cyan-400">2</span>
+                <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-xs font-bold text-cyan-400">
+                  2
+                </span>
                 <span>Buyers discover your invite on the marketplace</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-xs font-bold text-cyan-400">3</span>
+                <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-xs font-bold text-cyan-400">
+                  3
+                </span>
                 <span>Receive instant payment when someone purchases</span>
               </li>
             </ul>
