@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getListingBySlug } from "@/lib/listing";
+import { getListingBySlug, markListingAsSold } from "@/lib/listing";
 import { createThirdwebClient } from "thirdweb";
 import { facilitator, settlePayment } from "thirdweb/x402";
 import { baseSepolia } from "thirdweb/chains";
 
 const client = createThirdwebClient({
-  secretKey: process.env.SECRET_KEY 
+  secretKey: process.env.SECRET_KEY! 
 });
 
 const twFacilitator = facilitator({
   client,
-  serverWalletAddress: process.env.SERVER_WALLET, 
+  serverWalletAddress: process.env.SERVER_WALLET!, 
 });
 
 export async function POST(
@@ -53,7 +53,7 @@ export async function POST(
     );
   }
 
-  // todo - mark listing as sold and remove from the homepage
+  await markListingAsSold(slug);
 
   console.log("purchased", listing.inviteUrl)
   return NextResponse.json({
