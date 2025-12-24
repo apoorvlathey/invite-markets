@@ -18,3 +18,14 @@ export async function getListingBySlug(slug: string, getInvite: boolean) {
     inviteUrl: getInvite ? listing.inviteUrl : ""
   };
 }
+
+export async function markListingAsSold(slug: string) {
+  return Listing.findOneAndUpdate(
+    { slug },
+    {
+      status: "sold",
+      updatedAt: new Date(),
+    },
+    { new: true }
+  );
+}
