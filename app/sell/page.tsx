@@ -5,15 +5,19 @@ import { useRouter } from "next/navigation";
 import { type TypedData } from "thirdweb";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   getEIP712Domain,
   EIP712_TYPES,
   type ListingMessage,
 } from "@/lib/signature";
 import { featuredApps } from "@/data/featuredApps";
+import { LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
+import { type Listing, type ListingsData } from "@/lib/listings";
 
 export default function SellPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const account = useActiveAccount();
   const chain = useActiveWalletChain();
   const address = account?.address;
@@ -144,6 +148,31 @@ export default function SellPage() {
       if (!response.ok) {
         throw new Error(data.error || "Failed to create listing");
       }
+
+      // Add the new listing to the cache immediately so listing page shows it
+      const newListing: Listing = {
+        slug: data.listing.slug,
+        priceUsdc: data.listing.priceUsdc,
+        sellerAddress: data.listing.sellerAddress,
+        status: data.listing.status,
+        appId: data.listing.appId,
+        appName: data.listing.appName,
+        createdAt: data.listing.createdAt,
+        updatedAt: data.listing.createdAt,
+      };
+
+      queryClient.setQueryData<ListingsData>(LISTINGS_QUERY_KEY, (old) => {
+        if (!old) {
+          return {
+            invites: [],
+            rawListings: [newListing],
+          };
+        }
+        return {
+          ...old,
+          rawListings: [newListing, ...old.rawListings],
+        };
+      });
 
       setCreatedSlug(data.listing.slug);
     } catch (err) {

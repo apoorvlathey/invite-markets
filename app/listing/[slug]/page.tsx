@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -27,11 +27,26 @@ import { blo } from "blo";
 
 // fetchEthosScores is imported from lib/ethos-scores.ts (with localStorage caching)
 
+// Fetch a single listing by slug from the API
+async function fetchSingleListing(slug: string): Promise<Listing | null> {
+  try {
+    const response = await fetch(`/api/listings/${slug}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.listing || null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ListingPage() {
   const { slug } = useParams<{ slug: string }>();
   const queryClient = useQueryClient();
 
   const [ethosScore, setEthosScore] = useState<number | null>(null);
+  const [directListing, setDirectListing] = useState<Listing | null>(null);
+  const [directLoading, setDirectLoading] = useState(false);
+  const [directFetched, setDirectFetched] = useState(false);
 
   const {
     purchase,
@@ -44,7 +59,7 @@ export default function ListingPage() {
   // TanStack Query for listings - shares cache with homepage
   const {
     data: listingsData,
-    isLoading: loading,
+    isLoading: cacheLoading,
     error: queryError,
   } = useQuery<ListingsData>({
     queryKey: LISTINGS_QUERY_KEY,
@@ -54,10 +69,52 @@ export default function ListingPage() {
   });
 
   // Find this specific listing from the cache
-  const listing = useMemo(() => {
+  const cachedListing = useMemo(() => {
     if (!listingsData?.rawListings) return null;
     return listingsData.rawListings.find((l) => l.slug === slug) || null;
   }, [listingsData, slug]);
+
+  // Fetch listing directly if not in cache (handles newly created listings)
+  const fetchDirectListing = useCallback(async () => {
+    if (directFetched || directLoading) return;
+    setDirectLoading(true);
+    const fetched = await fetchSingleListing(slug);
+    setDirectListing(fetched);
+    setDirectLoading(false);
+    setDirectFetched(true);
+
+    // Add to cache if found so future navigation uses cached data
+    if (fetched && fetched.status === "active") {
+      queryClient.setQueryData<ListingsData>(LISTINGS_QUERY_KEY, (old) => {
+        if (!old) {
+          return {
+            invites: [],
+            rawListings: [fetched],
+          };
+        }
+        // Only add if not already present
+        if (old.rawListings.some((l) => l.slug === fetched.slug)) {
+          return old;
+        }
+        return {
+          ...old,
+          rawListings: [fetched, ...old.rawListings],
+        };
+      });
+    }
+  }, [slug, directFetched, directLoading, queryClient]);
+
+  // Trigger direct fetch when cache doesn't have the listing but cache query is done
+  useEffect(() => {
+    if (!cacheLoading && !cachedListing && !directFetched) {
+      fetchDirectListing();
+    }
+  }, [cacheLoading, cachedListing, directFetched, fetchDirectListing]);
+
+  // Use cached listing if available, otherwise use directly fetched listing
+  const listing = cachedListing || directListing;
+  // Show loading while cache is loading OR while waiting for direct fetch to complete (when not in cache)
+  const loading = cacheLoading || (!cachedListing && !directFetched);
 
   const error = queryError instanceof Error ? queryError.message : "";
 
