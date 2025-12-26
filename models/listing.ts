@@ -55,13 +55,14 @@ const ListingSchema = new mongoose.Schema<IListing>(
   }
 );
 
-let Listing: Model<IListing>;
-
 // Delete the model from mongoose cache if it exists to ensure schema updates are applied
 if (mongoose.models.Listing) {
   delete mongoose.models.Listing;
 }
 
-Listing = mongoose.model<IListing>("Listing", ListingSchema);
+const Listing: Model<IListing> = mongoose.model<IListing>(
+  "Listing",
+  ListingSchema
+);
 
 export { Listing };
