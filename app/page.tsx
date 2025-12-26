@@ -468,12 +468,10 @@ export default function Home() {
             </div>
 
             {/* Manual refresh button */}
-            <motion.button
+            <button
               onClick={handleManualRefresh}
               disabled={isRefreshing}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="relative p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group"
+              className="relative p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group hover:scale-105 active:scale-95"
               title="Refresh now"
             >
               <svg
@@ -493,18 +491,10 @@ export default function Home() {
               </svg>
 
               {/* Subtle pulse effect when refreshing */}
-              <AnimatePresence>
-                {isRefreshing && (
-                  <motion.span
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1.5 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5, repeat: Infinity }}
-                    className="absolute inset-0 rounded-lg border border-cyan-500/30"
-                  />
-                )}
-              </AnimatePresence>
-            </motion.button>
+              {isRefreshing && (
+                <span className="absolute inset-0 rounded-lg border border-cyan-500/30 animate-ping" />
+              )}
+            </button>
           </div>
         </div>
 
