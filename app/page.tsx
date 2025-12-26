@@ -53,6 +53,37 @@ interface ResolvedAddress {
   resolvedType: "farcaster" | "basename" | "ens";
 }
 
+/* ---------- Gradient Helpers ---------- */
+
+const GRADIENTS = [
+  { from: "#6366f1", to: "#8b5cf6" }, // indigo to purple
+  { from: "#06b6d4", to: "#3b82f6" }, // cyan to blue
+  { from: "#10b981", to: "#06b6d4" }, // emerald to cyan
+  { from: "#f59e0b", to: "#ef4444" }, // amber to red
+  { from: "#ec4899", to: "#8b5cf6" }, // pink to purple
+  { from: "#f43f5e", to: "#fb923c" }, // rose to orange
+  { from: "#8b5cf6", to: "#06b6d4" }, // purple to cyan
+  { from: "#84cc16", to: "#22c55e" }, // lime to green
+];
+
+// Simple deterministic hash function for strings
+function hashString(str: string): number {
+  let hash = 0;
+  const normalizedStr = str.toLowerCase().trim();
+  for (let i = 0; i < normalizedStr.length; i++) {
+    const char = normalizedStr.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
+// Get deterministic gradient based on app name
+function getGradientForApp(appName: string): { from: string; to: string } {
+  const hash = hashString(appName);
+  return GRADIENTS[hash % GRADIENTS.length];
+}
+
 /* ---------- Helper to transform API -> UI ---------- */
 
 function transformListing(listing: Listing): Invite {
@@ -70,15 +101,7 @@ function transformListing(listing: Listing): Invite {
     host = listing.appName;
   }
 
-  const gradients = [
-    { from: "#6366f1", to: "#8b5cf6" }, // indigo to purple
-    { from: "#06b6d4", to: "#3b82f6" }, // cyan to blue
-    { from: "#10b981", to: "#06b6d4" }, // emerald to cyan
-    { from: "#f59e0b", to: "#ef4444" }, // amber to red
-    { from: "#ec4899", to: "#8b5cf6" }, // pink to purple
-  ];
-  const gradient =
-    gradients[Math.abs(listing.slug.charCodeAt(0)) % gradients.length];
+  const gradient = getGradientForApp(host);
   const shortAddr = `${listing.sellerAddress.slice(
     0,
     6
