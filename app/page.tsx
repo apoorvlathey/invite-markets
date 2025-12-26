@@ -10,12 +10,12 @@ import { featuredApps } from "@/data/featuredApps";
 
 interface Listing {
   slug: string;
-  inviteUrl: string;
   priceUsdc: number;
   sellerAddress: string;
   status: "active" | "sold" | "cancelled";
   appId?: string;
   appName?: string;
+  appIconUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,25 +38,16 @@ interface Invite {
 function transformListing(listing: Listing): Invite {
   // Get app name from appId or appName
   let host = "App";
-  let appIconUrl: string | undefined;
 
   if (listing.appId) {
     const featuredApp = featuredApps.find((app) => app.id === listing.appId);
     if (featuredApp) {
       host = featuredApp.appName;
-      appIconUrl = featuredApp.appIconUrl;
     } else {
       host = listing.appId;
     }
   } else if (listing.appName) {
     host = listing.appName;
-  } else {
-    // Fallback to extracting from URL
-    try {
-      host = new URL(listing.inviteUrl).hostname.split(".")[0] || "App";
-    } catch {
-      // keep default
-    }
   }
 
   const gradients = [
@@ -75,7 +66,7 @@ function transformListing(listing: Listing): Invite {
 
   return {
     app: host.charAt(0).toUpperCase() + host.slice(1),
-    appIconUrl,
+    appIconUrl: listing.appIconUrl,
     description: `Early access invite to ${host}`,
     price: `$${listing.priceUsdc}`,
     seller: shortAddr,
@@ -194,7 +185,7 @@ export default function Home() {
 
           {/* Main heading with gradient */}
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6 leading-tight">
-            <span className="text-white">Invite</span>
+            <span className="text-white">invite</span>
             <span className="bg-linear-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
               .markets
             </span>
@@ -264,7 +255,7 @@ export default function Home() {
       {/* Trending */}
       <section className="relative px-4 md:px-6 lg:px-8 pb-24 md:pb-32 max-w-7xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-12">
-          Trending Invites
+          Latest Listings
         </h2>
 
         {loading && (
@@ -362,12 +353,13 @@ export default function Home() {
                     <div className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         {invite.appIconUrl ? (
-                          <div className="w-12 h-12 rounded-lg overflow-hidden border-2 border-zinc-800 bg-zinc-900 relative">
+                          <div className="w-12 h-12 rounded-lg overflow-hidden border border-zinc-700 bg-white p-1">
                             <Image
                               src={invite.appIconUrl}
                               alt={`${invite.app} icon`}
-                              fill
-                              className="object-cover"
+                              width={40}
+                              height={40}
+                              className="object-contain rounded-md w-full h-full"
                             />
                           </div>
                         ) : (

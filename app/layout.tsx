@@ -188,17 +188,17 @@ function Navigation() {
       <div className="relative max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <Link href="/" className="group flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg transition-all">
+            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg transition-all flex items-center justify-center">
               <Image
                 src="/icon.png"
                 alt="Invite.markets"
-                width={32}
-                height={32}
-                className="w-full h-full object-cover"
+                width={16}
+                height={16}
+                className="w-6 h-6 object-cover"
               />
             </div>
             <span className="text-xl font-bold tracking-tight bg-linear-to-r from-white to-zinc-400 bg-clip-text text-transparent group-hover:from-cyan-400 group-hover:to-blue-400 transition-all">
-              Invite.markets
+              invite.markets
             </span>
           </Link>
           <div className="flex items-center gap-2">
