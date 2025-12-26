@@ -12,7 +12,7 @@ import {
 } from "@/lib/signature";
 import { featuredApps } from "@/data/featuredApps";
 
-export default function SellerPage() {
+export default function SellPage() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
@@ -743,3 +743,4 @@ export default function SellerPage() {
     </div>
   );
 }
+
