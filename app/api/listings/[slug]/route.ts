@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
-import { Listing } from "@/models/listing";
+import { getListingBySlug } from "@/lib/listing";
 
 export async function GET(
   request: NextRequest,
@@ -11,7 +11,7 @@ export async function GET(
 
     const { slug } = await params;
 
-    const listing = await Listing.findOne({ slug });
+    const listing = await getListingBySlug(slug, false);
 
     if (!listing) {
       return NextResponse.json(
@@ -22,17 +22,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      listing: {
-        slug: listing.slug,
-        inviteUrl: listing.inviteUrl,
-        priceUsdc: listing.priceUsdc,
-        sellerAddress: listing.sellerAddress,
-        status: listing.status,
-        appId: listing.appId,
-        appName: listing.appName,
-        createdAt: listing.createdAt,
-        updatedAt: listing.updatedAt,
-      },
+      listing
     });
   } catch (error) {
     console.error("Error fetching listing:", error);
@@ -42,4 +32,3 @@ export async function GET(
     );
   }
 }
-

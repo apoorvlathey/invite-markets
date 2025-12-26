@@ -22,7 +22,6 @@ export async function GET() {
       success: true,
       listings: listings.map((listing) => ({
         slug: listing.slug,
-        inviteUrl: listing.inviteUrl,
         priceUsdc: listing.priceUsdc,
         sellerAddress: listing.sellerAddress,
         status: listing.status,
