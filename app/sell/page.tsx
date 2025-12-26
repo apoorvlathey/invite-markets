@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount, useSignTypedData, useChainId } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { type TypedData } from "thirdweb";
+import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   getEIP712Domain,
@@ -14,9 +14,12 @@ import { featuredApps } from "@/data/featuredApps";
 
 export default function SellPage() {
   const router = useRouter();
-  const { address, isConnected } = useAccount();
-  const chainId = useChainId();
-  const { signTypedDataAsync } = useSignTypedData();
+  const account = useActiveAccount();
+  const chain = useActiveWalletChain();
+  const address = account?.address;
+  const isConnected = !!account;
+  const chainId = chain?.id ?? 8453; // Default to Base mainnet
+
   const [formData, setFormData] = useState({
     inviteUrl: "",
     priceUsdc: "",
@@ -85,7 +88,7 @@ export default function SellPage() {
     e.preventDefault();
     setError("");
 
-    if (!isConnected || !address) {
+    if (!isConnected || !address || !account) {
       setError("Please connect your wallet first");
       return;
     }
@@ -109,11 +112,12 @@ export default function SellPage() {
         nonce,
       };
 
-      const signature = await signTypedDataAsync({
-        domain: getEIP712Domain(chainId),
-        types: EIP712_TYPES,
+      // Sign typed data using thirdweb account
+      const signature = await account.signTypedData({
+        domain: getEIP712Domain(chainId) as TypedData["domain"],
+        types: EIP712_TYPES as TypedData["types"],
         primaryType: "CreateListing",
-        message,
+        message: message as TypedData["message"],
       });
 
       const response = await fetch("/api/listings", {
@@ -264,10 +268,6 @@ export default function SellPage() {
   return (
     <div className="min-h-screen text-zinc-100">
       <div className="max-w-3xl mx-auto py-16 px-4 md:px-6">
-        <div className="flex justify-end mb-8">
-          <ConnectButton />
-        </div>
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
