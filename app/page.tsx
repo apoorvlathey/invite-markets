@@ -198,6 +198,11 @@ export default function Home() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                document
+                  .getElementById("latest-listings")
+                  ?.scrollIntoView({ behavior: "smooth" });
+              }}
               className="px-8 py-3.5 rounded-xl font-semibold text-base text-black bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 hover:from-emerald-300 hover:via-cyan-300 hover:to-blue-400 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-400/50 transition-all cursor-pointer flex items-center gap-2"
             >
               Explore Invites
@@ -381,7 +386,10 @@ export default function Home() {
       </section>
 
       {/* Latest Listings */}
-      <section className="relative px-4 md:px-6 lg:px-8 pb-24 md:pb-32 max-w-7xl mx-auto">
+      <section
+        id="latest-listings"
+        className="relative px-4 md:px-6 lg:px-8 pb-24 md:pb-32 max-w-7xl mx-auto scroll-mt-24"
+      >
         <div className="flex items-center justify-between mb-12">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
             Latest Listings
