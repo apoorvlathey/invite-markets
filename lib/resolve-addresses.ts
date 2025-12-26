@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 // ============================================================================
 // CONFIGURATION
@@ -133,9 +133,7 @@ export function getMultipleFromCache(
 /**
  * Save resolved addresses to cache (merges with existing cache)
  */
-export function saveToCache(
-  addressMap: Record<string, ResolvedAddress>
-): void {
+export function saveToCache(addressMap: Record<string, ResolvedAddress>): void {
   const store = getCacheStore();
   const now = Date.now();
 
@@ -263,21 +261,13 @@ export function useResolveAddresses(addresses: string[]) {
     [addresses]
   );
 
-  // State for instant cached values (before query runs)
-  const [cachedData, setCachedData] = useState<Record<string, ResolvedAddress>>(
-    {}
-  );
-
-  // Immediately load from localStorage on mount/address change
-  useEffect(() => {
+  // Calculate initial cached data synchronously during render
+  // This avoids the need for useEffect setState
+  const cachedData = useMemo(() => {
     if (normalizedAddresses.length === 0) {
-      // Only update if not already empty to prevent infinite loops
-      setCachedData((prev) => (Object.keys(prev).length === 0 ? prev : {}));
-      return;
+      return {};
     }
-
-    const cached = getMultipleFromCache(normalizedAddresses);
-    setCachedData(cached);
+    return getMultipleFromCache(normalizedAddresses);
   }, [normalizedAddresses]);
 
   // Query key that represents the set of addresses
@@ -388,4 +378,3 @@ export function getSellerDisplayInfo(
     shortAddress,
   };
 }
-

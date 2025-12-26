@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://invite.markets"),
   title: "invite.markets | Buy & Sell Early Access to the Hottest Web3 Apps",
   description:
     "Buy and sell early access to the hottest web3 apps — instantly. Powered by x402.",
