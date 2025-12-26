@@ -64,7 +64,9 @@ export default function ListingPage() {
       })) as { inviteUrl?: string } | undefined;
 
       if (res?.inviteUrl) {
-        // Show modal instead of redirecting
+        // Update listing state to sold immediately
+        setListing((prev) => (prev ? { ...prev, status: "sold" } : prev));
+        // Show modal with invite URL
         setInviteUrl(res.inviteUrl);
         setShowSuccessModal(true);
       }
