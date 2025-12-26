@@ -17,6 +17,7 @@ import {
   AUTO_REFRESH_INTERVAL,
 } from "@/app/components/RefreshIndicator";
 import { useResolveAddresses } from "@/lib/resolve-addresses";
+import { getExplorerAddressUrl } from "@/lib/chain";
 import {
   fetchListingsData,
   getGradientForApp,
@@ -576,7 +577,7 @@ export default function Home() {
                                             invite.sellerAddress.toLowerCase()
                                           ].displayName
                                         }`
-                                      : `https://basescan.org/address/${invite.sellerAddress}`
+                                      : getExplorerAddressUrl(invite.sellerAddress)
                                   }
                                   target="_blank"
                                   rel="noopener noreferrer"
@@ -605,7 +606,7 @@ export default function Home() {
                                 </a>
                                 {/* Show address below */}
                                 <a
-                                  href={`https://basescan.org/address/${invite.sellerAddress}`}
+                                  href={getExplorerAddressUrl(invite.sellerAddress)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
@@ -616,7 +617,7 @@ export default function Home() {
                               </>
                             ) : (
                               <a
-                                href={`https://basescan.org/address/${invite.sellerAddress}`}
+                                href={getExplorerAddressUrl(invite.sellerAddress)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}

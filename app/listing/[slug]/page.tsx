@@ -13,6 +13,7 @@ import {
   useResolveAddresses,
   getSellerDisplayInfo,
 } from "@/lib/resolve-addresses";
+import { getExplorerAddressUrl } from "@/lib/chain";
 import { timeAgo } from "@/lib/time";
 import { fetchEthosScores } from "@/lib/ethos-scores";
 import {
@@ -673,7 +674,7 @@ export default function ListingPage() {
                           )}
                         </a>
                         <a
-                          href={`https://basescan.org/address/${listing.sellerAddress}`}
+                          href={getExplorerAddressUrl(listing.sellerAddress)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
@@ -683,7 +684,7 @@ export default function ListingPage() {
                       </>
                     ) : (
                       <a
-                        href={`https://basescan.org/address/${listing.sellerAddress}`}
+                        href={getExplorerAddressUrl(listing.sellerAddress)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-mono text-sm text-zinc-300 hover:text-cyan-400 transition-colors"

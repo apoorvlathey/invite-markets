@@ -1,11 +1,20 @@
 import { createConfig, http } from "wagmi";
 import { base, baseSepolia } from "wagmi/chains";
 
-export const config = createConfig({
-  chains: [base, baseSepolia],
-  transports: {
-    [base.id]: http(),
-    [baseSepolia.id]: http(),
-  },
-  ssr: false, // Disable SSR to avoid indexedDB errors
-});
+const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET === "true";
+
+export const config = isTestnet
+  ? createConfig({
+      chains: [baseSepolia],
+      transports: {
+        [baseSepolia.id]: http(),
+      },
+      ssr: false,
+    })
+  : createConfig({
+      chains: [base],
+      transports: {
+        [base.id]: http(),
+      },
+      ssr: false,
+    });

@@ -2,22 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { getListingBySlug, markListingAsSold } from "@/lib/listing";
 import { createThirdwebClient } from "thirdweb";
 import { facilitator, settlePayment } from "thirdweb/x402";
-import { baseSepolia } from "thirdweb/chains";
+import { base, baseSepolia } from "thirdweb/chains";
+
+const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET === "true";
+const network = isTestnet ? baseSepolia : base;
 
 const client = createThirdwebClient({
-  secretKey: process.env.SECRET_KEY! 
+  secretKey: process.env.SECRET_KEY!,
 });
 
 const twFacilitator = facilitator({
   client,
-  serverWalletAddress: process.env.SERVER_WALLET!, 
+  serverWalletAddress: process.env.SERVER_WALLET!,
 });
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-
   const { slug } = await params;
 
   const listing = await getListingBySlug(slug, true);
@@ -36,26 +38,23 @@ export async function POST(
     method: "POST",
     paymentData,
     payTo: listing.sellerAddress,
-    network: baseSepolia,
+    network,
     price: `${listing.priceUsdc} USDC`,
     facilitator: twFacilitator,
   });
 
   if (result.status !== 200) {
-    return new NextResponse(
-      JSON.stringify(result.responseBody),
-      {
-        status: result.status,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    return new NextResponse(JSON.stringify(result.responseBody), {
+      status: result.status,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
   await markListingAsSold(slug);
 
-  console.log("purchased", listing.inviteUrl)
+  console.log("purchased", listing.inviteUrl);
   return NextResponse.json({
     inviteUrl: listing.inviteUrl,
   });

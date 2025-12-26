@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
+import { getExplorerAddressUrl } from "@/lib/chain";
 
 // ============================================================================
 // CONFIGURATION
@@ -359,7 +360,7 @@ export function getSellerDisplayInfo(
     const linkUrl =
       resolved.resolvedType === "farcaster"
         ? `https://warpcast.com/${resolved.displayName}`
-        : `https://basescan.org/address/${address}`;
+        : getExplorerAddressUrl(address);
 
     return {
       displayName: resolved.displayName,
@@ -373,7 +374,7 @@ export function getSellerDisplayInfo(
   return {
     displayName: shortAddress,
     avatarUrl: null,
-    linkUrl: `https://basescan.org/address/${address}`,
+    linkUrl: getExplorerAddressUrl(address),
     resolvedType: null,
     shortAddress,
   };

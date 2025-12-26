@@ -13,6 +13,7 @@ import {
   useResolveAddresses,
   getSellerDisplayInfo,
 } from "@/lib/resolve-addresses";
+import { getExplorerAddressUrl } from "@/lib/chain";
 import { usePurchase, LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
 import { PaymentSuccessModal } from "@/app/components/PaymentSuccessModal";
 import { QuickBuyButton } from "@/app/components/QuickBuyButton";
@@ -815,7 +816,9 @@ export default function AppPage() {
                                 )}
                               </a>
                               <a
-                                href={`https://basescan.org/address/${listing.sellerAddress}`}
+                                href={getExplorerAddressUrl(
+                                  listing.sellerAddress
+                                )}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
@@ -826,7 +829,9 @@ export default function AppPage() {
                             </>
                           ) : (
                             <a
-                              href={`https://basescan.org/address/${listing.sellerAddress}`}
+                              href={getExplorerAddressUrl(
+                                listing.sellerAddress
+                              )}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}

@@ -14,6 +14,7 @@ import {
 import { featuredApps } from "@/data/featuredApps";
 import { LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
 import { type Listing, type ListingsData } from "@/lib/listings";
+import { chainId as defaultChainId } from "@/lib/chain";
 
 export default function SellPage() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function SellPage() {
   const chain = useActiveWalletChain();
   const address = account?.address;
   const isConnected = !!account;
-  const chainId = chain?.id ?? 8453; // Default to Base mainnet
+  const chainId = chain?.id ?? defaultChainId;
 
   const [formData, setFormData] = useState({
     inviteUrl: "",
