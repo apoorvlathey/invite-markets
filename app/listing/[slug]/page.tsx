@@ -45,6 +45,9 @@ export default function ListingPage() {
   const queryClient = useQueryClient();
 
   const [ethosScore, setEthosScore] = useState<number | null>(null);
+  const [cheaperListingEthosScore, setCheaperListingEthosScore] = useState<
+    number | null
+  >(null);
 
   const {
     purchase,
@@ -118,6 +121,26 @@ export default function ListingPage() {
     return getSellerDisplayInfo(listing.sellerAddress, resolvedAddresses);
   }, [listing, resolvedAddresses]);
 
+  // Find cheaper listing for the same app
+  const cheaperListing = useMemo(() => {
+    if (!listing || !listingsData?.rawListings || !listing.appId) return null;
+
+    const sameAppListings = listingsData.rawListings.filter(
+      (l) =>
+        l.appId === listing.appId &&
+        l.slug !== listing.slug &&
+        l.status === "active" &&
+        l.priceUsdc < listing.priceUsdc
+    );
+
+    if (sameAppListings.length === 0) return null;
+
+    // Return the cheapest one
+    return sameAppListings.reduce((cheapest, current) =>
+      current.priceUsdc < cheapest.priceUsdc ? current : cheapest
+    );
+  }, [listing, listingsData]);
+
   // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -131,6 +154,28 @@ export default function ListingPage() {
       setEthosScore(scores[listing.sellerAddress.toLowerCase()] ?? null);
     });
   }, [listing]);
+
+  // Fetch Ethos score for cheaper listing's seller
+  useEffect(() => {
+    // Use an abort flag to handle race conditions
+    let cancelled = false;
+
+    if (cheaperListing?.sellerAddress) {
+      fetchEthosScores([cheaperListing.sellerAddress]).then((scores) => {
+        if (!cancelled) {
+          setCheaperListingEthosScore(
+            scores[cheaperListing.sellerAddress.toLowerCase()] ?? null
+          );
+        }
+      });
+    }
+
+    // Cleanup function resets state and prevents stale updates
+    return () => {
+      cancelled = true;
+      setCheaperListingEthosScore(null);
+    };
+  }, [cheaperListing?.sellerAddress]);
 
   const handlePurchase = async () => {
     if (!listing) return;
@@ -470,6 +515,140 @@ export default function ListingPage() {
                 </div>
               </div>
             </div>
+
+            {/* Cheaper Listing Banner */}
+            {cheaperListing && listing.status === "active" && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mt-4"
+              >
+                <Link href={`/listing/${cheaperListing.slug}`}>
+                  <div className="group relative rounded-xl overflow-hidden bg-linear-to-r from-emerald-500/10 via-cyan-500/10 to-emerald-500/10 border border-emerald-500/30 hover:border-emerald-400/50 transition-all cursor-pointer">
+                    {/* Animated gradient border effect */}
+                    <div className="absolute inset-0 bg-linear-to-r from-emerald-500/0 via-emerald-500/10 to-emerald-500/0 animate-pulse" />
+
+                    <div className="relative p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {/* Price drop icon */}
+                          <div className="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                            <svg
+                              className="w-5 h-5 text-emerald-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                              />
+                            </svg>
+                          </div>
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-emerald-300">
+                                Cheaper listing available!
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-xs font-bold text-emerald-400">
+                                {Math.round(
+                                  ((listing.priceUsdc -
+                                    cheaperListing.priceUsdc) /
+                                    listing.priceUsdc) *
+                                    100
+                                )}
+                                % less
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-zinc-400">
+                                Only{" "}
+                                <span className="font-semibold text-cyan-400">
+                                  ${cheaperListing.priceUsdc}
+                                </span>
+                              </span>
+                              {cheaperListingEthosScore !== null && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-zinc-500">
+                                    •
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs text-zinc-500">
+                                      Ethos score =
+                                    </span>
+                                    <span
+                                      className={`text-xs font-medium ${
+                                        ethosScore !== null &&
+                                        cheaperListingEthosScore > ethosScore
+                                          ? "text-emerald-400"
+                                          : ethosScore !== null &&
+                                            cheaperListingEthosScore <
+                                              ethosScore
+                                          ? "text-red-400"
+                                          : "text-zinc-400"
+                                      }`}
+                                    >
+                                      {cheaperListingEthosScore}
+                                    </span>
+                                    {/* Ethos comparison arrow */}
+                                    {ethosScore !== null &&
+                                    cheaperListingEthosScore > ethosScore ? (
+                                      <svg
+                                        className="w-3 h-3 text-emerald-400"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                    ) : ethosScore !== null &&
+                                      cheaperListingEthosScore < ethosScore ? (
+                                      <svg
+                                        className="w-3 h-3 text-red-400"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Arrow */}
+                        <svg
+                          className="w-5 h-5 text-emerald-400 group-hover:translate-x-1 transition-transform shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            )}
           </motion.div>
 
           {/* Right Column - Details */}
