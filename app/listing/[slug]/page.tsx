@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -45,9 +45,6 @@ export default function ListingPage() {
   const queryClient = useQueryClient();
 
   const [ethosScore, setEthosScore] = useState<number | null>(null);
-  const [directListing, setDirectListing] = useState<Listing | null>(null);
-  const [directLoading, setDirectLoading] = useState(false);
-  const [directFetched, setDirectFetched] = useState(false);
 
   const {
     purchase,
@@ -76,46 +73,35 @@ export default function ListingPage() {
   }, [listingsData, slug]);
 
   // Fetch listing directly if not in cache (handles newly created listings)
-  const fetchDirectListing = useCallback(async () => {
-    if (directFetched || directLoading) return;
-    setDirectLoading(true);
-    const fetched = await fetchSingleListing(slug);
-    setDirectListing(fetched);
-    setDirectLoading(false);
-    setDirectFetched(true);
+  const { data: directListing, isLoading: directLoading } = useQuery({
+    queryKey: ["single-listing", slug],
+    queryFn: () => fetchSingleListing(slug),
+    enabled: !cacheLoading && !cachedListing,
+    staleTime: 60 * 1000,
+  });
 
-    // Add to cache if found so future navigation uses cached data
-    if (fetched && fetched.status === "active") {
+  // Add to main cache when direct fetch succeeds
+  useEffect(() => {
+    if (directListing && directListing.status === "active") {
       queryClient.setQueryData<ListingsData>(LISTINGS_QUERY_KEY, (old) => {
         if (!old) {
-          return {
-            invites: [],
-            rawListings: [fetched],
-          };
+          return { invites: [], rawListings: [directListing] };
         }
-        // Only add if not already present
-        if (old.rawListings.some((l) => l.slug === fetched.slug)) {
+        if (old.rawListings.some((l) => l.slug === directListing.slug)) {
           return old;
         }
         return {
           ...old,
-          rawListings: [fetched, ...old.rawListings],
+          rawListings: [directListing, ...old.rawListings],
         };
       });
     }
-  }, [slug, directFetched, directLoading, queryClient]);
-
-  // Trigger direct fetch when cache doesn't have the listing but cache query is done
-  useEffect(() => {
-    if (!cacheLoading && !cachedListing && !directFetched) {
-      fetchDirectListing();
-    }
-  }, [cacheLoading, cachedListing, directFetched, fetchDirectListing]);
+  }, [directListing, queryClient]);
 
   // Use cached listing if available, otherwise use directly fetched listing
   const listing = cachedListing || directListing;
-  // Show loading while cache is loading OR while waiting for direct fetch to complete (when not in cache)
-  const loading = cacheLoading || (!cachedListing && !directFetched);
+  // Show loading while cache is loading OR while direct fetch is in progress (when not in cache)
+  const loading = cacheLoading || (!cachedListing && directLoading);
 
   const error = queryError instanceof Error ? queryError.message : "";
 
