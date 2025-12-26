@@ -5,91 +5,32 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { featuredApps } from "@/data/featuredApps";
 import { PaymentSuccessModal } from "@/app/components/PaymentSuccessModal";
-import { usePurchase } from "@/hooks/usePurchase";
+import { usePurchase, LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
 import {
   useResolveAddresses,
   getSellerDisplayInfo,
 } from "@/lib/resolve-addresses";
 import { timeAgo } from "@/lib/time";
-
-interface Listing {
-  slug: string;
-  priceUsdc: number;
-  sellerAddress: string;
-  status: "active" | "sold" | "cancelled";
-  appId?: string;
-  appName?: string;
-  appIconUrl?: string;
-  inviteUrl?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/* ---------- Gradient Helpers ---------- */
-
-const GRADIENTS = [
-  { from: "#6366f1", to: "#8b5cf6" }, // indigo to purple
-  { from: "#06b6d4", to: "#3b82f6" }, // cyan to blue
-  { from: "#10b981", to: "#06b6d4" }, // emerald to cyan
-  { from: "#f59e0b", to: "#ef4444" }, // amber to red
-  { from: "#ec4899", to: "#8b5cf6" }, // pink to purple
-  { from: "#f43f5e", to: "#fb923c" }, // rose to orange
-  { from: "#8b5cf6", to: "#06b6d4" }, // purple to cyan
-  { from: "#84cc16", to: "#22c55e" }, // lime to green
-];
-
-function hashString(str: string): number {
-  let hash = 0;
-  const normalizedStr = str.toLowerCase().trim();
-  for (let i = 0; i < normalizedStr.length; i++) {
-    const char = normalizedStr.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash);
-}
-
-function getGradientForApp(appName: string): { from: string; to: string } {
-  const hash = hashString(appName);
-  return GRADIENTS[hash % GRADIENTS.length];
-}
+import { fetchEthosScores } from "@/lib/ethos-scores";
+import {
+  fetchListingsData,
+  getGradientForApp,
+  type Listing,
+  type ListingsData,
+} from "@/lib/listings";
+import { blo } from "blo";
 
 /* ---------- Ethos Score Fetcher ---------- */
 
-async function fetchEthosScore(address: string): Promise<number | null> {
-  try {
-    const response = await fetch(
-      "https://api.ethos.network/api/v2/score/addresses",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ addresses: [address] }),
-      }
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data[address.toLowerCase()]?.score !== undefined) {
-        return data[address.toLowerCase()].score;
-      }
-    }
-  } catch (err) {
-    console.error("Error fetching Ethos score:", err);
-  }
-
-  return null;
-}
+// fetchEthosScores is imported from lib/ethos-scores.ts (with localStorage caching)
 
 export default function ListingPage() {
   const { slug } = useParams<{ slug: string }>();
+  const queryClient = useQueryClient();
 
-  const [listing, setListing] = useState<Listing | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [ethosScore, setEthosScore] = useState<number | null>(null);
 
   const {
@@ -100,10 +41,30 @@ export default function ListingPage() {
     closeSuccessModal,
   } = usePurchase();
 
+  // TanStack Query for listings - shares cache with homepage
+  const {
+    data: listingsData,
+    isLoading: loading,
+    error: queryError,
+  } = useQuery<ListingsData>({
+    queryKey: LISTINGS_QUERY_KEY,
+    queryFn: fetchListingsData,
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+
+  // Find this specific listing from the cache
+  const listing = useMemo(() => {
+    if (!listingsData?.rawListings) return null;
+    return listingsData.rawListings.find((l) => l.slug === slug) || null;
+  }, [listingsData, slug]);
+
+  const error = queryError instanceof Error ? queryError.message : "";
+
   // Resolve seller address
   const sellerAddresses = useMemo(
     () => (listing?.sellerAddress ? [listing.sellerAddress] : []),
-    [listing?.sellerAddress]
+    [listing]
   );
   const { resolvedAddresses } = useResolveAddresses(sellerAddresses);
 
@@ -118,39 +79,28 @@ export default function ListingPage() {
     window.scrollTo(0, 0);
   }, []);
 
-  // Fetch listing
-  useEffect(() => {
-    if (!slug) return;
-
-    (async () => {
-      try {
-        const res = await fetch(`/api/listings/${slug}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        setListing(data.listing);
-      } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "Failed to load listing");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [slug]);
-
   // Fetch Ethos score when listing loads
   useEffect(() => {
     if (!listing?.sellerAddress) return;
 
-    fetchEthosScore(listing.sellerAddress).then((score) => {
-      setEthosScore(score);
+    fetchEthosScores([listing.sellerAddress]).then((scores) => {
+      setEthosScore(scores[listing.sellerAddress.toLowerCase()] ?? null);
     });
-  }, [listing?.sellerAddress]);
+  }, [listing]);
 
   const handlePurchase = async () => {
     if (!listing) return;
 
     const result = await purchase(listing.slug);
     if (result) {
-      setListing((prev) => (prev ? { ...prev, status: "sold" } : prev));
+      // Remove the purchased listing from the shared cache
+      queryClient.setQueryData<ListingsData>(LISTINGS_QUERY_KEY, (old) => {
+        if (!old) return old;
+        return {
+          invites: old.invites.filter((inv) => inv.slug !== listing.slug),
+          rawListings: old.rawListings.filter((l) => l.slug !== listing.slug),
+        };
+      });
     }
   };
 
@@ -177,7 +127,7 @@ export default function ListingPage() {
         dot: "bg-red-400",
         label: "Cancelled",
       },
-    })[status];
+    }[status]);
 
   if (loading) {
     return (
@@ -299,7 +249,9 @@ export default function ListingPage() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold mb-3">Listing Not Found</h2>
-          <p className="text-zinc-400 mb-8">{error || "This listing doesn't exist or has been removed."}</p>
+          <p className="text-zinc-400 mb-8">
+            {error || "This listing doesn't exist or has been removed."}
+          </p>
           <Link href="/">
             <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 font-semibold text-black cursor-pointer hover:from-cyan-400 hover:to-blue-400 transition-all">
               Back to Marketplace
@@ -342,7 +294,7 @@ export default function ListingPage() {
               />
             </svg>
             Back to Marketplace
-        </Link>
+          </Link>
         </motion.div>
 
         <div className="grid lg:grid-cols-5 gap-8">
@@ -366,14 +318,17 @@ export default function ListingPage() {
               {/* Icon Display */}
               <div className="aspect-square relative flex items-center justify-center bg-zinc-950 overflow-hidden">
                 {/* Tiled Pattern Background */}
-                <div 
+                <div
                   className="absolute grid grid-cols-7 gap-6 opacity-[0.15]"
-                  style={{ 
-                    transform: 'rotate(-20deg) scale(1.8)',
+                  style={{
+                    transform: "rotate(-20deg) scale(1.8)",
                   }}
                 >
                   {[...Array(49)].map((_, i) => (
-                    <div key={i} className="w-12 h-12 flex items-center justify-center">
+                    <div
+                      key={i}
+                      className="w-12 h-12 flex items-center justify-center"
+                    >
                       {appIconUrl ? (
                         <div className="w-full h-full bg-white rounded-lg p-1.5 flex items-center justify-center">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -386,7 +341,7 @@ export default function ListingPage() {
                           />
                         </div>
                       ) : (
-                        <span 
+                        <span
                           className="text-3xl font-bold"
                           style={{ color: gradient.from }}
                         >
@@ -398,7 +353,7 @@ export default function ListingPage() {
                 </div>
 
                 {/* Gradient Overlay */}
-                <div 
+                <div
                   className="absolute inset-0"
                   style={{
                     background: `radial-gradient(circle at center, transparent 0%, ${gradient.from}15 60%, ${gradient.to}25 100%)`,
@@ -434,7 +389,7 @@ export default function ListingPage() {
                 </div>
               </div>
 
-              {/* Chain Badge */}
+              {/* Footer - Chain & App Link */}
               <div className="p-4 border-t border-zinc-800 bg-zinc-900/50">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -447,12 +402,27 @@ export default function ListingPage() {
                     />
                     <span className="text-sm text-zinc-400">Base Network</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-zinc-500">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    Secure Transfer
-                  </div>
+                  {listing.appId && (
+                    <Link
+                      href={`/app/${listing.appId}`}
+                      className="group flex items-center gap-1.5 text-xs text-zinc-400 hover:text-cyan-400 transition-colors"
+                    >
+                      <span>View all {appName} listings</span>
+                      <svg
+                        className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
@@ -483,9 +453,40 @@ export default function ListingPage() {
               </div>
 
               {/* App Name */}
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                {appName}
-              </h1>
+              <div className="flex items-start justify-between gap-3 mb-2">
+                {listing.appId ? (
+                  <Link
+                    href={`/app/${listing.appId}`}
+                    className="group inline-flex items-center gap-2"
+                  >
+                    <h1 className="text-3xl md:text-4xl font-bold text-white group-hover:text-cyan-400 transition-colors">
+                      {appName}
+                    </h1>
+                    <svg
+                      className="w-6 h-6 text-zinc-500 group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </Link>
+                ) : (
+                  <h1 className="text-3xl md:text-4xl font-bold text-white">
+                    {appName}
+                  </h1>
+                )}
+                {app && (
+                  <span className="shrink-0 px-2.5 py-1 rounded-lg bg-cyan-500/20 border border-cyan-500/30 text-xs font-semibold text-cyan-400">
+                    Featured App
+                  </span>
+                )}
+              </div>
               <p className="text-zinc-400 mb-6">
                 Early access invite to {appName}
               </p>
@@ -505,7 +506,9 @@ export default function ListingPage() {
                     <span className="text-4xl font-bold text-cyan-400">
                       ${listing.priceUsdc}
                     </span>
-                    <span className="text-lg text-zinc-400 font-medium">USDC</span>
+                    <span className="text-lg text-zinc-400 font-medium">
+                      USDC
+                    </span>
                   </div>
                 </div>
               </div>
@@ -576,67 +579,63 @@ export default function ListingPage() {
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   {/* Avatar */}
-                  {sellerInfo?.avatarUrl ? (
-                    <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-zinc-700">
-                        <Image
-                          src={sellerInfo.avatarUrl}
-                          alt="Seller avatar"
-                        width={48}
-                        height={48}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shrink-0">
-                      <span className="text-lg font-bold text-white">
-                        {sellerInfo?.shortAddress?.slice(2, 4).toUpperCase() ?? "??"}
-                      </span>
-                    </div>
-                  )}
+                  <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-zinc-700">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={
+                        sellerInfo?.avatarUrl ||
+                        blo(listing.sellerAddress as `0x${string}`)
+                      }
+                      alt="Seller avatar"
+                      width={48}
+                      height={48}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
                   {/* Name & Address */}
                   <div className="min-w-0">
-                      {sellerInfo?.resolvedType ? (
-                        <>
-                          <a
-                            href={sellerInfo.linkUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                    {sellerInfo?.resolvedType ? (
+                      <>
+                        <a
+                          href={sellerInfo.linkUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="font-semibold text-base text-white flex items-center gap-1.5 hover:text-cyan-400 transition-colors"
-                          >
-                            {sellerInfo.resolvedType === "farcaster" && "@"}
-                            {sellerInfo.displayName}
-                            {sellerInfo.resolvedType === "farcaster" && (
-                              <Image
-                                src="/farcaster-logo.svg"
-                                alt="Farcaster"
-                                width={14}
-                                height={14}
+                        >
+                          {sellerInfo.resolvedType === "farcaster" && "@"}
+                          {sellerInfo.displayName}
+                          {sellerInfo.resolvedType === "farcaster" && (
+                            <Image
+                              src="/farcaster-logo.svg"
+                              alt="Farcaster"
+                              width={14}
+                              height={14}
                               className="inline-block opacity-70"
-                              />
-                            )}
-                          </a>
-                          <a
-                            href={`https://basescan.org/address/${listing.sellerAddress}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
-                          >
-                          {sellerInfo.shortAddress}
-                          </a>
-                        </>
-                      ) : (
+                            />
+                          )}
+                        </a>
                         <a
                           href={`https://basescan.org/address/${listing.sellerAddress}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                        className="font-mono text-sm text-zinc-300 hover:text-cyan-400 transition-colors"
+                          className="text-sm text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
                         >
-                          {listing.sellerAddress}
+                          {sellerInfo.shortAddress}
                         </a>
-                      )}
-                    </div>
+                      </>
+                    ) : (
+                      <a
+                        href={`https://basescan.org/address/${listing.sellerAddress}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-sm text-zinc-300 hover:text-cyan-400 transition-colors"
+                      >
+                        {listing.sellerAddress}
+                      </a>
+                    )}
                   </div>
+                </div>
 
                 {/* Ethos Score */}
                 {ethosScore !== null && (
@@ -656,7 +655,7 @@ export default function ListingPage() {
                       <span className="text-xs text-emerald-300/70">
                         Ethos Score
                       </span>
-                </div>
+                    </div>
                   </a>
                 )}
               </div>
@@ -691,8 +690,8 @@ export default function ListingPage() {
                     <p className="text-sm text-zinc-500">
                       Instant, gasless payments. No transaction fees for buyers.
                     </p>
-            </div>
-          </div>
+                  </div>
+                </div>
 
                 {/* Chain Info */}
                 <div className="flex items-start gap-3">
@@ -705,7 +704,7 @@ export default function ListingPage() {
                       className="rounded"
                     />
                   </div>
-            <div>
+                  <div>
                     <p className="font-medium text-white">Base Network</p>
                     <p className="text-sm text-zinc-500">
                       USDC transfers happen securely on Base L2.
@@ -729,8 +728,8 @@ export default function ListingPage() {
                         d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                       />
                     </svg>
-            </div>
-            <div>
+                  </div>
+                  <div>
                     <p className="font-medium text-white">Secure & Instant</p>
                     <p className="text-sm text-zinc-500">
                       Receive your invite link immediately after payment.
