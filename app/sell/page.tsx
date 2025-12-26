@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { type TypedData } from "thirdweb";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -111,7 +110,7 @@ export default function SellPage() {
       const message: ListingMessage = {
         inviteUrl: formData.inviteUrl,
         priceUsdc: formData.priceUsdc,
-        sellerAddress: address,
+        sellerAddress: address as `0x${string}`,
         appId: selectedApp ? selectedApp.id : "",
         appName: selectedApp ? "" : formData.appInput.trim(),
         nonce,
@@ -119,10 +118,10 @@ export default function SellPage() {
 
       // Sign typed data using thirdweb account
       const signature = await account.signTypedData({
-        domain: getEIP712Domain(chainId) as TypedData["domain"],
-        types: EIP712_TYPES as TypedData["types"],
-        primaryType: "CreateListing",
-        message: message as TypedData["message"],
+        domain: getEIP712Domain(chainId),
+        types: EIP712_TYPES,
+        primaryType: "CreateListing" as const,
+        message,
       });
 
       const response = await fetch("/api/listings", {
