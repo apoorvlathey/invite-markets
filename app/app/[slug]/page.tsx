@@ -120,8 +120,13 @@ export default function AppPage() {
     gcTime: 5 * 60 * 1000,
   });
 
-  const allListings = listingsData?.rawListings ?? [];
   const error = queryError instanceof Error ? queryError.message : "";
+
+  // Memoize allListings to ensure stable reference
+  const allListings = useMemo(
+    () => listingsData?.rawListings ?? [],
+    [listingsData?.rawListings]
+  );
 
   // Filter listings for this specific app
   const appListings = useMemo(() => {
@@ -314,7 +319,7 @@ export default function AppPage() {
             This app doesn&apos;t exist or has no listings yet.
           </p>
           <Link href="/">
-            <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 font-semibold text-black cursor-pointer hover:from-cyan-400 hover:to-blue-400 transition-all">
+            <button className="px-6 py-3 rounded-xl bg-linear-to-r from-cyan-500 to-blue-500 font-semibold text-black cursor-pointer hover:from-cyan-400 hover:to-blue-400 transition-all">
               Back to Marketplace
             </button>
           </Link>
@@ -406,8 +411,8 @@ export default function AppPage() {
                   />
 
                   {/* Vignette */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-zinc-950/50" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/60 via-transparent to-zinc-950/60" />
+                  <div className="absolute inset-0 bg-linear-to-t from-zinc-950 via-transparent to-zinc-950/50" />
+                  <div className="absolute inset-0 bg-linear-to-r from-zinc-950/60 via-transparent to-zinc-950/60" />
 
                   {/* Main Icon */}
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -431,7 +436,7 @@ export default function AppPage() {
                   }}
                 >
                   {/* Vignette */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-zinc-950 via-transparent to-transparent" />
 
                   {/* Icon if available */}
                   {displayIconUrl && (
@@ -517,7 +522,7 @@ export default function AppPage() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full py-3 rounded-xl font-semibold text-black bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-xl font-semibold text-black bg-linear-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     <svg
                       className="w-4 h-4"

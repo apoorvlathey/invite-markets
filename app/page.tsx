@@ -1,12 +1,11 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import NProgress from "nprogress";
 import Image from "next/image";
-import NumberFlow from "@number-flow/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { featuredApps } from "@/data/featuredApps";
 import { timeAgo } from "@/lib/time";
@@ -21,8 +20,6 @@ import { useResolveAddresses } from "@/lib/resolve-addresses";
 import {
   fetchListingsData,
   getGradientForApp,
-  type Listing,
-  type Invite,
   type ListingsData,
 } from "@/lib/listings";
 import { blo } from "blo";
@@ -64,10 +61,17 @@ export default function Home() {
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
-  const invites = listingsData?.invites ?? [];
-  const rawListings = listingsData?.rawListings ?? [];
-
   const error = queryError instanceof Error ? queryError.message : "";
+
+  // Memoize invites and rawListings to ensure stable references
+  const invites = useMemo(
+    () => listingsData?.invites ?? [],
+    [listingsData?.invites]
+  );
+  const rawListings = useMemo(
+    () => listingsData?.rawListings ?? [],
+    [listingsData?.rawListings]
+  );
 
   // Compute featured apps with their listing counts
   const featuredAppsWithCounts: FeaturedAppWithCount[] = useMemo(() => {
@@ -311,8 +315,8 @@ export default function Home() {
                         />
 
                         {/* Vignette */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-zinc-950/50" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/60 via-transparent to-zinc-950/60" />
+                        <div className="absolute inset-0 bg-linear-to-t from-zinc-950 via-transparent to-zinc-950/50" />
+                        <div className="absolute inset-0 bg-linear-to-r from-zinc-950/60 via-transparent to-zinc-950/60" />
                       </div>
 
                       {/* Card content */}
