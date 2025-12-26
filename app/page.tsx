@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import NProgress from "nprogress";
@@ -13,6 +13,7 @@ import { timeAgo } from "@/lib/time";
 import { usePurchase } from "@/hooks/usePurchase";
 import { QuickBuyButton } from "@/app/components/QuickBuyButton";
 import { PaymentSuccessModal } from "@/app/components/PaymentSuccessModal";
+import { useResolveAddresses } from "@/lib/resolve-addresses";
 
 /* ---------- Constants ---------- */
 const AUTO_REFRESH_INTERVAL = 60; // seconds
@@ -45,12 +46,6 @@ interface Invite {
   slug: string;
   sellerAddress: string;
   createdAt: string;
-}
-
-interface ResolvedAddress {
-  displayName: string;
-  avatarUrl: string | null;
-  resolvedType: "farcaster" | "basename" | "ens";
 }
 
 /* ---------- Gradient Helpers ---------- */
@@ -235,42 +230,16 @@ export default function Home() {
   };
 
   // Get unique seller addresses from invites
-  const sellerAddresses =
-    invites.length > 0
-      ? [...new Set(invites.map((invite) => invite.sellerAddress))]
-      : [];
+  const sellerAddresses = useMemo(
+    () =>
+      invites.length > 0
+        ? [...new Set(invites.map((invite) => invite.sellerAddress))]
+        : [],
+    [invites]
+  );
 
-  // Fetch resolved addresses using useQuery (avoids setState in effect)
-  const { data: resolvedAddresses = {} } = useQuery({
-    queryKey: ["resolvedAddresses", sellerAddresses],
-    queryFn: async () => {
-      if (sellerAddresses.length === 0) return {};
-
-      const response = await fetch("/api/resolve-addresses", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ addresses: sellerAddresses }),
-      });
-
-      if (!response.ok) return {};
-
-      const results: (ResolvedAddress | undefined)[] = await response.json();
-      const resolvedMap: Record<string, ResolvedAddress> = {};
-
-      sellerAddresses.forEach((addr, index) => {
-        const resolved = results[index];
-        if (resolved) {
-          resolvedMap[addr.toLowerCase()] = resolved;
-        }
-      });
-
-      return resolvedMap;
-    },
-    enabled: sellerAddresses.length > 0,
-    staleTime: 5 * 60 * 1000, // Cache resolved addresses for 5 minutes
-  });
+  // Resolve addresses with localStorage caching
+  const { resolvedAddresses } = useResolveAddresses(sellerAddresses);
 
   // Countdown timer - calculates time since last fetch
   useEffect(() => {
