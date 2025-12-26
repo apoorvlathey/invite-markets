@@ -4,10 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { createThirdwebClient } from "thirdweb";
-import { useFetchWithPayment } from "thirdweb/react";
 import { featuredApps } from "@/data/featuredApps";
 import { PaymentSuccessModal } from "@/app/components/PaymentSuccessModal";
+import { usePurchase } from "@/hooks/usePurchase";
 
 interface Listing {
   slug: string;
@@ -21,10 +20,6 @@ interface Listing {
   updatedAt: string;
 }
 
-const thirdwebClient = createThirdwebClient({
-  clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID!,
-});
-
 export default function ListingPage() {
   const { slug } = useParams<{ slug: string }>();
 
@@ -32,11 +27,13 @@ export default function ListingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Modal state
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [inviteUrl, setInviteUrl] = useState("");
+  const { purchase, isPending, inviteUrl, showSuccessModal, closeSuccessModal } =
+    usePurchase();
 
-  const { fetchWithPayment, isPending } = useFetchWithPayment(thirdwebClient);
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     if (!slug) return;
@@ -58,20 +55,10 @@ export default function ListingPage() {
   const handlePurchase = async () => {
     if (!listing) return;
 
-    try {
-      const res = (await fetchWithPayment(`/api/purchase/${listing.slug}`, {
-        method: "POST",
-      })) as { inviteUrl?: string } | undefined;
-
-      if (res?.inviteUrl) {
-        // Update listing state to sold immediately
-        setListing((prev) => (prev ? { ...prev, status: "sold" } : prev));
-        // Show modal with invite URL
-        setInviteUrl(res.inviteUrl);
-        setShowSuccessModal(true);
-      }
-    } catch {
-      alert("Payment failed or cancelled");
+    const result = await purchase(listing.slug);
+    if (result) {
+      // Update listing state to sold immediately
+      setListing((prev) => (prev ? { ...prev, status: "sold" } : prev));
     }
   };
 
@@ -132,7 +119,7 @@ export default function ListingPage() {
 
   return (
     <div className="min-h-screen bg-black text-zinc-100">
-      <div className="max-w-6xl mx-auto py-12 px-4">
+      <div className="max-w-6xl mx-auto py-8 px-4">
         <Link href="/" className="text-cyan-400 mb-8 inline-block">
           ← Back to Marketplace
         </Link>
@@ -207,8 +194,8 @@ export default function ListingPage() {
       {/* Payment Success Modal */}
       <PaymentSuccessModal
         isOpen={showSuccessModal}
-        inviteUrl={inviteUrl}
-        onClose={() => setShowSuccessModal(false)}
+        inviteUrl={inviteUrl || ""}
+        onClose={closeSuccessModal}
       />
     </div>
   );

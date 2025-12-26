@@ -3,8 +3,14 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import NProgress from "nprogress";
 import Image from "next/image";
 import { featuredApps } from "@/data/featuredApps";
+import { timeAgo } from "@/lib/time";
+import { usePurchase } from "@/hooks/usePurchase";
+import { QuickBuyButton } from "@/app/components/QuickBuyButton";
+import { PaymentSuccessModal } from "@/app/components/PaymentSuccessModal";
 
 /* ---------- Types ---------- */
 
@@ -25,12 +31,20 @@ interface Invite {
   appIconUrl?: string;
   description: string;
   price: string;
+  priceUsdc: number;
   seller: string;
   ethos: number | null;
   gradientFrom: string;
   gradientTo: string;
   slug: string;
   sellerAddress: string;
+  createdAt: string;
+}
+
+interface ResolvedAddress {
+  displayName: string;
+  avatarUrl: string | null;
+  resolvedType: "farcaster" | "basename" | "ens";
 }
 
 /* ---------- Helper to transform API -> UI ---------- */
@@ -69,21 +83,43 @@ function transformListing(listing: Listing): Invite {
     appIconUrl: listing.appIconUrl,
     description: `Early access invite to ${host}`,
     price: `$${listing.priceUsdc}`,
+    priceUsdc: listing.priceUsdc,
     seller: shortAddr,
     ethos: null,
     gradientFrom: gradient.from,
     gradientTo: gradient.to,
     slug: listing.slug,
     sellerAddress: listing.sellerAddress,
+    createdAt: listing.createdAt,
   };
 }
 
 /* ---------- Page ---------- */
 
 export default function Home() {
+  const router = useRouter();
   const [invites, setInvites] = useState<Invite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // Map of address -> resolved display info (loaded async after listings)
+  const [resolvedAddresses, setResolvedAddresses] = useState<
+    Record<string, ResolvedAddress>
+  >({});
+  // Track which listing is currently being purchased
+  const [purchasingSlug, setPurchasingSlug] = useState<string | null>(null);
+
+  const { purchase, isPending, inviteUrl, showSuccessModal, closeSuccessModal } =
+    usePurchase();
+
+  const handleQuickBuy = async (slug: string) => {
+    setPurchasingSlug(slug);
+    const result = await purchase(slug);
+    if (result) {
+      // Remove the purchased listing from the list
+      setInvites((prev) => prev.filter((inv) => inv.slug !== slug));
+    }
+    setPurchasingSlug(null);
+  };
 
   useEffect(() => {
     const fetchEthosScores = async (
@@ -120,6 +156,41 @@ export default function Home() {
       return scoreMap;
     };
 
+    /**
+     * Fetch resolved display names and avatars for seller addresses.
+     * This is called async after listings are displayed to avoid blocking.
+     */
+    const fetchResolvedAddresses = async (addresses: string[]) => {
+      if (addresses.length === 0) return;
+
+      try {
+        const response = await fetch("/api/resolve-addresses", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ addresses }),
+        });
+
+        if (response.ok) {
+          const results: (ResolvedAddress | undefined)[] = await response.json();
+          const resolvedMap: Record<string, ResolvedAddress> = {};
+
+          // Map results back to addresses (same order as input)
+          addresses.forEach((addr, index) => {
+            const resolved = results[index];
+            if (resolved) {
+              resolvedMap[addr.toLowerCase()] = resolved;
+            }
+          });
+
+          setResolvedAddresses(resolvedMap);
+        }
+      } catch (err) {
+        console.error("Error fetching resolved addresses:", err);
+      }
+    };
+
     const fetchListings = async () => {
       try {
         setLoading(true);
@@ -147,6 +218,10 @@ export default function Home() {
 
         setInvites(invitesWithScores);
         setError("");
+
+        // Fetch resolved addresses async (non-blocking)
+        // This updates the UI dynamically when data is available
+        fetchResolvedAddresses(uniqueAddresses);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load listings"
@@ -202,7 +277,7 @@ export default function Home() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="px-8 py-3.5 rounded-xl font-semibold text-base text-black bg-linear-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all cursor-pointer flex items-center gap-2"
+              className="px-8 py-3.5 rounded-xl font-semibold text-base text-black bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 hover:from-emerald-300 hover:via-cyan-300 hover:to-blue-400 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-400/50 transition-all cursor-pointer flex items-center gap-2"
             >
               Explore Invites
               <svg
@@ -339,8 +414,13 @@ export default function Home() {
                 whileHover={{ y: -4 }}
                 className="group"
               >
-                <Link href={`/listing/${invite.slug}`}>
-                  <div className="relative rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 shadow-lg">
+                <div
+                  onClick={() => {
+                    NProgress.start();
+                    router.push(`/listing/${invite.slug}`);
+                  }}
+                  className="relative rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 shadow-lg cursor-pointer"
+                >
                     {/* Top accent bar with gradient */}
                     <div
                       className="h-1"
@@ -368,13 +448,18 @@ export default function Home() {
                           </div>
                         )}
                         <div className="text-right">
-                          <div className="text-2xl font-bold text-white">
+                          <div className="text-2xl font-bold text-cyan-400">
                             {invite.price}
                           </div>
                           <div className="text-xs text-zinc-500 font-medium">
                             USDC
                           </div>
                         </div>
+                      </div>
+
+                      {/* Time since listed */}
+                      <div className="text-xs text-zinc-500 mb-3">
+                        Listed {timeAgo(invite.createdAt)}
                       </div>
 
                       <h3 className="text-2xl font-bold text-white mb-2">
@@ -386,14 +471,74 @@ export default function Home() {
                       </p>
 
                       <div className="mb-6 pb-6 border-b border-zinc-800">
+                        <p className="text-xs text-zinc-500 mb-2">Seller:</p>
                         <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <p className="font-medium text-sm text-zinc-300 font-mono">
-                              {invite.seller}
-                            </p>
+                          <div className="flex items-center gap-2 min-w-0">
+                            {/* Seller avatar (if resolved) */}
+                            {resolvedAddresses[invite.sellerAddress.toLowerCase()]?.avatarUrl && (
+                              <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-zinc-700">
+                                <Image
+                                  src={resolvedAddresses[invite.sellerAddress.toLowerCase()].avatarUrl!}
+                                  alt="Seller avatar"
+                                  width={24}
+                                  height={24}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              {/* Resolved display name or fallback to truncated address */}
+                              {resolvedAddresses[invite.sellerAddress.toLowerCase()]?.displayName ? (
+                                <>
+                                  <a
+                                    href={
+                                      resolvedAddresses[invite.sellerAddress.toLowerCase()].resolvedType === "farcaster"
+                                        ? `https://warpcast.com/${resolvedAddresses[invite.sellerAddress.toLowerCase()].displayName}`
+                                        : `https://basescan.org/address/${invite.sellerAddress}`
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="font-medium text-sm text-zinc-300 truncate flex items-center gap-1 hover:text-cyan-400 transition-colors"
+                                  >
+                                    {resolvedAddresses[invite.sellerAddress.toLowerCase()].resolvedType === "farcaster" && "@"}
+                                    {resolvedAddresses[invite.sellerAddress.toLowerCase()].displayName}
+                                    {resolvedAddresses[invite.sellerAddress.toLowerCase()].resolvedType === "farcaster" && (
+                                      <Image
+                                        src="/farcaster-logo.svg"
+                                        alt="Farcaster"
+                                        width={12}
+                                        height={12}
+                                        className="inline-block opacity-60"
+                                      />
+                                    )}
+                                  </a>
+                                  {/* Show address below */}
+                                  <a
+                                    href={`https://basescan.org/address/${invite.sellerAddress}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-xs text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
+                                  >
+                                    {invite.seller}
+                                  </a>
+                                </>
+                              ) : (
+                                <a
+                                  href={`https://basescan.org/address/${invite.sellerAddress}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="font-medium text-sm text-zinc-300 font-mono hover:text-cyan-400 transition-colors"
+                                >
+                                  {invite.seller}
+                                </a>
+                              )}
+                            </div>
                           </div>
                           {invite.ethos !== null && (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-shrink-0">
                               <span className="text-xs text-zinc-500">
                                 Ethos:
                               </span>
@@ -408,33 +553,53 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* CTA Button - subtle, no gradient */}
-                      <button className="w-full rounded-lg py-3 px-4 font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 transition-all cursor-pointer">
-                        <span className="text-white flex items-center justify-center gap-2">
-                          View Details
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M13 7l5 5m0 0l-5 5m5-5H6"
-                            />
-                          </svg>
-                        </span>
-                      </button>
+                      {/* CTA Buttons */}
+                      <div className="flex gap-3">
+                        <QuickBuyButton
+                          price={invite.price}
+                          isPending={isPending && purchasingSlug === invite.slug}
+                          onBuy={() => handleQuickBuy(invite.slug)}
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            NProgress.start();
+                            router.push(`/listing/${invite.slug}`);
+                          }}
+                          className="rounded-lg py-3 px-4 font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 transition-all cursor-pointer"
+                        >
+                          <span className="text-white flex items-center justify-center gap-2">
+                            Details
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 7l5 5m0 0l-5 5m5-5H6"
+                              />
+                            </svg>
+                          </span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </Link>
               </motion.div>
             ))}
           </div>
         )}
       </section>
+
+      {/* Payment Success Modal */}
+      <PaymentSuccessModal
+        isOpen={showSuccessModal}
+        inviteUrl={inviteUrl || ""}
+        onClose={closeSuccessModal}
+      />
     </main>
   );
 }

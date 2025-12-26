@@ -6,13 +6,15 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "clean": "rm -rf .next"
   },
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.9",
     "@solana/sysvars": "^5.0.0",
     "@tanstack/react-query": "^5.90.6",
     "axios": "^1.13.1",
+    "canvas-confetti": "^1.9.3",
     "facilitators": "^0.0.7",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",
@@ -20,6 +22,7 @@
     "nanoid": "^5.1.6",
     "next": "16.0.10",
     "nextjs-toploader": "^3.9.17",
+    "nprogress": "^0.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "thirdweb": "^5.116.1",
@@ -31,6 +34,8 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/nprogress": "^0.2.3",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

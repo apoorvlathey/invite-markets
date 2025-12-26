@@ -4,9 +4,9 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
+        // Allow all HTTPS images (for avatars from Farcaster, ENS, etc.)
         protocol: "https",
-        hostname: "t2.gstatic.com",
-        pathname: "/faviconV2/**",
+        hostname: "**",
       },
     ],
   },
