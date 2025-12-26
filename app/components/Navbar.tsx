@@ -3,8 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { createThirdwebClient } from "thirdweb";
-import { ConnectButton, darkTheme } from "thirdweb/react";
+import {
+  ConnectButton,
+  darkTheme,
+  useActiveAccount,
+  useActiveWalletChain,
+} from "thirdweb/react";
 import { base, baseSepolia } from "thirdweb/chains";
+
+const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET === "true";
+const chain = isTestnet ? baseSepolia : base;
 
 const thirdwebClient = createThirdwebClient({
   clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID!,
@@ -13,9 +21,8 @@ const thirdwebClient = createThirdwebClient({
 // Custom theme matching the website's styling (STYLING.md)
 const customTheme = darkTheme({
   colors: {
-    // Modal and dropdown backgrounds
+    // Modal background
     modalBg: "#09090b", // zinc-950
-    dropdownBg: "#18181b", // zinc-800
     separatorLine: "#27272a", // zinc-800
 
     // Borders
@@ -46,40 +53,24 @@ const customTheme = darkTheme({
     // Skeleton loading
     skeletonBg: "#27272a", // zinc-800
 
-    // Icons
-    secondaryIconColor: "#71717a", // zinc-500
-    secondaryIconHoverBg: "#3f3f46", // zinc-700
-    secondaryIconHoverColor: "#fafafa", // zinc-50
-
     // Danger
     danger: "#ef4444", // red-500
 
     // Success
     success: "#10b981", // emerald-500
-
-    // Input
-    inputAutofillBg: "#18181b", // zinc-800
-
-    // Selected text
-    selectedTextBg: "#164e63", // cyan-900
-    selectedTextColor: "#fafafa", // zinc-50
-
-    // Tooltip
-    tooltipBg: "#18181b", // zinc-800
-    tooltipText: "#fafafa", // zinc-50
-
-    // Scrollbar
-    scrollbarBg: "#27272a", // zinc-800
-
-    // Wallet selector
-    walletSelectorButtonHoverBg: "#27272a", // zinc-800
-
-    // Terms
-    termsIconBg: "#27272a", // zinc-800
   },
 });
 
 export function Navbar() {
+  const activeAccount = useActiveAccount();
+  const activeChain = useActiveWalletChain();
+
+  const shortAddress = activeAccount?.address
+    ? `${activeAccount.address.slice(0, 6)}...${activeAccount.address.slice(
+        -4
+      )}`
+    : "";
+
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10">
       {/* Navbar background */}
@@ -163,7 +154,7 @@ export function Navbar() {
             </Link>
             <ConnectButton
               client={thirdwebClient}
-              chains={[base, baseSepolia]}
+              chains={[chain]}
               theme={customTheme}
               connectButton={{
                 label: "Connect",
@@ -180,16 +171,27 @@ export function Navbar() {
                 },
               }}
               detailsButton={{
-                style: {
-                  padding: "10px 16px",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  borderRadius: "12px",
-                  border: "1px solid #3f3f46", // zinc-700
-                  background: "#27272a", // zinc-800
-                  cursor: "pointer",
-                  transition: "all 150ms ease",
-                },
+                render: () => (
+                  <button className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-xl border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 transition-all cursor-pointer">
+                    {/* Chain icon */}
+                    {activeChain && (
+                      <div className="flex items-center gap-1.5 pr-2 border-r border-zinc-600">
+                        <Image
+                          src="/images/base.svg"
+                          alt={activeChain.name || "Chain"}
+                          width={18}
+                          height={18}
+                          className="rounded-full"
+                        />
+                        <span className="text-zinc-400 text-xs">
+                          {isTestnet ? "Sepolia" : "Base"}
+                        </span>
+                      </div>
+                    )}
+                    {/* Wallet address */}
+                    <span className="text-zinc-100">{shortAddress}</span>
+                  </button>
+                ),
               }}
             />
           </div>
