@@ -5,6 +5,7 @@ import { createThirdwebClient } from "thirdweb";
 import { useFetchWithPayment } from "thirdweb/react";
 import { useQueryClient } from "@tanstack/react-query";
 import confetti from "canvas-confetti";
+import { useToast } from "@/app/components/Toast";
 
 const thirdwebClient = createThirdwebClient({
   clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID!,
@@ -39,10 +40,13 @@ function triggerConfetti() {
 export function usePurchase(): UsePurchaseResult {
   const { fetchWithPayment, isPending } = useFetchWithPayment(thirdwebClient);
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const purchase = async (slug: string): Promise<{ inviteUrl: string } | null> => {
+  const purchase = async (
+    slug: string
+  ): Promise<{ inviteUrl: string } | null> => {
     try {
       const res = (await fetchWithPayment(`/api/purchase/${slug}`, {
         method: "POST",
@@ -51,17 +55,17 @@ export function usePurchase(): UsePurchaseResult {
       if (res?.inviteUrl) {
         // Celebrate successful purchase with confetti!
         triggerConfetti();
-        
+
         // Invalidate the listings cache so homepage refreshes on next visit
         queryClient.invalidateQueries({ queryKey: LISTINGS_QUERY_KEY });
-        
+
         setInviteUrl(res.inviteUrl);
         setShowSuccessModal(true);
         return { inviteUrl: res.inviteUrl };
       }
       return null;
     } catch {
-      alert("Payment failed or cancelled");
+      showToast("Payment failed or cancelled");
       return null;
     }
   };
@@ -79,4 +83,3 @@ export function usePurchase(): UsePurchaseResult {
     closeSuccessModal,
   };
 }
-
