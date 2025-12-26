@@ -5,6 +5,7 @@ import { WagmiProvider } from "wagmi";
 import { useState } from "react";
 import { config } from "@/lib/wagmi";
 import { ThirdwebProvider } from "thirdweb/react";
+import { ToastProvider } from "@/app/components/Toast";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -13,7 +14,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThirdwebProvider>
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
-          {children}
+          <ToastProvider>{children}</ToastProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </ThirdwebProvider>
