@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { featuredApps } from "@/data/featuredApps";
 import { PaymentSuccessModal } from "@/app/components/PaymentSuccessModal";
 import { usePurchase } from "@/hooks/usePurchase";
+import {
+  useResolveAddresses,
+  getSellerDisplayInfo,
+} from "@/lib/resolve-addresses";
 
 interface Listing {
   slug: string;
@@ -29,6 +34,19 @@ export default function ListingPage() {
 
   const { purchase, isPending, inviteUrl, showSuccessModal, closeSuccessModal } =
     usePurchase();
+
+  // Resolve seller address
+  const sellerAddresses = useMemo(
+    () => (listing?.sellerAddress ? [listing.sellerAddress] : []),
+    [listing?.sellerAddress]
+  );
+  const { resolvedAddresses } = useResolveAddresses(sellerAddresses);
+
+  // Get seller display info
+  const sellerInfo = useMemo(() => {
+    if (!listing) return null;
+    return getSellerDisplayInfo(listing.sellerAddress, resolvedAddresses);
+  }, [listing, resolvedAddresses]);
 
   // Scroll to top on mount
   useEffect(() => {
@@ -154,9 +172,65 @@ export default function ListingPage() {
 
             <div className="p-8 space-y-6">
               <div>
-                <label className="text-sm text-zinc-400">Seller Address</label>
-                <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 font-mono text-sm">
-                  {listing.sellerAddress}
+                <label className="text-sm text-zinc-400">Seller</label>
+                <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    {/* Seller avatar */}
+                    {sellerInfo?.avatarUrl && (
+                      <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-zinc-700">
+                        <Image
+                          src={sellerInfo.avatarUrl}
+                          alt="Seller avatar"
+                          width={40}
+                          height={40}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      {/* Resolved display name */}
+                      {sellerInfo?.resolvedType ? (
+                        <>
+                          <a
+                            href={sellerInfo.linkUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium text-base text-zinc-200 flex items-center gap-1.5 hover:text-cyan-400 transition-colors"
+                          >
+                            {sellerInfo.resolvedType === "farcaster" && "@"}
+                            {sellerInfo.displayName}
+                            {sellerInfo.resolvedType === "farcaster" && (
+                              <Image
+                                src="/farcaster-logo.svg"
+                                alt="Farcaster"
+                                width={14}
+                                height={14}
+                                className="inline-block opacity-60"
+                              />
+                            )}
+                          </a>
+                          {/* Show address below */}
+                          <a
+                            href={`https://basescan.org/address/${listing.sellerAddress}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
+                          >
+                            {listing.sellerAddress}
+                          </a>
+                        </>
+                      ) : (
+                        <a
+                          href={`https://basescan.org/address/${listing.sellerAddress}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono text-sm text-zinc-300 hover:text-cyan-400 transition-colors break-all"
+                        >
+                          {listing.sellerAddress}
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
