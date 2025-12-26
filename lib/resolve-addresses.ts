@@ -271,7 +271,8 @@ export function useResolveAddresses(addresses: string[]) {
   // Immediately load from localStorage on mount/address change
   useEffect(() => {
     if (normalizedAddresses.length === 0) {
-      setCachedData({});
+      // Only update if not already empty to prevent infinite loops
+      setCachedData((prev) => (Object.keys(prev).length === 0 ? prev : {}));
       return;
     }
 

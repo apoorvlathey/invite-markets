@@ -6,6 +6,7 @@ interface QuickBuyButtonProps {
   price: string;
   isPending: boolean;
   onBuy: () => void;
+  compact?: boolean;
 }
 
 /**
@@ -16,6 +17,7 @@ export function QuickBuyButton({
   price,
   isPending,
   onBuy,
+  compact = false,
 }: QuickBuyButtonProps) {
   return (
     <motion.button
@@ -27,7 +29,9 @@ export function QuickBuyButton({
         e.stopPropagation(); // Stop event bubbling
         onBuy();
       }}
-      className="flex-1 rounded-lg py-3 px-4 font-semibold bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 hover:from-emerald-300 hover:via-cyan-300 hover:to-blue-400 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-400/40 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+      className={`rounded-lg font-semibold bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 hover:from-emerald-300 hover:via-cyan-300 hover:to-blue-400 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-400/40 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+        compact ? "py-2 px-3 text-sm min-w-[100px]" : "flex-1 py-3 px-4"
+      }`}
     >
       <span className="text-black flex items-center justify-center gap-2">
         {isPending ? (
@@ -48,24 +52,26 @@ export function QuickBuyButton({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            Processing...
+            {!compact && "Processing..."}
           </>
         ) : (
           <>
             Buy {price}
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
+            {!compact && (
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+            )}
           </>
         )}
       </span>

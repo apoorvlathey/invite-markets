@@ -23,6 +23,9 @@ importers:
       axios:
         specifier: ^1.13.1
         version: 1.13.1
+      blo:
+        specifier: ^2.0.0
+        version: 2.0.0
       canvas-confetti:
         specifier: ^1.9.3
         version: 1.9.4
@@ -2524,6 +2527,9 @@ packages:
 
   blakejs@1.2.1:
     resolution: {integrity: sha512-QXUSXI3QVc/gJME0dBpXrag1kbzOqCjCX8/b54ntNyW6sjtoqxqRk3LTmXzaJoh71zMsDCjM+47jS7XiwN/+fQ==}
+
+  blo@2.0.0:
+    resolution: {integrity: sha512-VUUr1+vWisNSaHVswkbPbk1+GhygClKILkGchae7nsyuJ4ZVz5l1hEW4eR5F/ly/asM5vzigYGXjPnvrd//CVg==}
 
   bn.js@5.2.2:
     resolution: {integrity: sha512-v2YAxEmKaBLahNwE1mjp4WON6huMNeuDvagFZW+ASCuA/ku0bXR9hSMw0XpiqMoA3+rmnyck/tPRSFQkoC9Cuw==}
@@ -9430,6 +9436,8 @@ snapshots:
   big.js@6.2.2: {}
 
   blakejs@1.2.1: {}
+
+  blo@2.0.0: {}
 
   bn.js@5.2.2: {}
 

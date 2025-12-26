@@ -10,174 +10,32 @@ import NumberFlow from "@number-flow/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { featuredApps } from "@/data/featuredApps";
 import { timeAgo } from "@/lib/time";
-import { usePurchase } from "@/hooks/usePurchase";
+import { usePurchase, LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
 import { QuickBuyButton } from "@/app/components/QuickBuyButton";
 import { PaymentSuccessModal } from "@/app/components/PaymentSuccessModal";
+import {
+  RefreshIndicator,
+  AUTO_REFRESH_INTERVAL,
+} from "@/app/components/RefreshIndicator";
 import { useResolveAddresses } from "@/lib/resolve-addresses";
-
-/* ---------- Constants ---------- */
-const AUTO_REFRESH_INTERVAL = 60; // seconds
-const LISTINGS_QUERY_KEY = ["listings"];
+import {
+  fetchListingsData,
+  getGradientForApp,
+  type Listing,
+  type Invite,
+  type ListingsData,
+} from "@/lib/listings";
+import { blo } from "blo";
 
 /* ---------- Types ---------- */
 
-interface Listing {
-  slug: string;
-  priceUsdc: number;
-  sellerAddress: string;
-  status: "active" | "sold" | "cancelled";
-  appId?: string;
-  appName?: string;
-  appIconUrl?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Invite {
-  app: string;
-  appIconUrl?: string;
+interface FeaturedAppWithCount {
+  id: string;
+  appName: string;
+  appIconUrl: string;
   description: string;
-  price: string;
-  priceUsdc: number;
-  seller: string;
-  ethos: number | null;
-  gradientFrom: string;
-  gradientTo: string;
-  slug: string;
-  sellerAddress: string;
-  createdAt: string;
-}
-
-/* ---------- Gradient Helpers ---------- */
-
-const GRADIENTS = [
-  { from: "#6366f1", to: "#8b5cf6" }, // indigo to purple
-  { from: "#06b6d4", to: "#3b82f6" }, // cyan to blue
-  { from: "#10b981", to: "#06b6d4" }, // emerald to cyan
-  { from: "#f59e0b", to: "#ef4444" }, // amber to red
-  { from: "#ec4899", to: "#8b5cf6" }, // pink to purple
-  { from: "#f43f5e", to: "#fb923c" }, // rose to orange
-  { from: "#8b5cf6", to: "#06b6d4" }, // purple to cyan
-  { from: "#84cc16", to: "#22c55e" }, // lime to green
-];
-
-// Simple deterministic hash function for strings
-function hashString(str: string): number {
-  let hash = 0;
-  const normalizedStr = str.toLowerCase().trim();
-  for (let i = 0; i < normalizedStr.length; i++) {
-    const char = normalizedStr.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash);
-}
-
-// Get deterministic gradient based on app name
-function getGradientForApp(appName: string): { from: string; to: string } {
-  const hash = hashString(appName);
-  return GRADIENTS[hash % GRADIENTS.length];
-}
-
-/* ---------- Helper to transform API -> UI ---------- */
-
-function transformListing(listing: Listing): Invite {
-  // Get app name from appId or appName
-  let host = "App";
-
-  if (listing.appId) {
-    const featuredApp = featuredApps.find((app) => app.id === listing.appId);
-    if (featuredApp) {
-      host = featuredApp.appName;
-    } else {
-      host = listing.appId;
-    }
-  } else if (listing.appName) {
-    host = listing.appName;
-  }
-
-  const gradient = getGradientForApp(host);
-  const shortAddr = `${listing.sellerAddress.slice(
-    0,
-    6
-  )}…${listing.sellerAddress.slice(-4)}`;
-
-  return {
-    app: host.charAt(0).toUpperCase() + host.slice(1),
-    appIconUrl: listing.appIconUrl,
-    description: `Early access invite to ${host}`,
-    price: `$${listing.priceUsdc}`,
-    priceUsdc: listing.priceUsdc,
-    seller: shortAddr,
-    ethos: null,
-    gradientFrom: gradient.from,
-    gradientTo: gradient.to,
-    slug: listing.slug,
-    sellerAddress: listing.sellerAddress,
-    createdAt: listing.createdAt,
-  };
-}
-
-/* ---------- Fetch Functions ---------- */
-
-async function fetchEthosScores(
-  addresses: string[]
-): Promise<Record<string, number>> {
-  const scoreMap: Record<string, number> = {};
-
-  if (addresses.length === 0) return scoreMap;
-
-  try {
-    const response = await fetch(
-      "https://api.ethos.network/api/v2/score/addresses",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ addresses }),
-      }
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-      Object.keys(data).forEach((address) => {
-        if (data[address]?.score !== undefined) {
-          scoreMap[address.toLowerCase()] = data[address].score;
-        }
-      });
-    }
-  } catch (err) {
-    console.error("Error fetching Ethos scores:", err);
-  }
-
-  return scoreMap;
-}
-
-async function fetchListingsData(): Promise<Invite[]> {
-  const response = await fetch("/api/listings");
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || "Failed to fetch listings");
-  }
-
-  const listings: Listing[] = data.listings || [];
-  const active = listings.filter((l) => l.status === "active");
-  const transformedInvites = active.map(transformListing);
-
-  const uniqueAddresses = [
-    ...new Set(transformedInvites.map((invite) => invite.sellerAddress)),
-  ];
-
-  const scoreMap = await fetchEthosScores(uniqueAddresses);
-
-  const invitesWithScores = transformedInvites.map((invite) => ({
-    ...invite,
-    ethos: scoreMap[invite.sellerAddress.toLowerCase()] ?? null,
-  }));
-
-  return invitesWithScores;
+  activeListings: number;
+  gradient: { from: string; to: string };
 }
 
 /* ---------- Page ---------- */
@@ -193,7 +51,7 @@ export default function Home() {
 
   // TanStack Query for listings - caches data across route navigations
   const {
-    data: invites = [],
+    data: listingsData,
     isLoading: loading,
     error: queryError,
     isFetching: isRefreshing,
@@ -206,7 +64,22 @@ export default function Home() {
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
+  const invites = listingsData?.invites ?? [];
+  const rawListings = listingsData?.rawListings ?? [];
+
   const error = queryError instanceof Error ? queryError.message : "";
+
+  // Compute featured apps with their listing counts
+  const featuredAppsWithCounts: FeaturedAppWithCount[] = useMemo(() => {
+    return featuredApps.map((app) => {
+      const count = rawListings.filter((l) => l.appId === app.id).length;
+      return {
+        ...app,
+        activeListings: count,
+        gradient: getGradientForApp(app.appName),
+      };
+    });
+  }, [rawListings]);
 
   const {
     purchase,
@@ -221,10 +94,13 @@ export default function Home() {
     const result = await purchase(slug);
     if (result) {
       // Remove the purchased listing from the cache
-      queryClient.setQueryData<Invite[]>(
-        LISTINGS_QUERY_KEY,
-        (old) => old?.filter((inv) => inv.slug !== slug) ?? []
-      );
+      queryClient.setQueryData<ListingsData>(LISTINGS_QUERY_KEY, (old) => {
+        if (!old) return old;
+        return {
+          invites: old.invites.filter((inv) => inv.slug !== slug),
+          rawListings: old.rawListings.filter((l) => l.slug !== slug),
+        };
+      });
     }
     setPurchasingSlug(null);
   };
@@ -368,7 +244,139 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Trending */}
+      {/* Featured Apps Carousel */}
+      <section className="relative px-4 md:px-6 lg:px-8 pb-16 md:pb-20 max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-8">
+            Featured Apps
+          </h2>
+
+          {/* Scrollable carousel */}
+          <div className="relative -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8">
+            <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+              {featuredAppsWithCounts.map((app, i) => (
+                <motion.div
+                  key={app.id}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                  className="snap-start shrink-0"
+                >
+                  <Link href={`/app/${app.id}`}>
+                    <div className="group relative w-[320px] md:w-[380px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 cursor-pointer hover:-translate-y-1">
+                      {/* Gradient accent bar */}
+                      <div
+                        className="h-1"
+                        style={{
+                          background: `linear-gradient(90deg, ${app.gradient.from}, ${app.gradient.to})`,
+                        }}
+                      />
+
+                      {/* Tiled background header */}
+                      <div className="relative h-24 md:h-28 overflow-hidden bg-zinc-900/50">
+                        {/* Tiled pattern */}
+                        <div
+                          className="absolute inset-0 grid grid-cols-8 gap-3 opacity-[0.12] p-2"
+                          style={{
+                            transform: "rotate(-12deg) scale(1.4)",
+                          }}
+                        >
+                          {[...Array(24)].map((_, j) => (
+                            <div
+                              key={j}
+                              className="w-8 h-8 flex items-center justify-center"
+                            >
+                              <div className="w-full h-full bg-white rounded-md p-1 flex items-center justify-center">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={app.appIconUrl}
+                                  alt=""
+                                  className="object-contain w-full h-full"
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Gradient overlay */}
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            background: `linear-gradient(135deg, ${app.gradient.from}15 0%, ${app.gradient.to}20 100%)`,
+                          }}
+                        />
+
+                        {/* Vignette */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-zinc-950/50" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/60 via-transparent to-zinc-950/60" />
+                      </div>
+
+                      {/* Card content */}
+                      <div className="p-5 flex items-center gap-4">
+                        {/* App icon */}
+                        <div className="w-14 h-14 rounded-xl overflow-hidden border border-zinc-700 bg-white p-1.5 shrink-0 shadow-lg">
+                          <Image
+                            src={app.appIconUrl}
+                            alt={`${app.appName} icon`}
+                            width={48}
+                            height={48}
+                            className="object-contain rounded-lg w-full h-full"
+                          />
+                        </div>
+
+                        {/* App info */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-bold text-white truncate group-hover:text-cyan-400 transition-colors">
+                            {app.appName}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            {app.activeListings > 0 ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-medium text-emerald-400">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                {app.activeListings} active{" "}
+                                {app.activeListings === 1
+                                  ? "listing"
+                                  : "listings"}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-xs font-medium text-zinc-400">
+                                No listings yet
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Arrow */}
+                        <div className="shrink-0">
+                          <svg
+                            className="w-5 h-5 text-zinc-500 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Latest Listings */}
       <section className="relative px-4 md:px-6 lg:px-8 pb-24 md:pb-32 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-12">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
@@ -376,95 +384,11 @@ export default function Home() {
           </h2>
 
           {/* Auto-refresh countdown with manual refresh button */}
-          <div className="flex items-center gap-3">
-            {/* Countdown display */}
-            <div className="flex items-center gap-2 text-sm text-zinc-500">
-              <span className="hidden sm:inline">Refreshing in</span>
-              <div className="relative flex items-center justify-center">
-                {/* Circular progress indicator */}
-                <svg className="w-8 h-8 -rotate-90" viewBox="0 0 32 32">
-                  {/* Background circle */}
-                  <circle
-                    cx="16"
-                    cy="16"
-                    r="14"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="text-zinc-800"
-                  />
-                  {/* Progress circle */}
-                  <motion.circle
-                    cx="16"
-                    cy="16"
-                    r="14"
-                    fill="none"
-                    stroke="url(#countdownGradient)"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeDasharray={2 * Math.PI * 14}
-                    initial={{ strokeDashoffset: 0 }}
-                    animate={{
-                      strokeDashoffset:
-                        2 *
-                        Math.PI *
-                        14 *
-                        (1 - countdown / AUTO_REFRESH_INTERVAL),
-                    }}
-                    transition={{ duration: 0.3, ease: "linear" }}
-                  />
-                  <defs>
-                    <linearGradient
-                      id="countdownGradient"
-                      x1="0%"
-                      y1="0%"
-                      x2="100%"
-                      y2="0%"
-                    >
-                      <stop offset="0%" stopColor="#06b6d4" />
-                      <stop offset="100%" stopColor="#3b82f6" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                {/* Countdown number */}
-                <span className="absolute text-xs font-medium text-zinc-300">
-                  <NumberFlow
-                    value={countdown}
-                    format={{ minimumIntegerDigits: 2 }}
-                  />
-                </span>
-              </div>
-            </div>
-
-            {/* Manual refresh button */}
-            <button
-              onClick={handleManualRefresh}
-              disabled={isRefreshing}
-              className="relative p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group hover:scale-105 active:scale-95"
-              title="Refresh now"
-            >
-              <svg
-                className={`w-4 h-4 text-zinc-400 group-hover:text-cyan-400 transition-colors ${
-                  isRefreshing ? "animate-spin" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-
-              {/* Subtle pulse effect when refreshing */}
-              {isRefreshing && (
-                <span className="absolute inset-0 rounded-lg border border-cyan-500/30 animate-ping" />
-              )}
-            </button>
-          </div>
+          <RefreshIndicator
+            countdown={countdown}
+            isRefreshing={isRefreshing}
+            onRefresh={handleManualRefresh}
+          />
         </div>
 
         {loading && (
@@ -608,23 +532,22 @@ export default function Home() {
                       <p className="text-xs text-zinc-500 mb-2">Seller:</p>
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-center gap-2 min-w-0">
-                          {/* Seller avatar (if resolved) */}
-                          {resolvedAddresses[invite.sellerAddress.toLowerCase()]
-                            ?.avatarUrl && (
-                            <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-zinc-700">
-                              <Image
-                                src={
-                                  resolvedAddresses[
-                                    invite.sellerAddress.toLowerCase()
-                                  ].avatarUrl!
-                                }
-                                alt="Seller avatar"
-                                width={24}
-                                height={24}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          )}
+                          {/* Seller avatar */}
+                          <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-zinc-700">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={
+                                resolvedAddresses[
+                                  invite.sellerAddress.toLowerCase()
+                                ]?.avatarUrl ||
+                                blo(invite.sellerAddress as `0x${string}`)
+                              }
+                              alt="Seller avatar"
+                              width={24}
+                              height={24}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
                           <div className="min-w-0">
                             {/* Resolved display name or fallback to truncated address */}
                             {resolvedAddresses[
