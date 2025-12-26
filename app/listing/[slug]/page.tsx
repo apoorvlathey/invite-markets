@@ -116,7 +116,7 @@ export default function ListingPage() {
           <h2 className="text-3xl font-bold mb-3">Listing Not Found</h2>
           <p className="text-zinc-400 mb-8">{error}</p>
           <Link href="/">
-            <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 font-semibold text-black">
+            <button className="px-6 py-3 rounded-xl bg-linear-to-r from-cyan-500 to-blue-500 font-semibold text-black">
               Go Home
             </button>
           </Link>
@@ -177,7 +177,7 @@ export default function ListingPage() {
                   whileTap={{ scale: 0.98 }}
                   disabled={isPending}
                   onClick={handlePurchase}
-                  className="w-full py-4 rounded-xl font-bold text-lg text-black bg-gradient-to-r from-cyan-500 to-blue-500 disabled:opacity-50"
+                  className="w-full py-4 rounded-xl font-bold text-lg text-black bg-linear-to-r from-cyan-500 to-blue-500 disabled:opacity-50"
                 >
                   {isPending ? "Processing payment..." : "Purchase Now"}
                 </motion.button>

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Copy, Check, X, AlertTriangle } from 'lucide-react';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle, Copy, Check, X, AlertTriangle } from "lucide-react";
 
 interface PaymentSuccessModalProps {
   isOpen: boolean;
@@ -10,7 +10,11 @@ interface PaymentSuccessModalProps {
   onClose: () => void;
 }
 
-export function PaymentSuccessModal({ isOpen, inviteUrl, onClose }: PaymentSuccessModalProps) {
+export function PaymentSuccessModal({
+  isOpen,
+  inviteUrl,
+  onClose,
+}: PaymentSuccessModalProps) {
   const [copied, setCopied] = useState(false);
   const [hasCopied, setHasCopied] = useState(false);
   const [showConfirmClose, setShowConfirmClose] = useState(false);
@@ -22,7 +26,7 @@ export function PaymentSuccessModal({ isOpen, inviteUrl, onClose }: PaymentSucce
       setHasCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error("Failed to copy:", err);
     }
   };
 
@@ -61,9 +65,9 @@ export function PaymentSuccessModal({ isOpen, inviteUrl, onClose }: PaymentSucce
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={() => setShowConfirmClose(false)}
-                  className="fixed inset-0 bg-black/60 z-[60]"
+                  className="fixed inset-0 bg-black/60 z-60"
                 />
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -79,8 +83,13 @@ export function PaymentSuccessModal({ isOpen, inviteUrl, onClose }: PaymentSucce
                       </h3>
                     </div>
                     <p className="text-sm text-zinc-400 mb-6">
-                      You haven&apos;t copied your invite link yet. Once you close this modal, 
-                      <span className="text-red-400 font-medium"> you won&apos;t be able to access it again</span>.
+                      You haven&apos;t copied your invite link yet. Once you
+                      close this modal,
+                      <span className="text-red-400 font-medium">
+                        {" "}
+                        you won&apos;t be able to access it again
+                      </span>
+                      .
                     </p>
                     <div className="flex gap-3">
                       <button
@@ -138,7 +147,8 @@ export function PaymentSuccessModal({ isOpen, inviteUrl, onClose }: PaymentSucce
                     ⚠️ Important: This link will only be displayed once
                   </p>
                   <p className="text-xs text-yellow-300/80">
-                    Please copy and save it now. You won't be able to access it again.
+                    Please copy and save it now. You won&apos;t be able to
+                    access it again.
                   </p>
                 </div>
 
@@ -159,34 +169,37 @@ export function PaymentSuccessModal({ isOpen, inviteUrl, onClose }: PaymentSucce
                           transition={{
                             duration: 1.5,
                             repeat: Infinity,
-                            ease: 'linear',
+                            ease: "linear",
                           }}
                         >
                           {/* Core bright line - vivid colors */}
-                          <div 
+                          <div
                             className="absolute inset-0"
                             style={{
-                              background: 'conic-gradient(from 0deg, transparent 0deg, transparent 300deg, #00ffff 315deg, #00d4ff 325deg, #0099ff 335deg, #a855f7 345deg, #ff00ff 352deg, #ffffff 357deg, transparent 360deg)',
+                              background:
+                                "conic-gradient(from 0deg, transparent 0deg, transparent 300deg, #00ffff 315deg, #00d4ff 325deg, #0099ff 335deg, #a855f7 345deg, #ff00ff 352deg, #ffffff 357deg, transparent 360deg)",
                             }}
                           />
                           {/* Inner glow - saturated */}
-                          <div 
-                            className="absolute inset-0 blur-[4px]"
+                          <div
+                            className="absolute inset-0 blur-xs"
                             style={{
-                              background: 'conic-gradient(from 0deg, transparent 0deg, transparent 300deg, #00ffff 315deg, #00d4ff 325deg, #0099ff 335deg, #a855f7 345deg, #ff00ff 352deg, #ffffff 357deg, transparent 360deg)',
+                              background:
+                                "conic-gradient(from 0deg, transparent 0deg, transparent 300deg, #00ffff 315deg, #00d4ff 325deg, #0099ff 335deg, #a855f7 345deg, #ff00ff 352deg, #ffffff 357deg, transparent 360deg)",
                             }}
                           />
                           {/* Outer glow - wide and bright */}
-                          <div 
+                          <div
                             className="absolute inset-0 blur-lg"
                             style={{
-                              background: 'conic-gradient(from 0deg, transparent 0deg, transparent 295deg, #00ffff 315deg, #0099ff 335deg, #a855f7 348deg, #ff00ff 355deg, transparent 360deg)',
+                              background:
+                                "conic-gradient(from 0deg, transparent 0deg, transparent 295deg, #00ffff 315deg, #0099ff 335deg, #a855f7 348deg, #ff00ff 355deg, transparent 360deg)",
                             }}
                           />
                         </motion.div>
                       </div>
                       {/* Subtle base border */}
-                      <div className="absolute -inset-[1px] rounded-lg bg-zinc-700/30" />
+                      <div className="absolute -inset-px rounded-lg bg-zinc-700/30" />
                       {/* Input */}
                       <input
                         type="text"
@@ -201,8 +214,8 @@ export function PaymentSuccessModal({ isOpen, inviteUrl, onClose }: PaymentSucce
                       onClick={handleCopy}
                       className={`px-4 py-2 border rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer ${
                         copied
-                          ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                          : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-100'
+                          ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                          : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-100"
                       }`}
                     >
                       {copied ? (
