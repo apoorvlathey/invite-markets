@@ -31,13 +31,12 @@ export default function ListingPage() {
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   // Modal state
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [inviteUrl, setInviteUrl] = useState("");
 
-  const { fetchWithPayment, isPending } =
-    useFetchWithPayment(thirdwebClient);
+  const { fetchWithPayment, isPending } = useFetchWithPayment(thirdwebClient);
 
   useEffect(() => {
     if (!slug) return;
@@ -48,8 +47,8 @@ export default function ListingPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
         setListing(data.listing);
-      } catch (e: any) {
-        setError(e.message ?? "Failed to load listing");
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "Failed to load listing");
       } finally {
         setLoading(false);
       }
@@ -60,10 +59,9 @@ export default function ListingPage() {
     if (!listing) return;
 
     try {
-      const res = await fetchWithPayment(
-        `/api/purchase/${listing.slug}`,
-        { method: "POST" }
-      );
+      const res = (await fetchWithPayment(`/api/purchase/${listing.slug}`, {
+        method: "POST",
+      })) as { inviteUrl?: string } | undefined;
 
       if (res?.inviteUrl) {
         // Show modal instead of redirecting
@@ -127,14 +125,12 @@ export default function ListingPage() {
     );
   }
 
-  const app =
-    featuredApps.find((a) => a.id === listing.appId) ?? null;
+  const app = featuredApps.find((a) => a.id === listing.appId) ?? null;
   const status = getStatusConfig(listing.status);
 
   return (
     <div className="min-h-screen bg-black text-zinc-100">
       <div className="max-w-6xl mx-auto py-12 px-4">
-
         <Link href="/" className="text-cyan-400 mb-8 inline-block">
           ← Back to Marketplace
         </Link>
@@ -169,9 +165,7 @@ export default function ListingPage() {
 
             <div className="p-8 space-y-6">
               <div>
-                <label className="text-sm text-zinc-400">
-                  Seller Address
-                </label>
+                <label className="text-sm text-zinc-400">Seller Address</label>
                 <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 font-mono text-sm">
                   {listing.sellerAddress}
                 </div>
@@ -185,9 +179,7 @@ export default function ListingPage() {
                   onClick={handlePurchase}
                   className="w-full py-4 rounded-xl font-bold text-lg text-black bg-gradient-to-r from-cyan-500 to-blue-500 disabled:opacity-50"
                 >
-                  {isPending
-                    ? "Processing payment..."
-                    : "Purchase Now"}
+                  {isPending ? "Processing payment..." : "Purchase Now"}
                 </motion.button>
               )}
             </div>
