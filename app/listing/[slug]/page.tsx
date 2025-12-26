@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { createThirdwebClient } from "thirdweb";
 import { useFetchWithPayment } from "thirdweb/react";
 import { featuredApps } from "@/data/featuredApps";
-import { PaymentSuccessModal } from "../../components/PaymentSuccessModal";
+import { PaymentSuccessModal } from "@/app/components/PaymentSuccessModal";
 
 interface Listing {
   slug: string;

@@ -1,5 +1,5 @@
-import { connectDB } from "./mongoose";
-import { Listing } from "../models/listing";
+import { connectDB } from "@/lib/mongoose";
+import { Listing } from "@/models/listing";
 
 export async function getListingBySlug(slug: string, getInvite: boolean) {
   await connectDB();
@@ -15,7 +15,7 @@ export async function getListingBySlug(slug: string, getInvite: boolean) {
     status: listing.status,
     createdAt: listing.createdAt,
     updatedAt: listing.updatedAt,
-    inviteUrl: getInvite ? listing.inviteUrl : ""
+    inviteUrl: getInvite ? listing.inviteUrl : "",
   };
 }
 
