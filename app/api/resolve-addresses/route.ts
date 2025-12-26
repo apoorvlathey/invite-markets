@@ -36,7 +36,9 @@ const mainnetClient = createPublicClient({
 // Base client for Basename resolution (.base.eth)
 const baseClient = createPublicClient({
   chain: base,
-  transport: http(process.env.NEXT_PUBLIC_BASE_RPC_URL || "https://mainnet.base.org"),
+  transport: http(
+    process.env.NEXT_PUBLIC_BASE_RPC_URL || "https://mainnet.base.org"
+  ),
 });
 
 // Neynar API configuration
@@ -76,7 +78,10 @@ interface ResolvedAddressResponse {
 async function resolveFarcasterBulk(
   addresses: string[]
 ): Promise<Map<string, { username: string; avatarUrl: string | null }>> {
-  const result = new Map<string, { username: string; avatarUrl: string | null }>();
+  const result = new Map<
+    string,
+    { username: string; avatarUrl: string | null }
+  >();
 
   if (!NEYNAR_API_KEY || addresses.length === 0) {
     return result;
@@ -86,7 +91,9 @@ async function resolveFarcasterBulk(
     // Neynar bulk lookup by address - supports comma-separated addresses
     const addressList = addresses.join(",");
     const response = await fetch(
-      `${NEYNAR_API_BASE_URL}/v2/farcaster/user/bulk-by-address?addresses=${encodeURIComponent(addressList)}`,
+      `${NEYNAR_API_BASE_URL}/v2/farcaster/user/bulk-by-address?addresses=${encodeURIComponent(
+        addressList
+      )}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -140,14 +147,15 @@ async function resolveBasename(
       try {
         avatarUrl = await baseClient.getEnsAvatar({
           name: normalize(name),
-          universalResolverAddress: "0xC6d566A56A1aFf6508b41f6c90ff131615583BCD",
+          universalResolverAddress:
+            "0xC6d566A56A1aFf6508b41f6c90ff131615583BCD",
         });
       } catch {
         // Avatar fetch failed, continue without it
       }
       return { name, avatarUrl };
     }
-  } catch (error) {
+  } catch {
     // Basename resolution failed
   }
 
@@ -177,7 +185,7 @@ async function resolveEns(
       }
       return { name, avatarUrl };
     }
-  } catch (error) {
+  } catch {
     // ENS resolution failed
   }
 
@@ -296,10 +304,12 @@ export async function POST(request: NextRequest) {
       const farcasterData = await resolveFarcasterBulk(addressesToResolve);
 
       // Resolve remaining addresses in parallel
-      const resolutionPromises = addressesToResolve.map(async (addr: string) => {
-        const result = await resolveAddress(addr, farcasterData);
-        return { address: addr, result };
-      });
+      const resolutionPromises = addressesToResolve.map(
+        async (addr: string) => {
+          const result = await resolveAddress(addr, farcasterData);
+          return { address: addr, result };
+        }
+      );
 
       const resolutions = await Promise.allSettled(resolutionPromises);
 
@@ -342,8 +352,8 @@ export async function POST(request: NextRequest) {
     // ========================================================================
     // STEP 4: Build response maintaining input order
     // ========================================================================
-    const response: (ResolvedAddressResponse | undefined)[] = normalizedAddresses.map(
-      (addr: string) => {
+    const response: (ResolvedAddressResponse | undefined)[] =
+      normalizedAddresses.map((addr: string) => {
         // Check fresh results first
         if (freshResults.has(addr)) {
           return freshResults.get(addr);
@@ -361,8 +371,7 @@ export async function POST(request: NextRequest) {
 
         // Not resolved
         return undefined;
-      }
-    );
+      });
 
     return NextResponse.json(response);
   } catch (error) {
@@ -373,4 +382,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

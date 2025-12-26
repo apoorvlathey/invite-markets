@@ -235,7 +235,7 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 **Primary button (gradient - use for ONE main CTA only):**
 
 ```html
-<button class="group relative px-8 py-3 rounded-xl font-semibold text-black bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all">
+<button class="group relative px-8 py-3 rounded-xl font-semibold text-black bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all cursor-pointer">
   Button Text
 </button>
 ```
@@ -243,7 +243,7 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 **Secondary button (solid, most buttons should be this):**
 
 ```html
-<button class="px-8 py-3 rounded-xl font-semibold bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 transition-all">
+<button class="px-8 py-3 rounded-xl font-semibold bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 transition-all cursor-pointer">
   Button Text
 </button>
 ```
@@ -251,8 +251,16 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 **Ghost button:**
 
 ```html
-<button class="px-8 py-3 rounded-xl font-semibold border border-zinc-700 hover:bg-zinc-900 hover:border-zinc-600 transition-all">
+<button class="px-8 py-3 rounded-xl font-semibold border border-zinc-700 hover:bg-zinc-900 hover:border-zinc-600 transition-all cursor-pointer">
   Button Text
+</button>
+```
+
+**Icon button:**
+
+```html
+<button class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer">
+  <!-- Icon here -->
 </button>
 ```
 
@@ -491,6 +499,7 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 3. **Accessibility:** Maintain sufficient contrast, use focus rings
 4. **Mobile:** Reduce orb sizes and blur amounts on mobile for performance
 5. **Progressive enhancement:** Core experience works without effects, effects enhance
+6. **Cursor pointer:** ALWAYS add `cursor-pointer` to ALL interactive elements (buttons, clickable divs, links styled as buttons, icon buttons, etc.)
 
 ---
 
@@ -523,11 +532,15 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 
 ## Quick reference
 
-**Primary CTA:** `rounded-xl px-8 py-3 font-semibold bg-gradient-to-r from-cyan-500 to-blue-500`
+**Primary CTA:** `rounded-xl px-8 py-3 font-semibold bg-gradient-to-r from-cyan-500 to-blue-500 cursor-pointer`
 
-**Secondary button:** `rounded-xl px-8 py-3 font-semibold bg-zinc-800 border border-zinc-700`
+**Secondary button:** `rounded-xl px-8 py-3 font-semibold bg-zinc-800 border border-zinc-700 cursor-pointer`
+
+**Icon button:** `p-2 rounded-lg bg-zinc-900 border border-zinc-800 cursor-pointer`
 
 **Card:** `rounded-xl bg-zinc-950 border border-zinc-800`
+
+**Clickable card:** `rounded-xl bg-zinc-950 border border-zinc-800 cursor-pointer`
 
 **Input:** `rounded-lg px-4 py-3 bg-zinc-900 border border-zinc-700`
 
