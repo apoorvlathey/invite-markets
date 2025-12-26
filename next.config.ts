@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Silence Turbopack warning (Next.js 16+ uses Turbopack by default)
+  turbopack: {},
   webpack: (config) => {
     // Handle optional peer dependencies that cause warnings during build
     config.resolve.fallback = {

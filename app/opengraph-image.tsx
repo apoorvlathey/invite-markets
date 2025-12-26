@@ -1,14 +1,18 @@
 import { ImageResponse } from "next/og";
+import {
+  OG_SIZE,
+  OG_CONTENT_TYPE,
+  OGBackground,
+  OGBottomAccent,
+  ogContainerStyle,
+} from "@/lib/og-image";
 
 // Image metadata
 export const alt =
   "invite.markets | Buy & Sell Early Access to the Hottest Web3 Apps";
-export const size = {
-  width: 1200,
-  height: 630,
-};
+export const size = OG_SIZE;
 
-export const contentType = "image/png";
+export const contentType = OG_CONTENT_TYPE;
 
 // Image generation
 export default async function Image() {
@@ -16,70 +20,12 @@ export default async function Image() {
     (
       <div
         style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
+          ...ogContainerStyle,
           alignItems: "center",
           justifyContent: "center",
-          background: "#000000",
-          position: "relative",
-          overflow: "hidden",
         }}
       >
-        {/* Gradient orbs background */}
-        <div
-          style={{
-            position: "absolute",
-            top: "-150px",
-            left: "-100px",
-            width: "500px",
-            height: "500px",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(6, 182, 212, 0.4) 0%, transparent 70%)",
-            filter: "blur(60px)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: "-100px",
-            right: "-150px",
-            width: "600px",
-            height: "600px",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, transparent 70%)",
-            filter: "blur(60px)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: "-200px",
-            left: "30%",
-            width: "700px",
-            height: "700px",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, transparent 70%)",
-            filter: "blur(80px)",
-          }}
-        />
-
-        {/* Grid overlay */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
-            backgroundSize: "80px 80px",
-            maskImage:
-              "radial-gradient(ellipse 80% 60% at 50% 30%, black 40%, transparent 100%)",
-          }}
-        />
+        <OGBackground />
 
         {/* Content container */}
         <div
@@ -173,7 +119,8 @@ export default async function Image() {
                   fontSize: "32px",
                   fontWeight: 700,
                   color: "#f0abfc",
-                  textShadow: "0 0 30px rgba(168, 85, 247, 0.8), 0 0 60px rgba(236, 72, 153, 0.5)",
+                  textShadow:
+                    "0 0 30px rgba(168, 85, 247, 0.8), 0 0 60px rgba(236, 72, 153, 0.5)",
                 }}
               >
                 early access
@@ -277,17 +224,7 @@ export default async function Image() {
           </div>
         </div>
 
-        {/* Bottom accent line */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: "4px",
-            background: "linear-gradient(90deg, #06b6d4, #3b82f6, #a855f7)",
-          }}
-        />
+        <OGBottomAccent />
       </div>
     ),
     {

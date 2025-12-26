@@ -253,7 +253,7 @@ export default function ListingPage() {
             {error || "This listing doesn't exist or has been removed."}
           </p>
           <Link href="/">
-            <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 font-semibold text-black cursor-pointer hover:from-cyan-400 hover:to-blue-400 transition-all">
+            <button className="px-6 py-3 rounded-xl bg-linear-to-r from-cyan-500 to-blue-500 font-semibold text-black cursor-pointer hover:from-cyan-400 hover:to-blue-400 transition-all">
               Back to Marketplace
             </button>
           </Link>
@@ -361,8 +361,8 @@ export default function ListingPage() {
                 />
 
                 {/* Vignette Effect */}
-                <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/80 via-transparent to-zinc-950/80" />
-                <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/80 via-transparent to-zinc-950/80" />
+                <div className="absolute inset-0 bg-linear-to-b from-zinc-950/80 via-transparent to-zinc-950/80" />
+                <div className="absolute inset-0 bg-linear-to-r from-zinc-950/80 via-transparent to-zinc-950/80" />
 
                 {/* Main Icon */}
                 <div className="relative z-10">
