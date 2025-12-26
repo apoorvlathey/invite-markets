@@ -15,6 +15,7 @@
     "axios": "^1.13.1",
     "facilitators": "^0.0.7",
     "framer-motion": "^12.23.26",
+    "lucide-react": "^0.562.0",
     "mongoose": "^9.0.1",
     "nanoid": "^5.1.6",
     "next": "16.0.10",

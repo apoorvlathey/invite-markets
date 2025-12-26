@@ -4,11 +4,10 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useAccount } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { createThirdwebClient } from "thirdweb";
 import { useFetchWithPayment } from "thirdweb/react";
 import { featuredApps } from "@/data/featuredApps";
+import { PaymentSuccessModal } from "../../components/PaymentSuccessModal";
 
 interface Listing {
   slug: string;
@@ -28,11 +27,14 @@ const thirdwebClient = createThirdwebClient({
 
 export default function ListingPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { isConnected } = useAccount();
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  
+  // Modal state
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState("");
 
   const { fetchWithPayment, isPending } =
     useFetchWithPayment(thirdwebClient);
@@ -64,7 +66,9 @@ export default function ListingPage() {
       );
 
       if (res?.inviteUrl) {
-        window.location.href = res.inviteUrl;
+        // Show modal instead of redirecting
+        setInviteUrl(res.inviteUrl);
+        setShowSuccessModal(true);
       }
     } catch {
       alert("Payment failed or cancelled");
@@ -130,9 +134,6 @@ export default function ListingPage() {
   return (
     <div className="min-h-screen bg-black text-zinc-100">
       <div className="max-w-6xl mx-auto py-12 px-4">
-        <div className="flex justify-end mb-6">
-          <ConnectButton />
-        </div>
 
         <Link href="/" className="text-cyan-400 mb-8 inline-block">
           ← Back to Marketplace
@@ -180,7 +181,7 @@ export default function ListingPage() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  disabled={!isConnected || isPending}
+                  disabled={isPending}
                   onClick={handlePurchase}
                   className="w-full py-4 rounded-xl font-bold text-lg text-black bg-gradient-to-r from-cyan-500 to-blue-500 disabled:opacity-50"
                 >
@@ -208,6 +209,13 @@ export default function ListingPage() {
           </div>
         </div>
       </div>
+
+      {/* Payment Success Modal */}
+      <PaymentSuccessModal
+        isOpen={showSuccessModal}
+        inviteUrl={inviteUrl}
+        onClose={() => setShowSuccessModal(false)}
+      />
     </div>
   );
 }
