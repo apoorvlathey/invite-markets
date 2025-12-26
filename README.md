@@ -24,7 +24,7 @@ invite.markets connects sellers who have exclusive app invites with buyers who w
 
 ### For Sellers
 
-1. Connect your wallet at `/seller`
+1. Connect your wallet at `/sell`
 2. Select an app (featured or custom) and enter your invite URL
 3. Set your price in USDC
 4. Sign the listing with your wallet (no gas required)

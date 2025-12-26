@@ -209,7 +209,7 @@ function Navigation() {
               Explore
             </Link>
             <Link
-              href="/seller"
+              href="/sell"
               className="group relative px-6 py-3 text-sm font-bold rounded-xl overflow-hidden transition-all duration-300 hover:scale-105"
             >
               {/* Animated gradient background */}

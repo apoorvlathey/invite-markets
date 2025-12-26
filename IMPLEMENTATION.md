@@ -79,8 +79,8 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 
 ### 4. User Interface
 
-#### Seller Page - `/seller`
-**File**: `app/seller/page.tsx`
+#### Sell Page - `/sell`
+**File**: `app/sell/page.tsx`
 - Form with 3 fields: Invite URL, Price (USDC), Wallet Address
 - Client-side validation
 - Success screen with link to listing page
@@ -111,7 +111,7 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 ## User Flow
 
 1. **Create Listing**:
-   - Seller visits `/seller`
+   - Seller visits `/sell`
    - Fills form with invite URL, price, and wallet address
    - Submits form → POST to `/api/listings`
    - Server generates unique slug and saves to MongoDB
