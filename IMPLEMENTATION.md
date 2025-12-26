@@ -1,16 +1,19 @@
 # Invite Markets Implementation
 
 ## Overview
+
 A marketplace for buying and selling invite links with MongoDB backend and Next.js API routes.
 
 ## Database Structure
 
 ### MongoDB Configuration
+
 - **Cluster**: Cluster0
 - **Database**: InviteMarkets
 - **Collection**: listings
 
 ### Listing Schema
+
 ```typescript
 {
   slug: string (unique, indexed)
@@ -26,13 +29,17 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 ## Implementation Details
 
 ### 1. Database Setup
+
 **File**: `lib/mongoose.ts`
+
 - Connection pooling with cached connections for Next.js hot reloading
 - Auto-connects to `InviteMarkets` database
 - Prevents multiple connections in development
 
 ### 2. Data Model
+
 **File**: `models/listing.ts`
+
 - Mongoose schema with TypeScript interface
 - Unique slug generation (8-character alphanumeric)
 - Timestamps enabled for automatic `createdAt` and `updatedAt`
@@ -41,13 +48,16 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 ### 3. API Endpoints
 
 #### Create Listing - POST `/api/listings`
+
 **File**: `app/api/listings/route.ts`
+
 - Validates all required fields
 - Validates Ethereum address format
 - Generates unique slug using nanoid
 - Returns created listing with 201 status
 
 **Request Body**:
+
 ```json
 {
   "inviteUrl": "https://...",
@@ -57,6 +67,7 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -72,7 +83,9 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 ```
 
 #### Get Listing - GET `/api/listings/[slug]`
+
 **File**: `app/api/listings/[slug]/route.ts`
+
 - Fetches listing by unique slug
 - Returns 404 if not found
 - Includes all listing details with timestamps
@@ -80,13 +93,16 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 ### 4. User Interface
 
 #### Sell Page - `/sell`
+
 **File**: `app/sell/page.tsx`
+
 - Form with 3 fields: Invite URL, Price (USDC), Wallet Address
 - Client-side validation
 - Success screen with link to listing page
 - Option to create another listing
 
 **Features**:
+
 - URL validation for invite link
 - Number input with decimal support for price
 - Ethereum address pattern validation
@@ -94,7 +110,9 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 - Error handling with user-friendly messages
 
 #### Listing Page - `/listing/[slug]`
+
 **File**: `app/listing/[slug]/page.tsx`
+
 - Displays full listing details
 - Status badge with color coding
 - Formatted dates and prices
@@ -102,6 +120,7 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 - Purchase button (placeholder for future implementation)
 
 **Features**:
+
 - Loading spinner while fetching
 - Error state for invalid/missing listings
 - Responsive design
@@ -111,6 +130,7 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 ## User Flow
 
 1. **Create Listing**:
+
    - Seller visits `/sell`
    - Fills form with invite URL, price, and wallet address
    - Submits form → POST to `/api/listings`
@@ -126,17 +146,20 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 ## Technical Features
 
 ### Security
+
 - Input validation on both client and server
 - Ethereum address format validation
 - MongoDB injection protection via Mongoose
 - Error handling without exposing internals
 
 ### Performance
+
 - Connection pooling for database
 - Client-side loading states
 - Server-side data validation
 
 ### UX
+
 - Immediate feedback on form submission
 - Clear error messages
 - Loading indicators
@@ -144,6 +167,7 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 - Easy navigation between pages
 
 ## Future Enhancements
+
 - Purchase functionality with smart contracts
 - Listing search and filtering
 - User authentication
@@ -153,11 +177,12 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 - Email notifications
 
 ## Environment Variables Required
+
 ```env
 MONGODB_URL=mongodb+srv://xxxxx.mongodb.net/?appName=Cluster0
 ```
 
 ## Dependencies Added
+
 - `mongoose` - MongoDB ODM
 - `nanoid` - Unique ID generation
-

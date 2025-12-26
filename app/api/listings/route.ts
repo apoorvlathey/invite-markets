@@ -8,9 +8,31 @@ import {
   EIP712_TYPES,
   type ListingMessage,
 } from "@/lib/signature";
+import { getDomain, getFaviconUrl } from "@/lib/url";
+import { featuredApps } from "@/data/featuredApps";
 
 // Create a custom nanoid with URL-safe characters
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 8);
+
+/**
+ * Gets the app icon URL for a listing.
+ * For featured apps, uses the configured icon.
+ * For non-featured apps, extracts the domain from the invite URL (without the invite code)
+ * and generates a favicon URL.
+ */
+function getAppIconUrl(listing: { appId?: string; inviteUrl: string }): string {
+  // Check if this is a featured app
+  if (listing.appId) {
+    const featuredApp = featuredApps.find((app) => app.id === listing.appId);
+    if (featuredApp) {
+      return featuredApp.appIconUrl;
+    }
+  }
+
+  // For non-featured apps, get favicon from the domain (strips invite code)
+  const domain = getDomain(listing.inviteUrl);
+  return getFaviconUrl(domain);
+}
 
 export async function GET() {
   try {
@@ -27,6 +49,7 @@ export async function GET() {
         status: listing.status,
         appId: listing.appId,
         appName: listing.appName,
+        appIconUrl: getAppIconUrl(listing),
         createdAt: listing.createdAt,
         updatedAt: listing.updatedAt,
       })),
