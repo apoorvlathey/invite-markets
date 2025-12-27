@@ -26,6 +26,7 @@
     "nprogress": "^0.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "recharts": "^3.6.0",
     "thirdweb": "^5.116.1",
     "viem": "2.x",
     "wagmi": "^2.19.2",
