@@ -3,6 +3,7 @@ import { getListingBySlug, markListingAsSold } from "@/lib/listing";
 import { createThirdwebClient } from "thirdweb";
 import { facilitator, settlePayment } from "thirdweb/x402";
 import { base, baseSepolia } from "thirdweb/chains";
+import { Transaction } from "@/models/transaction";
 
 const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET === "true";
 const network = isTestnet ? baseSepolia : base;
@@ -52,9 +53,19 @@ export async function POST(
     });
   }
 
+  try {
+    await Transaction.create({
+      listingSlug: slug,
+      sellerAddress: listing.sellerAddress,
+      buyerAddress: result.paymentReceipt.payer?.toLowerCase(),
+      priceUsdc: listing.priceUsdc,
+    });
+  } catch (error) {
+    console.error("Failed to create transaction record:", error);
+  }
+
   await markListingAsSold(slug);
 
-  console.log("purchased", listing.inviteUrl);
   return NextResponse.json({
     inviteUrl: listing.inviteUrl,
   });
