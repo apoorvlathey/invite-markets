@@ -6,6 +6,7 @@ export interface ITransaction {
   sellerAddress: string;
   buyerAddress: string;
   priceUsdc: number;
+  appId: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,6 +34,10 @@ const TransactionSchema = new mongoose.Schema<ITransaction>(
       type: Number,
       required: true,
       min: 0,
+    },
+    appId: {
+        type: String,
+        required: false,
     },
   },
   {

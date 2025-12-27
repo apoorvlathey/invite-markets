@@ -59,6 +59,7 @@ export async function POST(
       sellerAddress: listing.sellerAddress,
       buyerAddress: result.paymentReceipt.payer?.toLowerCase(),
       priceUsdc: listing.priceUsdc,
+      appId: listing.appId
     });
   } catch (error) {
     console.error("Failed to create transaction record:", error);
