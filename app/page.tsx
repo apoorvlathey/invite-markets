@@ -354,7 +354,7 @@ export default function Home() {
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-xs font-medium text-zinc-400">
-                                No listings yet
+                                Sold out
                               </span>
                             )}
                           </div>
@@ -577,7 +577,9 @@ export default function Home() {
                                             invite.sellerAddress.toLowerCase()
                                           ].displayName
                                         }`
-                                      : getExplorerAddressUrl(invite.sellerAddress)
+                                      : getExplorerAddressUrl(
+                                          invite.sellerAddress
+                                        )
                                   }
                                   target="_blank"
                                   rel="noopener noreferrer"
@@ -606,7 +608,9 @@ export default function Home() {
                                 </a>
                                 {/* Show address below */}
                                 <a
-                                  href={getExplorerAddressUrl(invite.sellerAddress)}
+                                  href={getExplorerAddressUrl(
+                                    invite.sellerAddress
+                                  )}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
@@ -617,7 +621,9 @@ export default function Home() {
                               </>
                             ) : (
                               <a
-                                href={getExplorerAddressUrl(invite.sellerAddress)}
+                                href={getExplorerAddressUrl(
+                                  invite.sellerAddress
+                                )}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}

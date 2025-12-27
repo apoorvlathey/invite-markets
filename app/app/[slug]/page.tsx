@@ -317,7 +317,7 @@ export default function AppPage() {
           </div>
           <h2 className="text-2xl font-bold mb-3">App Not Found</h2>
           <p className="text-zinc-400 mb-8">
-            This app doesn&apos;t exist or has no listings yet.
+            This app doesn&apos;t exist or has no active listings atm.
           </p>
           <Link href="/">
             <button className="px-6 py-3 rounded-xl bg-linear-to-r from-cyan-500 to-blue-500 font-semibold text-black cursor-pointer hover:from-cyan-400 hover:to-blue-400 transition-all">
@@ -513,7 +513,7 @@ export default function AppPage() {
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-800 border border-zinc-700 text-sm font-medium text-zinc-400">
-                      No listings yet
+                      Sold out
                     </span>
                   )}
                 </div>
@@ -683,7 +683,7 @@ export default function AppPage() {
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">
-                  No listings yet
+                  Sold out
                 </h3>
                 <p className="text-zinc-400 text-sm mb-6">
                   Be the first to sell an invite for {displayName}!
