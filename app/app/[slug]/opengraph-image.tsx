@@ -245,7 +245,7 @@ export default async function Image({
                   ? `${appData.listingCount} listing${
                       appData.listingCount > 1 ? "s" : ""
                     } available`
-                  : "No listings yet"}
+                  : "Sold out"}
               </span>
             </div>
           </div>
