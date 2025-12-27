@@ -21,6 +21,7 @@ import {
   RefreshIndicator,
   AUTO_REFRESH_INTERVAL,
 } from "@/app/components/RefreshIndicator";
+import { PriceChart } from "@/app/components/PriceChart";
 import { fetchEthosScores } from "@/lib/ethos-scores";
 import {
   fetchListingsData,
@@ -35,6 +36,12 @@ import { blo } from "blo";
 
 interface ListingWithEthos extends Listing {
   ethosScore: number | null;
+}
+
+interface SaleData {
+  timestamp: string;
+  priceUsdc: number;
+  slug: string;
 }
 
 type SortField = "price" | "date" | "ethos";
@@ -117,6 +124,17 @@ export default function AppPage() {
   } = useQuery<ListingsData>({
     queryKey: LISTINGS_QUERY_KEY,
     queryFn: fetchListingsData,
+    staleTime: AUTO_REFRESH_INTERVAL * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+
+  const { data: salesData, isLoading: salesLoading } = useQuery<SaleData[]>({
+    queryKey: ["sales", slug],
+    queryFn: async () => {
+      const response = await fetch(`/api/sales/${slug}`);
+      if (!response.ok) throw new Error("Failed to fetch sales");
+      return response.json();
+    },
     staleTime: AUTO_REFRESH_INTERVAL * 1000,
     gcTime: 5 * 60 * 1000,
   });
@@ -544,6 +562,15 @@ export default function AppPage() {
               </div>
             </div>
           </motion.div>
+
+          {/* Price History Chart */}
+          {!salesLoading && !error && (
+            <PriceChart
+              sales={salesData || []}
+              gradientFrom={gradient.from}
+              gradientTo={gradient.to}
+            />
+          )}
 
           {/* Right Column - Listings Table */}
           <motion.div
