@@ -44,6 +44,27 @@ export async function getListingBySlug(slug: string, getInvite: boolean) {
   };
 }
 
+export async function getSoldListingsBySlug(slug: string) {
+  await connectDB();
+
+  const sales = await Listing.find({
+    appId: slug,
+    status: "sold",
+  })
+    .sort({ completedAt: -1 })
+    .limit(100)
+    .select("priceUsdc updatedAt appId")
+    .lean();
+
+  const formattedSales = sales.map((sale) => ({
+    timestamp: sale.updatedAt,
+    priceUsdc: sale.priceUsdc,
+    appId: sale.appId,
+  }));
+
+  return formattedSales;
+}
+
 export async function markListingAsSold(slug: string) {
   return Listing.findOneAndUpdate(
     { slug },
