@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { OnboardingModal } from "./OnboardingModal";
 
 const footerLinks = {
   product: [
@@ -9,23 +11,31 @@ const footerLinks = {
     { label: "Sell Invites", href: "/sell" },
   ],
   resources: [
-    { label: "Documentation", href: "https://docs.x402.org", external: true },
-    { label: "GitHub", href: "https://github.com/coinbase/x402", external: true },
+    {
+      label: "GitHub",
+      href: "https://github.com/apoorvlathey/invite-markets",
+      external: true,
+    },
   ],
   social: [
     { label: "Twitter", href: "https://twitter.com/apoorveth", external: true },
-    { label: "Farcaster", href: "https://farcaster.xyz/~/channel/x402", external: true },
+    {
+      label: "Farcaster",
+      href: "https://farcaster.xyz/~/channel/x402",
+      external: true,
+    },
   ],
 };
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   return (
     <footer className="relative mt-auto border-t border-zinc-800/50">
       {/* Subtle gradient line at top */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
-      
+      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-cyan-500/30 to-transparent" />
+
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-12 md:py-16">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           {/* Brand Column */}
@@ -49,7 +59,9 @@ export function Footer() {
             </p>
             <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              <span className="text-xs font-medium text-cyan-300">Powered by x402</span>
+              <span className="text-xs font-medium text-cyan-300">
+                Powered by x402
+              </span>
             </div>
           </div>
 
@@ -78,6 +90,15 @@ export function Footer() {
               Resources
             </h4>
             <ul className="space-y-3">
+              {/* Help button that triggers onboarding modal */}
+              <li>
+                <button
+                  onClick={() => setShowOnboarding(true)}
+                  className="text-sm text-zinc-500 hover:text-cyan-400 transition-colors cursor-pointer"
+                >
+                  Help
+                </button>
+              </li>
               {footerLinks.resources.map((link) => (
                 <li key={link.label}>
                   <a
@@ -147,7 +168,7 @@ export function Footer() {
             <p className="text-sm text-zinc-600">
               © {currentYear} invite.markets. All rights reserved.
             </p>
-            
+
             {/* Built on Base badge */}
             <div className="flex items-center gap-3">
               <span className="text-xs text-zinc-600">Built on</span>
@@ -164,7 +185,14 @@ export function Footer() {
           </div>
         </div>
       </div>
+
+      {/* Onboarding Modal triggered by Help */}
+      {showOnboarding && (
+        <OnboardingModal
+          forceShow={true}
+          onClose={() => setShowOnboarding(false)}
+        />
+      )}
     </footer>
   );
 }
-
