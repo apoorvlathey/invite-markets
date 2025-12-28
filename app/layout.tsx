@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
 import { Providers } from "@/app/providers";
 import { Navbar } from "@/app/components/Navbar";
+import { Footer } from "@/app/components/Footer";
 import NextTopLoader from "nextjs-toploader";
 
 const geistSans = Geist({
@@ -75,7 +76,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-zinc-100 min-h-screen overflow-x-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-zinc-100 min-h-screen overflow-x-hidden flex flex-col`}
       >
         {/* Animated gradient orbs background */}
         <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
@@ -172,7 +173,8 @@ export default function RootLayout({
         />
         <Providers>
           <Navbar />
-          {children}
+          <main className="flex-1">{children}</main>
+          <Footer />
         </Providers>
       </body>
     </html>
