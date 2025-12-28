@@ -76,9 +76,15 @@ export function OnboardingModal({ forceShow, onClose }: OnboardingModalProps) {
 
     const shouldOpen = getInitialOpenState(forceShow);
     if (shouldOpen) {
-      // Small delay for better UX
-      const timer = setTimeout(() => setIsOpen(true), 1000);
-      return () => clearTimeout(timer);
+      if (forceShow) {
+        // Show immediately when force triggered (e.g., from Help button)
+        setCurrentStep(0); // Reset to first step
+        setIsOpen(true);
+      } else {
+        // Small delay for better UX on first visit
+        const timer = setTimeout(() => setIsOpen(true), 1000);
+        return () => clearTimeout(timer);
+      }
     }
   }, [forceShow]);
 
