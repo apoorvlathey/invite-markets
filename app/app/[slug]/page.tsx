@@ -382,9 +382,9 @@ export default function AppPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="lg:col-span-1"
+            className="lg:col-span-1 flex"
           >
-            <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden sticky top-24">
+            <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden flex flex-col flex-1">
               {/* Gradient Header Bar */}
               <div
                 className="h-1.5"
@@ -474,7 +474,7 @@ export default function AppPage() {
               )}
 
               {/* App Info */}
-              <div className="p-6">
+              <div className="p-6 flex-1 flex flex-col">
                 <div className="flex items-start justify-between gap-3 mb-3">
                   {isFeatured && featuredApp?.siteUrl ? (
                     <a
@@ -537,7 +537,7 @@ export default function AppPage() {
                 </div>
 
                 {/* CTA */}
-                <Link href="/sell">
+                <Link href="/sell" className="mt-auto">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -565,19 +565,27 @@ export default function AppPage() {
 
           {/* Price History Chart */}
           {!salesLoading && !error && (
-            <PriceChart
-              sales={salesData || []}
-              gradientFrom={gradient.from}
-              gradientTo={gradient.to}
-            />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="lg:col-span-2 flex"
+            >
+              <PriceChart
+                sales={salesData || []}
+                gradientFrom={gradient.from}
+                gradientTo={gradient.to}
+                className="flex-1"
+              />
+            </motion.div>
           )}
 
-          {/* Right Column - Listings Table */}
+          {/* Listings Table - Full Width */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="lg:col-span-2"
+            className="lg:col-span-3"
           >
             {/* Header */}
             <div className="flex items-center justify-between gap-4 mb-6">
