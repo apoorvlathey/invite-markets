@@ -606,7 +606,7 @@ export default function SellPage() {
                   required
                   min="0"
                   step="0.01"
-                  placeholder="10.00"
+                  placeholder="1.00"
                   className="w-full px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <span className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">
@@ -675,6 +675,11 @@ export default function SellPage() {
                 </div>
               </motion.div>
             )}
+
+            {/* Fee Info */}
+            <p className="text-xs text-zinc-500 text-center">
+              Fees: 5% platform · 0.3% facilitator
+            </p>
 
             {error && (
               <motion.div
