@@ -261,9 +261,30 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-8">
-            Featured Apps
-          </h2>
+          <div className="flex items-center gap-4 mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+              Featured Apps
+            </h2>
+            <Link
+              href="/apps"
+              className="flex items-center gap-1 text-sm font-medium text-zinc-400 hover:text-cyan-400 transition-colors translate-y-0.5"
+            >
+              View All
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </Link>
+          </div>
 
           {/* Scrollable carousel */}
           <div className="relative -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8">
@@ -483,25 +504,25 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
                 whileHover={{ y: -4 }}
-                className="group"
+                className="group h-full"
               >
                 <div
                   onClick={() => {
                     NProgress.start();
                     router.push(`/listing/${invite.slug}`);
                   }}
-                  className="relative rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 shadow-lg cursor-pointer"
+                  className="relative rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 shadow-lg cursor-pointer h-full flex flex-col"
                 >
                   {/* Top accent bar with gradient */}
                   <div
-                    className="h-1"
+                    className="h-1 shrink-0"
                     style={{
                       background: `linear-gradient(90deg, ${invite.gradientFrom}, ${invite.gradientTo})`,
                     }}
                   />
 
                   {/* Header */}
-                  <div className="p-6">
+                  <div className="p-6 flex flex-col flex-1">
                     <div className="flex items-start justify-between mb-4">
                       {invite.appIconUrl ? (
                         <div className="w-12 h-12 rounded-lg overflow-hidden border border-zinc-700 bg-white p-1">
@@ -537,11 +558,11 @@ export default function Home() {
                       {invite.app}
                     </h3>
 
-                    <p className="text-sm text-zinc-400 leading-relaxed mb-6">
+                    <p className="text-sm text-zinc-400 leading-relaxed mb-6 flex-1">
                       {invite.description}
                     </p>
 
-                    <div className="mb-6 pb-6 border-b border-zinc-800">
+                    <div className="mb-6 pb-6 border-b border-zinc-800 mt-auto">
                       <p className="text-xs text-zinc-500 mb-2">Seller:</p>
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-center gap-2 min-w-0">
