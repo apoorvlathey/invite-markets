@@ -61,20 +61,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify Turnstile token
-    if (!turnstileToken) {
-      return NextResponse.json(
-        { error: "Captcha verification required" },
-        { status: 400 }
-      );
-    }
+    // Verify Turnstile token (only if TURNSTILE_SECRET_KEY is configured)
+    if (TURNSTILE_SECRET_KEY) {
+      if (!turnstileToken) {
+        return NextResponse.json(
+          { error: "Captcha verification required" },
+          { status: 400 }
+        );
+      }
 
-    const isTurnstileValid = await verifyTurnstile(turnstileToken);
-    if (!isTurnstileValid) {
-      return NextResponse.json(
-        { error: "Captcha verification failed" },
-        { status: 400 }
-      );
+      const isTurnstileValid = await verifyTurnstile(turnstileToken);
+      if (!isTurnstileValid) {
+        return NextResponse.json(
+          { error: "Captcha verification failed" },
+          { status: 400 }
+        );
+      }
     }
 
     // Get IP address for spam detection
