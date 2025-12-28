@@ -2,75 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { createThirdwebClient } from "thirdweb";
-import {
-  ConnectButton,
-  darkTheme,
-  useActiveAccount,
-  useActiveWalletChain,
-} from "thirdweb/react";
-import { base, baseSepolia } from "thirdweb/chains";
-
-const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET === "true";
-const chain = isTestnet ? baseSepolia : base;
-
-const thirdwebClient = createThirdwebClient({
-  clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID!,
-});
-
-// Custom theme matching the website's styling (STYLING.md)
-const customTheme = darkTheme({
-  colors: {
-    // Modal background
-    modalBg: "#09090b", // zinc-950
-    separatorLine: "#27272a", // zinc-800
-
-    // Borders
-    borderColor: "#3f3f46", // zinc-700
-
-    // Primary button (gradient style)
-    primaryButtonBg: "#06b6d4", // cyan-500
-    primaryButtonText: "#000000",
-
-    // Secondary button
-    secondaryButtonBg: "#27272a", // zinc-800
-    secondaryButtonText: "#fafafa", // zinc-50
-    secondaryButtonHoverBg: "#3f3f46", // zinc-700
-
-    // Connected button background
-    connectedButtonBg: "#27272a", // zinc-800
-    connectedButtonBgHover: "#3f3f46", // zinc-700
-
-    // Text colors
-    primaryText: "#fafafa", // zinc-50
-    secondaryText: "#a1a1aa", // zinc-400
-
-    // Accent color
-    accentText: "#06b6d4", // cyan-500
-    accentButtonBg: "#06b6d4", // cyan-500
-    accentButtonText: "#000000",
-
-    // Skeleton loading
-    skeletonBg: "#27272a", // zinc-800
-
-    // Danger
-    danger: "#ef4444", // red-500
-
-    // Success
-    success: "#10b981", // emerald-500
-  },
-});
+import { ConnectButton } from "@/app/components/ConnectButton";
 
 export function Navbar() {
-  const activeAccount = useActiveAccount();
-  const activeChain = useActiveWalletChain();
-
-  const shortAddress = activeAccount?.address
-    ? `${activeAccount.address.slice(0, 6)}...${activeAccount.address.slice(
-        -4
-      )}`
-    : "";
-
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10">
       {/* Navbar background */}
@@ -152,48 +86,7 @@ export function Navbar() {
                 style={{ zIndex: -1 }}
               />
             </Link>
-            <ConnectButton
-              client={thirdwebClient}
-              chains={[chain]}
-              theme={customTheme}
-              connectButton={{
-                label: "Connect",
-                style: {
-                  padding: "12px 24px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  borderRadius: "12px",
-                  border: "1px solid #3f3f46", // zinc-700
-                  background: "#27272a", // zinc-800
-                  color: "#fafafa", // white
-                  cursor: "pointer",
-                  transition: "all 150ms ease",
-                },
-              }}
-              detailsButton={{
-                render: () => (
-                  <button className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-xl border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 transition-all cursor-pointer">
-                    {/* Chain icon */}
-                    {activeChain && (
-                      <div className="flex items-center gap-1.5 pr-2 border-r border-zinc-600">
-                        <Image
-                          src="/images/base.svg"
-                          alt={activeChain.name || "Chain"}
-                          width={18}
-                          height={18}
-                          className="rounded-full"
-                        />
-                        <span className="text-zinc-400 text-xs">
-                          {isTestnet ? "Sepolia" : "Base"}
-                        </span>
-                      </div>
-                    )}
-                    {/* Wallet address */}
-                    <span className="text-zinc-100">{shortAddress}</span>
-                  </button>
-                ),
-              }}
-            />
+            <ConnectButton />
           </div>
         </div>
       </div>

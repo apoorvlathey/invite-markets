@@ -14,7 +14,7 @@ const footerLinks = {
   ],
   social: [
     { label: "Twitter", href: "https://twitter.com/apoorveth", external: true },
-    { label: "Farcaster", href: "https://warpcast.com/~/channel/x402", external: true },
+    { label: "Farcaster", href: "https://farcaster.xyz/~/channel/x402", external: true },
   ],
 };
 
