@@ -15,7 +15,6 @@ const WaitlistSchema = new mongoose.Schema<IWaitlist>(
       required: true,
       lowercase: true,
       trim: true,
-      index: true,
     },
     xUsername: {
       type: String,
