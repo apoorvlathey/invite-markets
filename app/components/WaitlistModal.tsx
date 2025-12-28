@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { motion } from "framer-motion";
 import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 import { CheckCircle, Loader2, Sparkles } from "lucide-react";
 
@@ -154,23 +153,13 @@ export function WaitlistModal({ onSuccess }: WaitlistModalProps) {
       </div>
 
       {/* Content */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative z-10 w-full max-w-md mx-4"
-      >
+      <div className="relative z-10 w-full max-w-md mx-4 animate-fade-in-up">
         {isSuccess ? (
           /* Success State */
           <div className="text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", damping: 15 }}
-              className="inline-flex items-center justify-center w-20 h-20 mb-6 rounded-full bg-emerald-500/20 border border-emerald-500/40"
-            >
+            <div className="inline-flex items-center justify-center w-20 h-20 mb-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 animate-scale-in">
               <CheckCircle className="w-10 h-10 text-emerald-400" />
-            </motion.div>
+            </div>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">
               You&apos;re on the list!
             </h2>
@@ -182,12 +171,7 @@ export function WaitlistModal({ onSuccess }: WaitlistModalProps) {
           /* Form State */
           <div className="text-center">
             {/* Badge */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.1, type: "spring" }}
-              className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-cyan-500/10 border border-cyan-500/30"
-            >
+            <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-cyan-500/10 border border-cyan-500/30 animate-scale-in">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
@@ -195,7 +179,7 @@ export function WaitlistModal({ onSuccess }: WaitlistModalProps) {
               <span className="text-sm font-medium text-cyan-300">
                 Coming Soon
               </span>
-            </motion.div>
+            </div>
 
             {/* Header */}
             <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
@@ -265,22 +249,16 @@ export function WaitlistModal({ onSuccess }: WaitlistModalProps) {
 
               {/* Error Message */}
               {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"
-                >
+                <div className="px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm animate-fade-in">
                   {error}
-                </motion.div>
+                </div>
               )}
 
               {/* Submit Button - Primary CTA with gradient */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <button
                 type="submit"
                 disabled={isSubmitting}
-                className="group relative w-full py-3 rounded-xl font-semibold text-black bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25"
+                className="group relative w-full py-3 rounded-xl font-semibold text-black bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25"
               >
                 {isSubmitting ? (
                   <>
@@ -293,58 +271,19 @@ export function WaitlistModal({ onSuccess }: WaitlistModalProps) {
                     <Sparkles className="w-4 h-4" />
                   </>
                 )}
-              </motion.button>
+              </button>
             </form>
 
-            {/* Twitter link with animated gradient border */}
-            <div className="relative mt-8 inline-block">
-              {/* Rotating gradient border */}
-              <div className="absolute -inset-[2px] rounded-xl overflow-hidden">
-                <motion.div
-                  className="absolute top-1/2 left-1/2 w-[200%] aspect-square -translate-x-1/2 -translate-y-1/2"
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: 2.5,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                >
-                  {/* Core gradient line */}
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        "conic-gradient(from 0deg, transparent 0deg, transparent 300deg, #00ffff 315deg, #00d4ff 325deg, #0099ff 335deg, #a855f7 345deg, #ff00ff 352deg, #ffffff 357deg, transparent 360deg)",
-                    }}
-                  />
-                  {/* Inner glow */}
-                  <div
-                    className="absolute inset-0 blur-xs"
-                    style={{
-                      background:
-                        "conic-gradient(from 0deg, transparent 0deg, transparent 300deg, #00ffff 315deg, #00d4ff 325deg, #0099ff 335deg, #a855f7 345deg, #ff00ff 352deg, #ffffff 357deg, transparent 360deg)",
-                    }}
-                  />
-                  {/* Outer glow */}
-                  <div
-                    className="absolute inset-0 blur-lg"
-                    style={{
-                      background:
-                        "conic-gradient(from 0deg, transparent 0deg, transparent 295deg, #00ffff 315deg, #0099ff 335deg, #a855f7 348deg, #ff00ff 355deg, transparent 360deg)",
-                    }}
-                  />
-                </motion.div>
-              </div>
-              {/* Subtle base border */}
-              <div className="absolute -inset-px rounded-xl bg-zinc-700/30" />
+            {/* Twitter link with gradient border */}
+            <div className="relative mt-8 inline-block group">
+              {/* Gradient border */}
+              <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500 opacity-50 group-hover:opacity-100 transition-opacity" />
               {/* Button content */}
-              <motion.a
+              <a
                 href="https://x.com/invitemarkets"
                 target="_blank"
                 rel="noopener noreferrer"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="group relative inline-flex items-center gap-3 px-5 py-2.5 rounded-xl bg-zinc-900 cursor-pointer"
+                className="relative inline-flex items-center gap-3 px-5 py-2.5 rounded-xl bg-zinc-900 active:scale-[0.98] transition-transform"
               >
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 group-hover:bg-cyan-500/20 transition-colors">
                   <svg
@@ -358,7 +297,7 @@ export function WaitlistModal({ onSuccess }: WaitlistModalProps) {
                 <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">
                   Follow @invitemarkets
                 </span>
-              </motion.a>
+              </a>
             </div>
 
             {/* Footer text */}
@@ -367,7 +306,7 @@ export function WaitlistModal({ onSuccess }: WaitlistModalProps) {
             </p>
           </div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }
