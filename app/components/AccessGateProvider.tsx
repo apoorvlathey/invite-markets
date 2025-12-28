@@ -52,8 +52,9 @@ export function AccessGateProvider({ children }: AccessGateProviderProps) {
       setIsWhitelistMode(data.isWhitelistMode);
     } catch (error) {
       console.error("Error checking access:", error);
-      // On error, default to allowing access to not block users
-      setHasAccess(true);
+      // In whitelist mode, fail closed on error to avoid granting unintended access
+      setHasAccess(false);
+      setIsWhitelistMode(true);
     } finally {
       setIsLoading(false);
     }
