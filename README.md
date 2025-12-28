@@ -113,6 +113,8 @@ NEXT_PUBLIC_BASE_RPC_URL=            # Basename resolution
 - Site Key: `1x00000000000000000000AA`
 - Secret Key: `1x0000000000000000000000000000000AA`
 
+These are official Cloudflare Turnstile **always-pass test keys**, intended **only for localhost and development**. They do **not** provide real bot protection and **must not** be used in production. For production deployments, generate your own Turnstile site and secret keys from the Cloudflare dashboard and configure them via environment variables.
+
 ## Project Structure
 
 ```
