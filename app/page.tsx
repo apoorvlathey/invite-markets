@@ -12,6 +12,7 @@ import { timeAgo } from "@/lib/time";
 import { usePurchase, LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
 import { QuickBuyButton } from "@/app/components/QuickBuyButton";
 import { PaymentSuccessModal } from "@/app/components/PaymentSuccessModal";
+import { OnboardingModal } from "@/app/components/OnboardingModal";
 import {
   RefreshIndicator,
   AUTO_REFRESH_INTERVAL,
@@ -697,6 +698,9 @@ export default function Home() {
         inviteUrl={inviteUrl || ""}
         onClose={closeSuccessModal}
       />
+
+      {/* First-time Visitor Onboarding */}
+      <OnboardingModal />
     </main>
   );
 }
