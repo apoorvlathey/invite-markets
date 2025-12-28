@@ -8,7 +8,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { motion } from "framer-motion";
 
 interface SaleData {
   timestamp: string;
@@ -20,12 +19,14 @@ interface PriceChartProps {
   sales: SaleData[];
   gradientFrom: string;
   gradientTo: string;
+  className?: string;
 }
 
 export function PriceChart({
   sales,
   gradientFrom,
   gradientTo,
+  className,
 }: PriceChartProps) {
   const chartData = useMemo(() => {
     if (!sales || sales.length === 0) return [];
@@ -94,10 +95,8 @@ export function PriceChart({
 
   if (chartData.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl bg-zinc-950 border border-zinc-800 p-8 mb-6"
+      <div
+        className={`rounded-xl bg-zinc-950 border border-zinc-800 p-8 flex flex-col justify-center ${className || ""}`}
       >
         <div className="text-center">
           <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
@@ -122,15 +121,13 @@ export function PriceChart({
             Price history will appear after the first sale
           </p>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden mb-6 lg:col-span-2"
+    <div
+      className={`rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden flex flex-col ${className || ""}`}
     >
       <div className="px-5 py-4 border-b border-zinc-800">
         <h3 className="text-lg font-bold text-white mb-3">Price History</h3>
@@ -252,6 +249,6 @@ export function PriceChart({
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </motion.div>
+    </div>
   );
 }
