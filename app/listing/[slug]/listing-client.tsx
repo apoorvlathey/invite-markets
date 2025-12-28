@@ -13,7 +13,6 @@ import {
   useResolveAddresses,
   getSellerDisplayInfo,
 } from "@/lib/resolve-addresses";
-import { getExplorerAddressUrl } from "@/lib/chain";
 import { timeAgo } from "@/lib/time";
 import { fetchEthosScores } from "@/lib/ethos-scores";
 import {
@@ -820,10 +819,8 @@ export default function ListingClient() {
                   <div className="min-w-0">
                     {sellerInfo?.resolvedType ? (
                       <>
-                        <a
-                          href={sellerInfo.linkUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <Link
+                          href={`/profile/${listing.sellerAddress}`}
                           className="font-semibold text-base text-white flex items-center gap-1.5 hover:text-cyan-400 transition-colors"
                         >
                           {sellerInfo.resolvedType === "farcaster" && "@"}
@@ -837,25 +834,21 @@ export default function ListingClient() {
                               className="inline-block opacity-70"
                             />
                           )}
-                        </a>
-                        <a
-                          href={getExplorerAddressUrl(listing.sellerAddress)}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        </Link>
+                        <Link
+                          href={`/profile/${listing.sellerAddress}`}
                           className="text-sm text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
                         >
                           {sellerInfo.shortAddress}
-                        </a>
+                        </Link>
                       </>
                     ) : (
-                      <a
-                        href={getExplorerAddressUrl(listing.sellerAddress)}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Link
+                        href={`/profile/${listing.sellerAddress}`}
                         className="font-mono text-sm text-zinc-300 hover:text-cyan-400 transition-colors"
                       >
                         {listing.sellerAddress}
-                      </a>
+                      </Link>
                     )}
                   </div>
                 </div>
@@ -863,7 +856,7 @@ export default function ListingClient() {
                 {/* Ethos Score */}
                 {ethosScore !== null && (
                   <a
-                    href={`https://ethos.network/profile/${listing.sellerAddress}`}
+                    href={`https://app.ethos.network/profile/${listing.sellerAddress}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="shrink-0 group"

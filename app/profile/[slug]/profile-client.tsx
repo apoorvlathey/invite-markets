@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { blo } from "blo";
-import { useResolveAddresses, getSellerDisplayInfo } from "@/lib/resolve-addresses";
+import {
+  useResolveAddresses,
+  getSellerDisplayInfo,
+} from "@/lib/resolve-addresses";
 import { getExplorerAddressUrl } from "@/lib/chain";
+import { fetchEthosScores } from "@/lib/ethos-scores";
 
 interface ProfileClientProps {
   address: string;
@@ -71,11 +75,25 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 }
 
 export default function ProfileClient({ address }: ProfileClientProps) {
+  const router = useRouter();
   const { resolvedAddresses, isLoading } = useResolveAddresses([address]);
   const displayInfo = getSellerDisplayInfo(address, resolvedAddresses);
+  const [ethosScore, setEthosScore] = useState<number | null>(null);
 
   // Generate blockie avatar as fallback
   const bloAvatar = blo(address as `0x${string}`);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Fetch Ethos score
+  useEffect(() => {
+    fetchEthosScores([address]).then((scores) => {
+      setEthosScore(scores[address.toLowerCase()] ?? null);
+    });
+  }, [address]);
 
   return (
     <div className="min-h-screen text-zinc-100">
@@ -98,9 +116,9 @@ export default function ProfileClient({ address }: ProfileClientProps) {
           animate={{ opacity: 1, x: 0 }}
           className="mb-8"
         >
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors cursor-pointer"
           >
             <svg
               className="w-4 h-4"
@@ -115,8 +133,8 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            <span className="text-sm font-medium">Back to Home</span>
-          </Link>
+            <span className="text-sm font-medium">Back</span>
+          </button>
         </motion.div>
 
         {/* Profile Card */}
@@ -127,8 +145,8 @@ export default function ProfileClient({ address }: ProfileClientProps) {
           className="rounded-2xl bg-zinc-950 border border-zinc-800 shadow-premium overflow-hidden"
         >
           {/* Header gradient */}
-          <div className="h-24 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 relative">
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]" />
+          <div className="h-24 bg-linear-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 relative">
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-size-[40px_40px]" />
           </div>
 
           {/* Avatar */}
@@ -184,6 +202,52 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                 </p>
               )}
             </motion.div>
+
+            {/* Ethos Score */}
+            {ethosScore !== null && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+                className="mt-6"
+              >
+                <a
+                  href={`https://app.ethos.network/profile/${address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:border-emerald-500/50 transition-colors cursor-pointer group"
+                >
+                  <Image
+                    src="/images/ethos.svg"
+                    alt="Ethos"
+                    width={24}
+                    height={24}
+                    className="opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-emerald-300/70">
+                      Ethos Score:
+                    </span>
+                    <span className="text-lg font-bold text-emerald-400">
+                      {ethosScore}
+                    </span>
+                  </div>
+                  <svg
+                    className="w-4 h-4 text-emerald-400/50 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all ml-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
+                  </svg>
+                </a>
+              </motion.div>
+            )}
 
             {/* Full address */}
             <motion.div
@@ -299,4 +363,3 @@ export default function ProfileClient({ address }: ProfileClientProps) {
     </div>
   );
 }
-

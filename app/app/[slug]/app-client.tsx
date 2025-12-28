@@ -13,7 +13,6 @@ import {
   useResolveAddresses,
   getSellerDisplayInfo,
 } from "@/lib/resolve-addresses";
-import { getExplorerAddressUrl } from "@/lib/chain";
 import { usePurchase, LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
 import { PaymentSuccessModal } from "@/app/components/PaymentSuccessModal";
 import { QuickBuyButton } from "@/app/components/QuickBuyButton";
@@ -831,10 +830,8 @@ export default function AppPageClient() {
                         <div className="min-w-0">
                           {sellerInfo.resolvedType ? (
                             <>
-                              <a
-                                href={sellerInfo.linkUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <Link
+                                href={`/profile/${listing.sellerAddress}`}
                                 onClick={(e) => e.stopPropagation()}
                                 className="font-medium text-sm text-white flex items-center gap-1 hover:text-cyan-400 transition-colors truncate"
                               >
@@ -849,31 +846,23 @@ export default function AppPageClient() {
                                     className="inline-block opacity-60"
                                   />
                                 )}
-                              </a>
-                              <a
-                                href={getExplorerAddressUrl(
-                                  listing.sellerAddress
-                                )}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              </Link>
+                              <Link
+                                href={`/profile/${listing.sellerAddress}`}
                                 onClick={(e) => e.stopPropagation()}
                                 className="text-xs text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
                               >
                                 {sellerInfo.shortAddress}
-                              </a>
+                              </Link>
                             </>
                           ) : (
-                            <a
-                              href={getExplorerAddressUrl(
-                                listing.sellerAddress
-                              )}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <Link
+                              href={`/profile/${listing.sellerAddress}`}
                               onClick={(e) => e.stopPropagation()}
                               className="font-mono text-sm text-zinc-300 hover:text-cyan-400 transition-colors"
                             >
                               {sellerInfo.shortAddress}
-                            </a>
+                            </Link>
                           )}
                         </div>
                       </div>
@@ -895,7 +884,7 @@ export default function AppPageClient() {
                         </span>
                         {listing.ethosScore !== null ? (
                           <a
-                            href={`https://ethos.network/profile/${listing.sellerAddress}`}
+                            href={`https://app.ethos.network/profile/${listing.sellerAddress}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
