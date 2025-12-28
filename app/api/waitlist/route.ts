@@ -166,13 +166,23 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Check if message is recent (within 5 minutes)
+      // Check if message is recent (within 5 minutes, not in the future)
       const timestampMatch = message.match(/Timestamp: (\d+)/);
       if (timestampMatch) {
         const messageTimestamp = parseInt(timestampMatch[1]);
         const now = Date.now();
         const fiveMinutes = 5 * 60 * 1000;
-        if (Math.abs(now - messageTimestamp) > fiveMinutes) {
+        
+        // Reject future timestamps (with small grace period for clock skew)
+        if (messageTimestamp > now + 30000) {
+          return NextResponse.json(
+            { error: "Invalid timestamp" },
+            { status: 401 }
+          );
+        }
+        
+        // Reject timestamps older than 5 minutes
+        if (now - messageTimestamp > fiveMinutes) {
           return NextResponse.json(
             { error: "Signature expired" },
             { status: 401 }
