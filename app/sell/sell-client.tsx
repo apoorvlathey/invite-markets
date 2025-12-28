@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,6 +15,13 @@ import { featuredApps } from "@/data/featuredApps";
 import { LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
 import { type Listing, type ListingsData } from "@/lib/listings";
 import { chainId as defaultChainId } from "@/lib/chain";
+
+interface ExistingApp {
+  id: string;
+  name: string;
+  iconUrl: string;
+  isFeatured: boolean;
+}
 
 export default function SellClient() {
   const router = useRouter();
@@ -36,25 +44,86 @@ export default function SellClient() {
   const [selectedApp, setSelectedApp] = useState<{
     id: string;
     appName: string;
+    appIconUrl?: string;
   } | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [isValueConfirmed, setIsValueConfirmed] = useState(false);
   const [lowestPrice, setLowestPrice] = useState<number | null>(null);
+  const [existingApps, setExistingApps] = useState<ExistingApp[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inviteUrlInputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch existing apps on mount
+  useEffect(() => {
+    const fetchExistingApps = async () => {
+      try {
+        const response = await fetch("/api/apps");
+        const data = await response.json();
+        if (data.success) {
+          // Filter out featured apps (we show them separately)
+          const nonFeaturedApps = data.apps.filter(
+            (app: ExistingApp) => !app.isFeatured
+          );
+          setExistingApps(nonFeaturedApps);
+        }
+      } catch (error) {
+        console.error("Error fetching existing apps:", error);
+      }
+    };
+
+    fetchExistingApps();
+  }, []);
+
   // Filter featured apps based on input
-  const filteredApps = featuredApps.filter((app) =>
+  const filteredFeaturedApps = featuredApps.filter((app) =>
     app.appName.toLowerCase().includes(formData.appInput.toLowerCase())
   );
 
-  // Create dropdown items list (featured apps + custom app if no matches)
-  const dropdownItems =
-    filteredApps.length > 0
-      ? filteredApps
-      : formData.appInput
-      ? [{ id: "custom", appName: formData.appInput }]
-      : [];
+  // Filter existing apps based on input
+  const filteredExistingApps = existingApps.filter((app) =>
+    app.name.toLowerCase().includes(formData.appInput.toLowerCase())
+  );
+
+  // Create dropdown items list with sections
+  const dropdownItems = useMemo(() => {
+    const items: {
+      id: string;
+      appName: string;
+      appIconUrl?: string;
+      section: "featured" | "existing" | "custom";
+    }[] = [];
+
+    // Add filtered featured apps
+    for (const app of filteredFeaturedApps) {
+      items.push({
+        id: app.id,
+        appName: app.appName,
+        appIconUrl: app.appIconUrl,
+        section: "featured",
+      });
+    }
+
+    // Add filtered existing apps
+    for (const app of filteredExistingApps) {
+      items.push({
+        id: app.id,
+        appName: app.name,
+        appIconUrl: app.iconUrl,
+        section: "existing",
+      });
+    }
+
+    // Add custom option if no matches and there's input
+    if (items.length === 0 && formData.appInput) {
+      items.push({
+        id: "custom",
+        appName: formData.appInput,
+        section: "custom",
+      });
+    }
+
+    return items;
+  }, [filteredFeaturedApps, filteredExistingApps, formData.appInput]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -407,7 +476,15 @@ export default function SellClient() {
                           if (dropdownItems.length > 0) {
                             const selected = dropdownItems[highlightedIndex];
                             if (selected.id !== "custom") {
-                              setSelectedApp(selected);
+                              const appIconUrl =
+                                "appIconUrl" in selected
+                                  ? selected.appIconUrl
+                                  : undefined;
+                              setSelectedApp({
+                                id: selected.id,
+                                appName: selected.appName,
+                                appIconUrl,
+                              });
                             } else {
                               setSelectedApp(null);
                             }
@@ -439,6 +516,23 @@ export default function SellClient() {
                 ) : (
                   <div className="w-full px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center gap-2">
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-600">
+                      <div className="w-5 h-5 rounded overflow-hidden border border-zinc-500 bg-white p-0.5 shrink-0 flex items-center justify-center relative">
+                        {/* Fallback letter (always rendered, behind image) */}
+                        <span className="text-[10px] font-bold text-zinc-800 absolute inset-0 flex items-center justify-center">
+                          {formData.appInput.charAt(0).toUpperCase()}
+                        </span>
+                        {/* Image (on top, hides fallback when loaded) */}
+                        {selectedApp?.appIconUrl && (
+                          <Image
+                            src={selectedApp.appIconUrl}
+                            alt={selectedApp.appName}
+                            width={16}
+                            height={16}
+                            className="rounded-sm object-contain w-full h-full relative z-10 bg-white"
+                            unoptimized
+                          />
+                        )}
+                      </div>
                       <span className="text-zinc-100 font-medium">
                         {formData.appInput}
                       </span>
@@ -482,9 +576,8 @@ export default function SellClient() {
                       transition={{ duration: 0.15 }}
                       className="absolute z-50 w-full mt-2 rounded-xl bg-zinc-900 border border-zinc-700 shadow-2xl overflow-hidden"
                     >
-                      <div className="max-h-48 overflow-y-auto">
+                      <div className="max-h-64 overflow-y-auto">
                         {dropdownItems.map((item, index) => {
-                          const isFeatured = item.id !== "custom";
                           const isHighlighted = index === highlightedIndex;
 
                           return (
@@ -492,8 +585,12 @@ export default function SellClient() {
                               key={item.id}
                               type="button"
                               onClick={() => {
-                                if (isFeatured) {
-                                  setSelectedApp(item);
+                                if (item.section !== "custom") {
+                                  setSelectedApp({
+                                    id: item.id,
+                                    appName: item.appName,
+                                    appIconUrl: item.appIconUrl,
+                                  });
                                 } else {
                                   setSelectedApp(null);
                                 }
@@ -511,10 +608,29 @@ export default function SellClient() {
                                   : "hover:bg-zinc-800/50"
                               }`}
                             >
-                              <span className="text-zinc-100 font-medium">
-                                {item.appName}
-                              </span>
-                              {isFeatured ? (
+                              <div className="flex items-center gap-3">
+                                <div className="w-7 h-7 rounded-lg overflow-hidden border border-zinc-600 bg-white p-0.5 shrink-0 flex items-center justify-center relative">
+                                  {/* Fallback letter (always rendered, behind image) */}
+                                  <span className="text-xs font-bold text-zinc-800 absolute inset-0 flex items-center justify-center">
+                                    {item.appName.charAt(0).toUpperCase()}
+                                  </span>
+                                  {/* Image (on top, hides fallback when loaded) */}
+                                  {item.appIconUrl && (
+                                    <Image
+                                      src={item.appIconUrl}
+                                      alt={item.appName}
+                                      width={24}
+                                      height={24}
+                                      className="rounded object-contain w-full h-full relative z-10 bg-white"
+                                      unoptimized
+                                    />
+                                  )}
+                                </div>
+                                <span className="text-zinc-100 font-medium">
+                                  {item.appName}
+                                </span>
+                              </div>
+                              {item.section === "featured" ? (
                                 <span
                                   className={`px-2 py-1 rounded-lg bg-cyan-500/20 border border-cyan-500/30 text-xs text-cyan-400 font-medium transition-all ${
                                     isHighlighted
@@ -524,11 +640,11 @@ export default function SellClient() {
                                 >
                                   Featured
                                 </span>
-                              ) : (
+                              ) : item.section === "custom" ? (
                                 <span className="text-xs text-zinc-500">
                                   Press Enter to select
                                 </span>
-                              )}
+                              ) : null}
                             </button>
                           );
                         })}
@@ -835,4 +951,3 @@ export default function SellClient() {
     </div>
   );
 }
-
