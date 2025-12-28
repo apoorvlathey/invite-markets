@@ -75,7 +75,7 @@ export function AccessGateProvider({ children }: AccessGateProviderProps) {
 
   // If in whitelist mode and no access, but not on invite/admin paths, show waitlist
   if (isWhitelistMode && !hasAccess && !isInvitePath && !isAdminPath) {
-    return <WaitlistModal />;
+    return <WaitlistModal onSuccess={checkAccess} />;
   }
 
   // Has access or on special paths, render children
