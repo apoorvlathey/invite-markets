@@ -6,21 +6,26 @@ A marketplace for buying and selling exclusive invite links to the hottest web3 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square)
 ![Base](https://img.shields.io/badge/Network-Base-0052FF?style=flat-square)
 
-## Overview
-
-invite.markets connects sellers who have exclusive app invites with buyers who want early access. Sellers list their invite links at their desired price in USDC, and buyers can instantly purchase them through the x402 payment protocol — no escrow, no waiting.
-
-### Features
+## Features
 
 - 🎟️ **Invite Marketplace** — Browse and purchase invite links for web3 apps
 - 💰 **Instant USDC Payments** — Powered by x402 protocol on Base
 - 🔐 **Signature-Verified Listings** — EIP-712 signed listings ensure authenticity
 - ⭐ **Seller Reputation** — Ethos Network integration for trust scores
-- 🏷️ **Featured Apps** — Highlighted apps with custom icons
-- 👛 **Multi-Wallet Support** — Connect via MetaMask, Coinbase Wallet, WalletConnect, and more
-- 🎨 **Modern UI** — Beautiful animations with Framer Motion
+- 🏷️ **Featured Apps** — Highlighted apps with custom branding
+- 👛 **Multi-Wallet Support** — Via Thirdweb (MetaMask, Coinbase Wallet, WalletConnect, etc.)
+- 🎨 **Modern UI** — Beautiful dark theme with Framer Motion animations
+- 🔒 **Whitelist Mode** — Optional gated access with waitlist
 
 ## How It Works
+
+### For Buyers
+
+1. Browse trending invites on the homepage or `/apps`
+2. Check seller reputation via Ethos score
+3. Click to view listing details
+4. Connect wallet and pay with USDC
+5. Instantly receive the invite URL
 
 ### For Sellers
 
@@ -28,55 +33,87 @@ invite.markets connects sellers who have exclusive app invites with buyers who w
 2. Select an app (featured or custom) and enter your invite URL
 3. Set your price in USDC
 4. Sign the listing with your wallet (no gas required)
-5. Your invite is live! Get paid instantly when someone buys
+5. Get paid instantly when someone buys
 
-### For Buyers
+## Pages
 
-1. Browse trending invites on the homepage
-2. Check seller reputation via Ethos score
-3. Click to view listing details
-4. Connect wallet and pay with USDC
-5. Instantly receive the invite URL
+| Route                | Description                            |
+| -------------------- | -------------------------------------- |
+| `/`                  | Homepage with trending invites         |
+| `/apps`              | Browse all apps with available invites |
+| `/app/[slug]`        | App-specific listing page              |
+| `/listing/[slug]`    | Individual listing detail & purchase   |
+| `/sell`              | Create a new listing                   |
+| `/profile/[address]` | Seller profile with listings & sales   |
+| `/admin`             | Waitlist dashboard (SIWE protected)    |
+| `/invite/[code]`     | Exclusive access verification          |
+
+## Whitelist & Waitlist System
+
+When `NEXT_PUBLIC_IS_ONLY_WHITELIST=true`, the site operates in gated access mode:
+
+- **Waitlist Form** — Users without access see a waitlist signup form
+- **Cloudflare Turnstile** — Captcha protection against spam
+- **Invite Links** — Users with valid `/invite/<code>` URLs get permanent access via cookie
+- **Admin Dashboard** — View waitlist entries at `/admin` (requires SIWE signature from admin address)
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ and pnpm
-- A wallet on Base or Base Sepolia
 - MongoDB database
-- WalletConnect Project ID ([get one free](https://cloud.walletconnect.com))
+- Thirdweb account ([dashboard](https://thirdweb.com/dashboard))
+- Cloudflare Turnstile keys (for whitelist mode)
 
 ### Installation
-
-1. Clone the repository:
 
 ```bash
 git clone https://github.com/apoorvlathey/invite-markets.git
 cd invite-markets
-```
-
-2. Install dependencies:
-
-```bash
 pnpm install
-```
-
-3. Configure environment variables:
-
-```bash
 cp example.env.local .env.local
-```
-
-Edit `.env.local` with your configuration.
-
-4. Run the development server:
-
-```bash
+# Edit .env.local with your configuration
 pnpm dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000)
+
+## Environment Variables
+
+```env
+# Network
+NEXT_PUBLIC_IS_TESTNET=              # "true" for Base Sepolia, empty for mainnet
+
+# Whitelist Mode
+NEXT_PUBLIC_IS_ONLY_WHITELIST=       # "true" to enable gated access
+INVITE_ACCESS_CODE=                  # Secret code for /invite/<code> URLs
+ADMIN_ETH_ADDRESSES=                 # Comma-separated admin wallet addresses
+
+# Cloudflare Turnstile (captcha)
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=      # Site key (use test key for localhost)
+TURNSTILE_SECRET_KEY=                # Secret key
+
+# Database
+MONGODB_URL=                         # MongoDB connection string
+
+# Thirdweb
+NEXT_PUBLIC_THIRDWEB_CLIENT_ID=      # Client ID from dashboard
+SECRET_KEY=                          # Secret key for server wallet
+SERVER_WALLET=                       # Server wallet address for x402
+
+# Name Resolution
+NEYNAR_API_KEY=                      # Farcaster username resolution
+NEXT_PUBLIC_MAINNET_RPC_URL=         # ENS resolution
+NEXT_PUBLIC_BASE_RPC_URL=            # Basename resolution
+```
+
+**Turnstile Test Keys (localhost):**
+
+- Site Key: `1x00000000000000000000AA`
+- Secret Key: `1x0000000000000000000000000000000AA`
+
+These are official Cloudflare Turnstile **always-pass test keys**, intended **only for localhost and development**. They do **not** provide real bot protection and **must not** be used in production. For production deployments, generate your own Turnstile site and secret keys from the Cloudflare dashboard and configure them via environment variables.
 
 ## Project Structure
 
@@ -84,82 +121,64 @@ pnpm dev
 invite-markets/
 ├── app/
 │   ├── api/
-│   │   ├── listings/          # Listing CRUD endpoints
-│   │   │   ├── route.ts       # GET all, POST create
-│   │   │   └── [slug]/
-│   │   │       └── route.ts   # GET single listing
-│   │   └── purchase/
-│   │       └── [slug]/
-│   │           └── route.ts   # x402-protected purchase endpoint
+│   │   ├── access/check/        # Check whitelist access cookie
+│   │   ├── auth/verify/         # SIWE signature verification
+│   │   ├── invite/verify/       # Validate invite code & set cookie
+│   │   ├── listings/            # Listing CRUD
+│   │   ├── purchase/[slug]/     # x402-protected purchase
+│   │   ├── sales/[slug]/        # Seller sales data
+│   │   └── waitlist/            # Waitlist submissions
+│   ├── admin/                   # Admin dashboard
+│   ├── app/[slug]/              # App-specific page
+│   ├── apps/                    # All apps browser
 │   ├── components/
-│   │   └── PaymentSuccessModal.tsx
-│   ├── listing/
-│   │   └── [slug]/
-│   │       └── page.tsx       # Individual listing page
-│   ├── seller/
-│   │   └── page.tsx           # Seller listing creation
-│   ├── page.tsx               # Homepage / marketplace
-│   ├── layout.tsx             # Root layout with providers
-│   └── providers.tsx          # Wagmi & RainbowKit setup
+│   │   ├── AccessGateProvider   # Whitelist access control
+│   │   ├── WaitlistModal        # Waitlist signup form
+│   │   ├── ConnectButton/       # Thirdweb wallet connection
+│   │   └── ...
+│   ├── invite/[code]/           # Invite code verification
+│   ├── listing/[slug]/          # Listing detail page
+│   ├── profile/[slug]/          # Seller profile
+│   └── sell/                    # Create listing
 ├── data/
-│   └── featuredApps.ts        # Featured app configurations
+│   └── featuredApps.ts          # Featured app configs
 ├── lib/
-│   ├── listing.ts             # Listing utilities
-│   ├── mongoose.ts            # MongoDB connection
-│   ├── signature.ts           # EIP-712 signature verification
-│   └── wagmi.ts               # Wagmi configuration
+│   ├── mongoose.ts              # DB connection
+│   ├── signature.ts             # EIP-712 verification
+│   └── ...
 ├── models/
-│   └── listing.ts             # Mongoose schema
-└── public/
-    └── images/
-        └── appIcons/          # Featured app icons
+│   ├── listing.ts               # Listing schema
+│   ├── waitlist.ts              # Waitlist schema
+│   └── transaction.ts           # Transaction schema
+└── public/images/               # App icons & assets
 ```
 
 ## Tech Stack
 
-- **Framework:** [Next.js 16](https://nextjs.org/) with App Router
-- **Payments:** [x402 Protocol](https://github.com/coinbase/x402) for USDC payments
-- **Database:** MongoDB with Mongoose
-- **Wallet Connection:** [RainbowKit](https://www.rainbowkit.com/) + [Wagmi](https://wagmi.sh/)
-- **Blockchain:** [Base](https://base.org/) (L2)
-- **Reputation:** [Ethos Network](https://ethos.network/) for trust scores
-- **Animations:** [Framer Motion](https://www.framer.com/motion/)
+- **Framework:** Next.js 16 (App Router)
+- **Payments:** x402 Protocol (USDC on Base)
+- **Database:** MongoDB + Mongoose
+- **Wallet:** Thirdweb SDK
+- **Reputation:** Ethos Network
+- **Captcha:** Cloudflare Turnstile
+- **Animations:** Framer Motion
 - **Styling:** Tailwind CSS
-
-## Networks
-
-| Network      | Use Case            | USDC         |
-| ------------ | ------------------- | ------------ |
-| Base Sepolia | Development/Testing | Testnet USDC |
-| Base Mainnet | Production          | Real USDC    |
-
-## Deployment
-
-### Vercel
-
-1. Push your code to GitHub
-2. Import the project in Vercel
-3. Add environment variables
-4. Deploy!
-
-The app is fully compatible with Vercel's Edge Runtime and serverless functions.
 
 ## Security
 
-- All listings are signed with EIP-712 typed data
-- Seller addresses are verified against signatures server-side
+- EIP-712 typed data signatures for listings
+- SIWE (Sign-In with Ethereum) for admin access
+- Cloudflare Turnstile captcha protection
+- HTTP-only cookies for access tokens
+- Server-side signature verification
 - MongoDB injection protection via Mongoose
-- Input validation on both client and server
-- Invite URLs are only revealed after successful payment
+- Invite URLs only revealed after payment
 
-## Contributing
+## Deployment
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Deploy to Vercel:
 
-## License
-
-MIT License
-
----
-
-Built with ❤️ on Base
+1. Push code to GitHub
+2. Import project in Vercel
+3. Add environment variables
+4. Deploy

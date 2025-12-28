@@ -157,11 +157,11 @@ export function PaymentSuccessModal({
                   <label className="text-sm font-medium text-zinc-400 mb-2 block">
                     Your Invite Link:
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-stretch">
                     {/* Animated border container */}
-                    <div className="relative flex-1">
+                    <div className="relative flex-1 p-[2px]">
                       {/* Rotating gradient - uses a larger square that rotates */}
-                      <div className="absolute -inset-[2px] rounded-lg overflow-hidden">
+                      <div className="absolute inset-0 rounded-lg overflow-hidden">
                         {/* Single rotating beam with layered glow */}
                         <motion.div
                           className="absolute top-1/2 left-1/2 w-[200%] aspect-square -translate-x-1/2 -translate-y-1/2"
@@ -199,13 +199,13 @@ export function PaymentSuccessModal({
                         </motion.div>
                       </div>
                       {/* Subtle base border */}
-                      <div className="absolute -inset-px rounded-lg bg-zinc-700/30" />
+                      <div className="absolute inset-[1px] rounded-[7px] bg-zinc-700/30" />
                       {/* Input */}
                       <input
                         type="text"
                         value={inviteUrl}
                         readOnly
-                        className="relative w-full px-3 py-2 bg-zinc-900 rounded-lg text-sm font-mono text-zinc-100 focus:outline-none"
+                        className="relative w-full h-full px-3 py-2.5 bg-zinc-900 rounded-[6px] text-sm font-mono text-zinc-100 focus:outline-none"
                       />
                     </div>
                     <motion.button

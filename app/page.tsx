@@ -292,9 +292,30 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-8">
-            Featured Apps
-          </h2>
+          <div className="flex items-center gap-4 mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+              Featured Apps
+            </h2>
+            <Link
+              href="/apps"
+              className="flex items-center gap-1 text-sm font-medium text-zinc-400 hover:text-cyan-400 transition-colors translate-y-0.5"
+            >
+              View All
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </Link>
+          </div>
 
           {/* Scrollable carousel */}
           <div className="relative -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8">
