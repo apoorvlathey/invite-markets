@@ -4,6 +4,7 @@ import "@/app/globals.css";
 import { Providers } from "@/app/providers";
 import { Navbar } from "@/app/components/Navbar";
 import { Footer } from "@/app/components/Footer";
+import { Analytics } from "@/app/components/Analytics";
 import NextTopLoader from "nextjs-toploader";
 
 const geistSans = Geist({
@@ -81,6 +82,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-zinc-100 min-h-screen overflow-x-hidden flex flex-col`}
       >
+        <Analytics />
         {/* Animated gradient orbs background */}
         <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
           {/* Primary cyan orb - top left */}
