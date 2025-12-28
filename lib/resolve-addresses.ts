@@ -2,7 +2,6 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import { getExplorerAddressUrl } from "@/lib/chain";
 
 // ============================================================================
 // CONFIGURATION
@@ -340,7 +339,7 @@ export function useResolveAddresses(addresses: string[]) {
 
 /**
  * Get the display info for a seller address
- * Returns displayName, avatarUrl, and link URL
+ * Returns displayName, avatarUrl, resolvedType, and shortAddress
  */
 export function getSellerDisplayInfo(
   address: string,
@@ -348,7 +347,6 @@ export function getSellerDisplayInfo(
 ): {
   displayName: string;
   avatarUrl: string | null;
-  linkUrl: string;
   resolvedType: ResolvedType | null;
   shortAddress: string;
 } {
@@ -357,15 +355,9 @@ export function getSellerDisplayInfo(
   const shortAddress = `${address.slice(0, 6)}…${address.slice(-4)}`;
 
   if (resolved) {
-    const linkUrl =
-      resolved.resolvedType === "farcaster"
-        ? `https://farcaster.xyz/${resolved.displayName}`
-        : getExplorerAddressUrl(address);
-
     return {
       displayName: resolved.displayName,
       avatarUrl: resolved.avatarUrl,
-      linkUrl,
       resolvedType: resolved.resolvedType,
       shortAddress,
     };
@@ -374,7 +366,6 @@ export function getSellerDisplayInfo(
   return {
     displayName: shortAddress,
     avatarUrl: null,
-    linkUrl: getExplorerAddressUrl(address),
     resolvedType: null,
     shortAddress,
   };

@@ -18,7 +18,6 @@ import {
   AUTO_REFRESH_INTERVAL,
 } from "@/app/components/RefreshIndicator";
 import { useResolveAddresses } from "@/lib/resolve-addresses";
-import { getExplorerAddressUrl } from "@/lib/chain";
 import {
   fetchListingsData,
   getGradientForApp,
@@ -568,22 +567,8 @@ export default function Home() {
                               invite.sellerAddress.toLowerCase()
                             ]?.displayName ? (
                               <>
-                                <a
-                                  href={
-                                    resolvedAddresses[
-                                      invite.sellerAddress.toLowerCase()
-                                    ].resolvedType === "farcaster"
-                                      ? `https://farcaster.xyz/${
-                                          resolvedAddresses[
-                                            invite.sellerAddress.toLowerCase()
-                                          ].displayName
-                                        }`
-                                      : getExplorerAddressUrl(
-                                          invite.sellerAddress
-                                        )
-                                  }
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                <Link
+                                  href={`/profile/${invite.sellerAddress}`}
                                   onClick={(e) => e.stopPropagation()}
                                   className="font-medium text-sm text-zinc-300 truncate flex items-center gap-1 hover:text-cyan-400 transition-colors"
                                 >
@@ -606,32 +591,24 @@ export default function Home() {
                                       className="inline-block opacity-60"
                                     />
                                   )}
-                                </a>
+                                </Link>
                                 {/* Show address below */}
-                                <a
-                                  href={getExplorerAddressUrl(
-                                    invite.sellerAddress
-                                  )}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                <Link
+                                  href={`/profile/${invite.sellerAddress}`}
                                   onClick={(e) => e.stopPropagation()}
                                   className="text-xs text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
                                 >
                                   {invite.seller}
-                                </a>
+                                </Link>
                               </>
                             ) : (
-                              <a
-                                href={getExplorerAddressUrl(
-                                  invite.sellerAddress
-                                )}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <Link
+                                href={`/profile/${invite.sellerAddress}`}
                                 onClick={(e) => e.stopPropagation()}
                                 className="font-medium text-sm text-zinc-300 font-mono hover:text-cyan-400 transition-colors"
                               >
                                 {invite.seller}
-                              </a>
+                              </Link>
                             )}
                           </div>
                         </div>
