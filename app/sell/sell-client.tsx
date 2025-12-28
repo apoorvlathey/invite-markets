@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,6 +37,7 @@ export default function SellClient() {
   const [selectedApp, setSelectedApp] = useState<{
     id: string;
     appName: string;
+    appIconUrl?: string;
   } | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [isValueConfirmed, setIsValueConfirmed] = useState(false);
@@ -407,7 +409,15 @@ export default function SellClient() {
                           if (dropdownItems.length > 0) {
                             const selected = dropdownItems[highlightedIndex];
                             if (selected.id !== "custom") {
-                              setSelectedApp(selected);
+                              const appIconUrl =
+                                "appIconUrl" in selected
+                                  ? selected.appIconUrl
+                                  : undefined;
+                              setSelectedApp({
+                                id: selected.id,
+                                appName: selected.appName,
+                                appIconUrl,
+                              });
                             } else {
                               setSelectedApp(null);
                             }
@@ -439,6 +449,15 @@ export default function SellClient() {
                 ) : (
                   <div className="w-full px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center gap-2">
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-600">
+                      {selectedApp?.appIconUrl && (
+                        <Image
+                          src={selectedApp.appIconUrl}
+                          alt={selectedApp.appName}
+                          width={20}
+                          height={20}
+                          className="rounded-md object-cover"
+                        />
+                      )}
                       <span className="text-zinc-100 font-medium">
                         {formData.appInput}
                       </span>
@@ -486,6 +505,8 @@ export default function SellClient() {
                         {dropdownItems.map((item, index) => {
                           const isFeatured = item.id !== "custom";
                           const isHighlighted = index === highlightedIndex;
+                          const appIconUrl =
+                            "appIconUrl" in item ? item.appIconUrl : undefined;
 
                           return (
                             <button
@@ -493,7 +514,11 @@ export default function SellClient() {
                               type="button"
                               onClick={() => {
                                 if (isFeatured) {
-                                  setSelectedApp(item);
+                                  setSelectedApp({
+                                    id: item.id,
+                                    appName: item.appName,
+                                    appIconUrl,
+                                  });
                                 } else {
                                   setSelectedApp(null);
                                 }
@@ -511,9 +536,20 @@ export default function SellClient() {
                                   : "hover:bg-zinc-800/50"
                               }`}
                             >
-                              <span className="text-zinc-100 font-medium">
-                                {item.appName}
-                              </span>
+                              <div className="flex items-center gap-3">
+                                {appIconUrl && (
+                                  <Image
+                                    src={appIconUrl}
+                                    alt={item.appName}
+                                    width={24}
+                                    height={24}
+                                    className="rounded-md object-cover"
+                                  />
+                                )}
+                                <span className="text-zinc-100 font-medium">
+                                  {item.appName}
+                                </span>
+                              </div>
                               {isFeatured ? (
                                 <span
                                   className={`px-2 py-1 rounded-lg bg-cyan-500/20 border border-cyan-500/30 text-xs text-cyan-400 font-medium transition-all ${
@@ -835,4 +871,3 @@ export default function SellClient() {
     </div>
   );
 }
-
