@@ -240,7 +240,7 @@ export default function SellPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-lg w-full rounded-3xl glass-strong shadow-premium p-10"
+          className="max-w-lg w-full rounded-2xl bg-zinc-950 border border-zinc-800 shadow-premium p-10"
         >
           <div className="text-center">
             <motion.div
@@ -315,7 +315,7 @@ export default function SellPage() {
                   setSelectedApp(null);
                   setIsValueConfirmed(false);
                 }}
-                className="w-full rounded-2xl py-4 px-6 font-semibold glass hover:bg-white/10 transition-all cursor-pointer"
+                className="w-full rounded-xl py-4 px-6 font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all cursor-pointer"
               >
                 Create Another Listing
               </motion.button>
@@ -346,7 +346,7 @@ export default function SellPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-3xl glass-strong shadow-premium p-8 md:p-10"
+          className="rounded-2xl bg-zinc-950 border border-zinc-800 shadow-premium p-8 md:p-10"
         >
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* App Name Input with Dropdown */}
@@ -428,7 +428,7 @@ export default function SellPage() {
                       }}
                       required
                       placeholder="Type app name or select from featured..."
-                      className="w-full px-5 py-4 rounded-2xl bg-zinc-900/50 border border-white/10 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/30 transition-all duration-150 hover:border-white/20"
+                      className="w-full px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600"
                     />
                     {selectedApp && !showDropdown && (
                       <span className="absolute right-5 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-cyan-500/20 border border-cyan-500/30 text-xs text-cyan-400 font-medium">
@@ -437,8 +437,8 @@ export default function SellPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="w-full px-5 py-4 rounded-2xl bg-zinc-900/50 border border-white/10 flex items-center gap-2">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700">
+                  <div className="w-full px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center gap-2">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-600">
                       <span className="text-zinc-100 font-medium">
                         {formData.appInput}
                       </span>
@@ -452,7 +452,7 @@ export default function SellPage() {
                           }));
                           setSelectedApp(null);
                         }}
-                        className="text-zinc-400 hover:text-zinc-200 transition-colors"
+                        className="text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
                       >
                         <svg
                           className="w-4 h-4"
@@ -480,7 +480,7 @@ export default function SellPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute z-50 w-full mt-2 rounded-2xl bg-zinc-900 border border-white/10 shadow-2xl overflow-hidden"
+                      className="absolute z-50 w-full mt-2 rounded-xl bg-zinc-900 border border-zinc-700 shadow-2xl overflow-hidden"
                     >
                       <div className="max-h-48 overflow-y-auto">
                         {dropdownItems.map((item, index) => {
@@ -505,10 +505,10 @@ export default function SellPage() {
                                 setShowDropdown(false);
                               }}
                               onMouseEnter={() => setHighlightedIndex(index)}
-                              className={`w-full px-5 py-3 text-left transition-colors flex items-center justify-between group ${
+                              className={`w-full px-5 py-3 text-left transition-colors flex items-center justify-between group cursor-pointer ${
                                 isHighlighted
-                                  ? "bg-white/10"
-                                  : "hover:bg-white/5"
+                                  ? "bg-zinc-800"
+                                  : "hover:bg-zinc-800/50"
                               }`}
                             >
                               <span className="text-zinc-100 font-medium">
@@ -568,7 +568,7 @@ export default function SellPage() {
                 onChange={handleChange}
                 required
                 placeholder="https://app.example.com/invite/..."
-                className="w-full px-5 py-4 rounded-2xl bg-zinc-900/50 border border-white/10 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/30 transition-all duration-150 hover:border-white/20"
+                className="w-full px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600"
               />
               <p className="mt-2 text-xs text-zinc-500">
                 The unique invite link you want to sell
@@ -607,7 +607,7 @@ export default function SellPage() {
                   min="0"
                   step="0.01"
                   placeholder="10.00"
-                  className="w-full px-5 py-4 rounded-2xl bg-zinc-900/50 border border-white/10 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/30 transition-all duration-150 hover:border-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <span className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">
                   USDC
@@ -648,7 +648,7 @@ export default function SellPage() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl bg-linear-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 p-5"
+                className="rounded-xl bg-zinc-900/80 border border-cyan-500/30 p-5"
               >
                 <div className="flex items-start gap-3">
                   <svg
@@ -680,7 +680,7 @@ export default function SellPage() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl bg-linear-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 p-5"
+                className="rounded-xl bg-zinc-900/80 border border-red-500/30 p-5"
               >
                 <div className="flex items-start gap-3">
                   <svg
@@ -706,7 +706,7 @@ export default function SellPage() {
               whileTap={{ scale: isConnected && !isSubmitting ? 0.98 : 1 }}
               type="submit"
               disabled={isSubmitting || !isConnected}
-              className="group relative w-full rounded-2xl py-5 px-6 font-bold text-lg overflow-hidden disabled:cursor-not-allowed cursor-pointer"
+              className="group relative w-full rounded-xl py-4 px-6 font-bold text-lg overflow-hidden disabled:cursor-not-allowed cursor-pointer"
             >
               {isConnected && !isSubmitting ? (
                 <>
@@ -787,7 +787,7 @@ export default function SellPage() {
           </form>
 
           {/* Info section */}
-          <div className="mt-10 pt-8 border-t border-white/10">
+          <div className="mt-10 pt-8 border-t border-zinc-800">
             <h3 className="text-sm font-semibold text-zinc-300 mb-4 flex items-center gap-2">
               <svg
                 className="w-4 h-4 text-cyan-400"
