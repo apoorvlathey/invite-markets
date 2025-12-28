@@ -247,10 +247,14 @@ export function WaitlistModal({ onSuccess }: WaitlistModalProps) {
                     ref={turnstileRef}
                     siteKey={TURNSTILE_SITE_KEY}
                     onSuccess={handleTurnstileSuccess}
-                    onError={() => setTurnstileToken(null)}
+                    onError={() => {
+                      setTurnstileToken(null);
+                      setIsSubmitting(false);
+                    }}
                     onExpire={() => {
                       setTurnstileToken(null);
                       setShowTurnstile(true);
+                      setIsSubmitting(false);
                     }}
                     options={{
                       theme: "dark",
