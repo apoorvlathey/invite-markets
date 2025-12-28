@@ -45,11 +45,8 @@ const TransactionSchema = new mongoose.Schema<ITransaction>(
   }
 );
 
-// Delete the model from mongoose cache if it exists to ensure schema updates are applied
-if (mongoose.models.Transaction) {
-  delete mongoose.models.Transaction;
-}
-
-const Transaction = mongoose.model<ITransaction>("Transaction", TransactionSchema);
+const Transaction =
+  (mongoose.models.Transaction as mongoose.Model<ITransaction>) ||
+  mongoose.model<ITransaction>("Transaction", TransactionSchema);
 
 export { Transaction };
