@@ -39,6 +39,7 @@ export default function SellPage() {
   } | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [isValueConfirmed, setIsValueConfirmed] = useState(false);
+  const [lowestPrice, setLowestPrice] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inviteUrlInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,6 +77,37 @@ export default function SellPage() {
   useEffect(() => {
     setHighlightedIndex(0);
   }, [dropdownItems.length, formData.appInput]);
+
+  // Fetch lowest price when app is confirmed
+  useEffect(() => {
+    if (!isValueConfirmed || !formData.appInput) {
+      setLowestPrice(null);
+      return;
+    }
+
+    const fetchLowestPrice = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (selectedApp) {
+          params.set("appId", selectedApp.id);
+        } else {
+          params.set("appName", formData.appInput.trim());
+        }
+
+        const response = await fetch(`/api/listings/lowest-price?${params}`);
+        const data = await response.json();
+
+        if (data.success) {
+          setLowestPrice(data.lowestPrice);
+        }
+      } catch (error) {
+        console.error("Error fetching lowest price:", error);
+        setLowestPrice(null);
+      }
+    };
+
+    fetchLowestPrice();
+  }, [isValueConfirmed, selectedApp, formData.appInput]);
 
   // Auto-redirect after 5 seconds when listing is created
   useEffect(() => {
@@ -584,6 +616,32 @@ export default function SellPage() {
               <p className="mt-2 text-xs text-zinc-500">
                 Set a competitive price for your invite
               </p>
+              <AnimatePresence>
+                {isValueConfirmed && lowestPrice !== null && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    className="mt-2 text-xs text-cyan-400 flex items-center gap-1.5"
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    Current lowest listing price for {formData.appInput} is $
+                    {lowestPrice.toFixed(2)}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
 
             {isConnected && address && (
