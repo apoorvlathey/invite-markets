@@ -35,15 +35,9 @@ const WaitlistSchema = new mongoose.Schema<IWaitlist>(
 // Ensure unique email entries
 WaitlistSchema.index({ email: 1 }, { unique: true });
 
-// Delete the model from mongoose cache if it exists to ensure schema updates are applied
-if (mongoose.models.Waitlist) {
-  delete mongoose.models.Waitlist;
-}
-
-const Waitlist: Model<IWaitlist> = mongoose.model<IWaitlist>(
-  "Waitlist",
-  WaitlistSchema
-);
+const Waitlist: Model<IWaitlist> =
+  (mongoose.models.Waitlist as Model<IWaitlist>) ||
+  mongoose.model<IWaitlist>("Waitlist", WaitlistSchema);
 
 export { Waitlist };
 
