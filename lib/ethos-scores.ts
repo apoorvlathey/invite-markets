@@ -22,8 +22,14 @@ const STORAGE_KEY = `${STORAGE_PREFIX}ethos-scores-cache`;
 // TYPE DEFINITIONS
 // ============================================================================
 
+export interface EthosData {
+  score: number;
+  level: string;
+}
+
 interface CachedEntry {
   score: number;
+  level: string;
   cachedAt: number; // timestamp in ms
 }
 
@@ -81,36 +87,42 @@ function isCacheValid(entry: CachedEntry): boolean {
 }
 
 /**
- * Get an Ethos score from cache if it exists and is valid
+ * Get Ethos data (score and level) from cache if it exists and is valid
  */
-export function getEthosScoreFromCache(address: string): number | null {
+export function getEthosDataFromCache(address: string): EthosData | null {
   const store = getCacheStore();
   const normalizedAddress = address.toLowerCase();
   const entry = store[normalizedAddress];
 
   if (entry && isCacheValid(entry)) {
-    return entry.score;
+    return {
+      score: entry.score,
+      level: entry.level,
+    };
   }
 
   return null;
 }
 
 /**
- * Get multiple Ethos scores from cache
- * Returns a map of address -> score for found & valid entries
+ * Get multiple Ethos data (score and level) from cache
+ * Returns a map of address -> EthosData for found & valid entries
  */
-export function getMultipleEthosScoresFromCache(
+export function getMultipleEthosDataFromCache(
   addresses: string[]
-): Record<string, number> {
+): Record<string, EthosData> {
   const store = getCacheStore();
-  const result: Record<string, number> = {};
+  const result: Record<string, EthosData> = {};
 
   for (const address of addresses) {
     const normalizedAddress = address.toLowerCase();
     const entry = store[normalizedAddress];
 
     if (entry && isCacheValid(entry)) {
-      result[normalizedAddress] = entry.score;
+      result[normalizedAddress] = {
+        score: entry.score,
+        level: entry.level,
+      };
     }
   }
 
@@ -118,18 +130,19 @@ export function getMultipleEthosScoresFromCache(
 }
 
 /**
- * Save Ethos scores to cache (merges with existing cache)
+ * Save Ethos data (score and level) to cache (merges with existing cache)
  */
-export function saveEthosScoresToCache(
-  scoreMap: Record<string, number>
+export function saveEthosDataToCache(
+  dataMap: Record<string, EthosData>
 ): void {
   const store = getCacheStore();
   const now = Date.now();
 
-  for (const [address, score] of Object.entries(scoreMap)) {
+  for (const [address, data] of Object.entries(dataMap)) {
     const normalizedAddress = address.toLowerCase();
     store[normalizedAddress] = {
-      score,
+      score: data.score,
+      level: data.level,
       cachedAt: now,
     };
   }
@@ -145,9 +158,9 @@ export function saveEthosScoresToCache(
 }
 
 /**
- * Clear the entire Ethos scores cache
+ * Clear the entire Ethos cache
  */
-export function clearEthosScoresCache(): void {
+export function clearEthosCache(): void {
   if (!isBrowser()) return;
   localStorage.removeItem(STORAGE_KEY);
 }
@@ -157,23 +170,23 @@ export function clearEthosScoresCache(): void {
 // ============================================================================
 
 /**
- * Fetch Ethos scores with localStorage caching.
+ * Fetch Ethos data (score and level) with localStorage caching.
  *
  * 1. Check localStorage for cached valid entries
  * 2. Only fetch uncached/expired addresses from API
  * 3. Save new results to localStorage
  * 4. Return combined results
  */
-export async function fetchEthosScores(
+export async function fetchEthosData(
   addresses: string[]
-): Promise<Record<string, number>> {
+): Promise<Record<string, EthosData>> {
   if (addresses.length === 0) return {};
 
   // Normalize addresses
   const normalizedAddresses = addresses.map((a) => a.toLowerCase());
 
   // Check cache first
-  const cached = getMultipleEthosScoresFromCache(normalizedAddresses);
+  const cached = getMultipleEthosDataFromCache(normalizedAddresses);
   const cachedAddresses = new Set(Object.keys(cached));
 
   // Find addresses that need fetching
@@ -187,7 +200,7 @@ export async function fetchEthosScores(
   }
 
   // Fetch uncached addresses from API
-  const freshScores: Record<string, number> = {};
+  const freshData: Record<string, EthosData> = {};
 
   try {
     const response = await fetch(
@@ -202,23 +215,36 @@ export async function fetchEthosScores(
     );
 
     if (response.ok) {
-      const data = await response.json();
-      Object.keys(data).forEach((address) => {
-        if (data[address]?.score !== undefined) {
-          freshScores[address.toLowerCase()] = data[address].score;
-        }
-      });
-
-      // Save fresh scores to cache
-      if (Object.keys(freshScores).length > 0) {
-        saveEthosScoresToCache(freshScores);
+      const data = await response.json();      
+      // Process the response data based on API structure
+      if (typeof data === 'object' && data !== null) {
+        Object.keys(data).forEach((address) => {
+          const scoreData = data[address];
+          
+          if (scoreData && typeof scoreData === 'object') {
+            const score = scoreData.score;
+            const level = scoreData.level;
+            
+            if (score !== undefined) {
+              freshData[address.toLowerCase()] = {
+                score: score,
+                level: level
+              };
+            }
+          }
+        });
+      }    
+      // Save fresh data to cache
+      if (Object.keys(freshData).length > 0) {
+        saveEthosDataToCache(freshData);
       }
+    } else {
+      console.log("Response not ok:", response.status, response.statusText);
     }
   } catch (err) {
-    console.error("Error fetching Ethos scores:", err);
+    console.error("Error fetching Ethos data:", err);
   }
 
   // Combine cached and fresh results
-  return { ...cached, ...freshScores };
+  return { ...cached, ...freshData };
 }
-
