@@ -18,7 +18,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://invite.markets"),
-  title: "invite.markets | Buy & Sell Early Access to the Hottest Web3 Apps",
+  title: {
+    default: "invite.markets | Buy & Sell Web3 App Invites",
+    template: "%s | invite.markets",
+  },
   description:
     "Buy and sell early access to the hottest web3 apps — instantly. Powered by x402.",
   keywords: [
