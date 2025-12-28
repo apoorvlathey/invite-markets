@@ -50,6 +50,7 @@ export function WaitlistModal({ onSuccess }: WaitlistModalProps) {
       }
 
       setIsSuccess(true);
+      setTurnstileToken(null); // Clear single-use token after successful submission
       onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
