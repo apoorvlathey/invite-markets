@@ -7,7 +7,7 @@ import { OnboardingModal } from "./OnboardingModal";
 
 const footerLinks = {
   product: [
-    { label: "Browse Apps", href: "/" },
+    { label: "Browse Apps", href: "/apps" },
     { label: "Sell Invites", href: "/sell" },
   ],
   resources: [
