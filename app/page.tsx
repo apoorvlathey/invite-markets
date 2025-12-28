@@ -572,7 +572,7 @@ export default function Home() {
                                     resolvedAddresses[
                                       invite.sellerAddress.toLowerCase()
                                     ].resolvedType === "farcaster"
-                                      ? `https://warpcast.com/${
+                                      ? `https://farcaster.xyz/${
                                           resolvedAddresses[
                                             invite.sellerAddress.toLowerCase()
                                           ].displayName

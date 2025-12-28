@@ -359,7 +359,7 @@ export function getSellerDisplayInfo(
   if (resolved) {
     const linkUrl =
       resolved.resolvedType === "farcaster"
-        ? `https://warpcast.com/${resolved.displayName}`
+        ? `https://farcaster.xyz/${resolved.displayName}`
         : getExplorerAddressUrl(address);
 
     return {
