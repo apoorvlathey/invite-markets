@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
@@ -11,16 +11,13 @@ interface InviteClientProps {
 }
 
 export function InviteClient({ code, isValidCode }: InviteClientProps) {
-  const router = useRouter();
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     isValidCode ? "loading" : "error"
   );
 
   useEffect(() => {
-    if (!isValidCode) {
-      setStatus("error");
-      return;
-    }
+    // Early return if invalid - state already initialized to "error" via useState
+    if (!isValidCode) return;
 
     // Call API to set cookie
     const verifyAndRedirect = async () => {
@@ -33,9 +30,10 @@ export function InviteClient({ code, isValidCode }: InviteClientProps) {
 
         if (response.ok) {
           setStatus("success");
-          // Short delay to show success message
+          // Short delay to show success message, then full page reload
+          // to ensure AccessGateProvider re-checks access with new cookie
           setTimeout(() => {
-            router.push("/");
+            window.location.href = "/";
           }, 1000);
         } else {
           setStatus("error");
@@ -46,7 +44,7 @@ export function InviteClient({ code, isValidCode }: InviteClientProps) {
     };
 
     verifyAndRedirect();
-  }, [code, isValidCode, router]);
+  }, [code, isValidCode]);
 
   if (status === "loading") {
     return (
@@ -111,14 +109,13 @@ export function InviteClient({ code, isValidCode }: InviteClientProps) {
           The invite code you used is not valid. Please check your link and try
           again.
         </p>
-        <a
+        <Link
           href="/"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 transition-all cursor-pointer"
         >
           Go to Homepage
-        </a>
+        </Link>
       </motion.div>
     </div>
   );
 }
-

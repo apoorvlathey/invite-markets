@@ -296,8 +296,73 @@ export function WaitlistModal({ onSuccess }: WaitlistModalProps) {
               </motion.button>
             </form>
 
+            {/* Twitter link with animated gradient border */}
+            <div className="relative mt-8 inline-block">
+              {/* Rotating gradient border */}
+              <div className="absolute -inset-[2px] rounded-xl overflow-hidden">
+                <motion.div
+                  className="absolute top-1/2 left-1/2 w-[200%] aspect-square -translate-x-1/2 -translate-y-1/2"
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                >
+                  {/* Core gradient line */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background:
+                        "conic-gradient(from 0deg, transparent 0deg, transparent 300deg, #00ffff 315deg, #00d4ff 325deg, #0099ff 335deg, #a855f7 345deg, #ff00ff 352deg, #ffffff 357deg, transparent 360deg)",
+                    }}
+                  />
+                  {/* Inner glow */}
+                  <div
+                    className="absolute inset-0 blur-xs"
+                    style={{
+                      background:
+                        "conic-gradient(from 0deg, transparent 0deg, transparent 300deg, #00ffff 315deg, #00d4ff 325deg, #0099ff 335deg, #a855f7 345deg, #ff00ff 352deg, #ffffff 357deg, transparent 360deg)",
+                    }}
+                  />
+                  {/* Outer glow */}
+                  <div
+                    className="absolute inset-0 blur-lg"
+                    style={{
+                      background:
+                        "conic-gradient(from 0deg, transparent 0deg, transparent 295deg, #00ffff 315deg, #0099ff 335deg, #a855f7 348deg, #ff00ff 355deg, transparent 360deg)",
+                    }}
+                  />
+                </motion.div>
+              </div>
+              {/* Subtle base border */}
+              <div className="absolute -inset-px rounded-xl bg-zinc-700/30" />
+              {/* Button content */}
+              <motion.a
+                href="https://x.com/invitemarkets"
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="group relative inline-flex items-center gap-3 px-5 py-2.5 rounded-xl bg-zinc-900 cursor-pointer"
+              >
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-800 group-hover:bg-cyan-500/20 transition-colors">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-4 h-4 fill-zinc-400 group-hover:fill-cyan-400 transition-colors"
+                    aria-hidden="true"
+                  >
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">
+                  Follow @invitemarkets
+                </span>
+              </motion.a>
+            </div>
+
             {/* Footer text */}
-            <p className="mt-8 text-zinc-600 text-sm">
+            <p className="mt-6 text-zinc-600 text-sm">
               The marketplace for early access to web3 apps
             </p>
           </div>
