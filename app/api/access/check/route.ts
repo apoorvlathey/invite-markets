@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAccessToken } from "@/app/api/invite/verify/route";
+import { verifyAccessToken } from "@/lib/access-token";
 
 // GET - Check if user has valid access cookie
 export async function GET(request: NextRequest) {
   try {
-    const isWhitelistMode = process.env.NEXT_PUBLIC_IS_ONLY_WHITELIST === "true";
-    
+    const isWhitelistMode =
+      process.env.NEXT_PUBLIC_IS_ONLY_WHITELIST === "true";
+
     // If not in whitelist mode, everyone has access
     if (!isWhitelistMode) {
       return NextResponse.json({
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     // Check for access cookie
     const accessCookie = request.cookies.get("invite_access");
-    
+
     if (!accessCookie?.value) {
       return NextResponse.json({
         hasAccess: false,
@@ -40,4 +41,3 @@ export async function GET(request: NextRequest) {
     });
   }
 }
-

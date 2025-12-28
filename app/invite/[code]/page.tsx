@@ -18,7 +18,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
   }
 
   // Validate the access code on server
-  const isValidCode = INVITE_ACCESS_CODE && code === INVITE_ACCESS_CODE;
+  const isValidCode = !!(INVITE_ACCESS_CODE && code === INVITE_ACCESS_CODE);
 
   return <InviteClient code={code} isValidCode={isValidCode} />;
 }
