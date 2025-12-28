@@ -14,7 +14,7 @@ import {
   getSellerDisplayInfo,
 } from "@/lib/resolve-addresses";
 import { timeAgo } from "@/lib/time";
-import { fetchEthosScores } from "@/lib/ethos-scores";
+import { fetchEthosData, type EthosData } from "@/lib/ethos-scores";
 import {
   fetchListingsData,
   getGradientForApp,
@@ -22,10 +22,6 @@ import {
   type ListingsData,
 } from "@/lib/listings";
 import { blo } from "blo";
-
-/* ---------- Ethos Score Fetcher ---------- */
-
-// fetchEthosScores is imported from lib/ethos-scores.ts (with localStorage caching)
 
 // Fetch a single listing by slug from the API
 async function fetchSingleListing(slug: string): Promise<Listing | null> {
@@ -39,14 +35,61 @@ async function fetchSingleListing(slug: string): Promise<Listing | null> {
   }
 }
 
+// Helper function to get trust level color and label
+function getTrustLevelConfig(level: string) {
+  const normalizedLevel = level.toLowerCase();
+
+  switch (normalizedLevel) {
+    case "trusted":
+      return {
+        bg: "bg-emerald-500/10",
+        border: "border-emerald-500/30",
+        text: "text-emerald-400",
+        dot: "bg-emerald-400",
+        label: "Trusted",
+      };
+    case "neutral":
+      return {
+        bg: "bg-blue-500/10",
+        border: "border-blue-500/30",
+        text: "text-blue-400",
+        dot: "bg-blue-400",
+        label: "Neutral",
+      };
+    case "questionable":
+      return {
+        bg: "bg-yellow-500/10",
+        border: "border-yellow-500/30",
+        text: "text-yellow-400",
+        dot: "bg-yellow-400",
+        label: "Questionable",
+      };
+    case "untrusted":
+      return {
+        bg: "bg-red-500/10",
+        border: "border-red-500/30",
+        text: "text-red-400",
+        dot: "bg-red-400",
+        label: "Untrusted",
+      };
+    default:
+      return {
+        bg: "bg-zinc-500/10",
+        border: "border-zinc-500/30",
+        text: "text-zinc-400",
+        dot: "bg-zinc-400",
+        label: "Unknown",
+      };
+  }
+}
+
 export default function ListingClient() {
   const { slug } = useParams<{ slug: string }>();
   const queryClient = useQueryClient();
 
-  const [ethosScore, setEthosScore] = useState<number | null>(null);
-  const [cheaperListingEthosScore, setCheaperListingEthosScore] = useState<
-    number | null
-  >(null);
+  const [ethosData, setEthosData] = useState<EthosData | null>(null);
+  const [cheaperListingEthosData, setCheaperListingEthosData] =
+    useState<EthosData | null>(null);
 
   const {
     purchase,
@@ -145,25 +188,25 @@ export default function ListingClient() {
     window.scrollTo(0, 0);
   }, []);
 
-  // Fetch Ethos score when listing loads
+  // Fetch Ethos data when listing loads
   useEffect(() => {
     if (!listing?.sellerAddress) return;
 
-    fetchEthosScores([listing.sellerAddress]).then((scores) => {
-      setEthosScore(scores[listing.sellerAddress.toLowerCase()] ?? null);
+    fetchEthosData([listing.sellerAddress]).then((data) => {
+      setEthosData(data[listing.sellerAddress.toLowerCase()] ?? null);
     });
   }, [listing]);
 
-  // Fetch Ethos score for cheaper listing's seller
+  // Fetch Ethos data for cheaper listing's seller
   useEffect(() => {
     // Use an abort flag to handle race conditions
     let cancelled = false;
 
     if (cheaperListing?.sellerAddress) {
-      fetchEthosScores([cheaperListing.sellerAddress]).then((scores) => {
+      fetchEthosData([cheaperListing.sellerAddress]).then((data) => {
         if (!cancelled) {
-          setCheaperListingEthosScore(
-            scores[cheaperListing.sellerAddress.toLowerCase()] ?? null
+          setCheaperListingEthosData(
+            data[cheaperListing.sellerAddress.toLowerCase()] ?? null
           );
         }
       });
@@ -172,7 +215,7 @@ export default function ListingClient() {
     // Cleanup function resets state and prevents stale updates
     return () => {
       cancelled = true;
-      setCheaperListingEthosScore(null);
+      setCheaperListingEthosData(null);
     };
   }, [cheaperListing?.sellerAddress]);
 
@@ -355,6 +398,13 @@ export default function ListingClient() {
   const appIconUrl = app?.appIconUrl ?? listing.appIconUrl;
   const gradient = getGradientForApp(appName);
   const status = getStatusConfig(listing.status);
+
+  const trustLevelConfig = ethosData
+    ? getTrustLevelConfig(ethosData.level)
+    : null;
+  const cheaperTrustLevelConfig = cheaperListingEthosData
+    ? getTrustLevelConfig(cheaperListingEthosData.level)
+    : null;
 
   return (
     <div className="min-h-screen bg-black text-zinc-100">
@@ -563,39 +613,40 @@ export default function ListingClient() {
                                 % less
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
                               <span className="text-xs text-zinc-400">
                                 Only{" "}
                                 <span className="font-semibold text-cyan-400">
                                   ${cheaperListing.priceUsdc}
                                 </span>
                               </span>
-                              {cheaperListingEthosScore !== null && (
-                                <div className="flex items-center gap-1">
+                              {cheaperListingEthosData && (
+                                <>
                                   <span className="text-xs text-zinc-500">
                                     •
                                   </span>
-                                  <div className="flex items-center gap-1">
+                                  <div className="flex items-center gap-1.5">
                                     <span className="text-xs text-zinc-500">
-                                      Ethos score =
+                                      Score:
                                     </span>
                                     <span
                                       className={`text-xs font-medium ${
-                                        ethosScore !== null &&
-                                        cheaperListingEthosScore > ethosScore
+                                        ethosData &&
+                                        cheaperListingEthosData.score >
+                                          ethosData.score
                                           ? "text-emerald-400"
-                                          : ethosScore !== null &&
-                                            cheaperListingEthosScore <
-                                              ethosScore
+                                          : ethosData &&
+                                            cheaperListingEthosData.score <
+                                              ethosData.score
                                           ? "text-red-400"
                                           : "text-zinc-400"
                                       }`}
                                     >
-                                      {cheaperListingEthosScore}
+                                      {cheaperListingEthosData.score}
                                     </span>
-                                    {/* Ethos comparison arrow */}
-                                    {ethosScore !== null &&
-                                    cheaperListingEthosScore > ethosScore ? (
+                                    {ethosData &&
+                                    cheaperListingEthosData.score >
+                                      ethosData.score ? (
                                       <svg
                                         className="w-3 h-3 text-emerald-400"
                                         fill="currentColor"
@@ -607,8 +658,9 @@ export default function ListingClient() {
                                           clipRule="evenodd"
                                         />
                                       </svg>
-                                    ) : ethosScore !== null &&
-                                      cheaperListingEthosScore < ethosScore ? (
+                                    ) : ethosData &&
+                                      cheaperListingEthosData.score <
+                                        ethosData.score ? (
                                       <svg
                                         className="w-3 h-3 text-red-400"
                                         fill="currentColor"
@@ -622,7 +674,19 @@ export default function ListingClient() {
                                       </svg>
                                     ) : null}
                                   </div>
-                                </div>
+                                  {cheaperTrustLevelConfig && (
+                                    <>
+                                      <span className="text-xs text-zinc-500">
+                                        •
+                                      </span>
+                                      <span
+                                        className={`text-xs font-medium ${cheaperTrustLevelConfig.text}`}
+                                      >
+                                        {cheaperTrustLevelConfig.label}
+                                      </span>
+                                    </>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>
@@ -797,86 +861,103 @@ export default function ListingClient() {
 
             {/* Seller Card */}
             <div className="rounded-xl bg-zinc-950 border border-zinc-800 p-6">
-              <h3 className="text-sm font-medium text-zinc-400 mb-4">Seller</h3>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Avatar */}
-                  <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-zinc-700">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={
-                        sellerInfo?.avatarUrl ||
-                        blo(listing.sellerAddress as `0x${string}`)
-                      }
-                      alt="Seller avatar"
-                      width={48}
-                      height={48}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-zinc-400 mb-4">
+                    Seller
+                  </h3>
+                  <div className="flex items-center gap-3">
+                    {/* Avatar */}
+                    <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-zinc-700">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={
+                          sellerInfo?.avatarUrl ||
+                          blo(listing.sellerAddress as `0x${string}`)
+                        }
+                        alt="Seller avatar"
+                        width={48}
+                        height={48}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
 
-                  {/* Name & Address */}
-                  <div className="min-w-0">
-                    {sellerInfo?.resolvedType ? (
-                      <>
+                    {/* Name & Address */}
+                    <div className="min-w-0">
+                      {sellerInfo?.resolvedType ? (
+                        <>
+                          <Link
+                            href={`/profile/${listing.sellerAddress}`}
+                            className="font-semibold text-base text-white flex items-center gap-1.5 hover:text-cyan-400 transition-colors"
+                          >
+                            {sellerInfo.resolvedType === "farcaster" && "@"}
+                            {sellerInfo.displayName}
+                            {sellerInfo.resolvedType === "farcaster" && (
+                              <Image
+                                src="/farcaster-logo.svg"
+                                alt="Farcaster"
+                                width={14}
+                                height={14}
+                                className="inline-block opacity-70"
+                              />
+                            )}
+                          </Link>
+                          <Link
+                            href={`/profile/${listing.sellerAddress}`}
+                            className="text-sm text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
+                          >
+                            {sellerInfo.shortAddress}
+                          </Link>
+                        </>
+                      ) : (
                         <Link
                           href={`/profile/${listing.sellerAddress}`}
-                          className="font-semibold text-base text-white flex items-center gap-1.5 hover:text-cyan-400 transition-colors"
+                          className="font-mono text-sm text-zinc-300 hover:text-cyan-400 transition-colors"
                         >
-                          {sellerInfo.resolvedType === "farcaster" && "@"}
-                          {sellerInfo.displayName}
-                          {sellerInfo.resolvedType === "farcaster" && (
-                            <Image
-                              src="/farcaster-logo.svg"
-                              alt="Farcaster"
-                              width={14}
-                              height={14}
-                              className="inline-block opacity-70"
-                            />
-                          )}
+                          {listing.sellerAddress}
                         </Link>
-                        <Link
-                          href={`/profile/${listing.sellerAddress}`}
-                          className="text-sm text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
-                        >
-                          {sellerInfo.shortAddress}
-                        </Link>
-                      </>
-                    ) : (
-                      <Link
-                        href={`/profile/${listing.sellerAddress}`}
-                        className="font-mono text-sm text-zinc-300 hover:text-cyan-400 transition-colors"
-                      >
-                        {listing.sellerAddress}
-                      </Link>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Ethos Score */}
-                {ethosScore !== null && (
-                  <a
-                    href={`https://app.ethos.network/profile/${listing.sellerAddress}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 group"
-                  >
-                    <div className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 group-hover:border-emerald-500/50 transition-colors cursor-pointer">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                        <span className="text-xl font-bold text-emerald-400">
-                          {ethosScore}
+                {/* Ethos Score & Trust Level */}
+                {ethosData && trustLevelConfig && (
+                  <div className="shrink-0">
+                    <h3 className="text-sm font-medium text-zinc-400 mb-4 text-right">
+                      Ethos Score
+                    </h3>
+
+                    <a
+                      href={`https://app.ethos.network/profile/${listing.sellerAddress}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group block"
+                    >
+                      <div
+                        className={`flex flex-col items-center gap-1.5 px-4 py-2.5 rounded-xl ${trustLevelConfig.bg} border ${trustLevelConfig.border} group-hover:border-opacity-70 transition-colors cursor-pointer`}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`w-2 h-2 rounded-full ${trustLevelConfig.dot}`}
+                          />
+                          <span
+                            className={`text-xl font-bold ${trustLevelConfig.text}`}
+                          >
+                            {ethosData.score}
+                          </span>
+                        </div>
+                        <span
+                          className={`text-xs ${trustLevelConfig.text} opacity-70`}
+                        >
+                          {trustLevelConfig.label}
                         </span>
                       </div>
-                      <span className="text-xs text-emerald-300/70">
-                        Ethos Score
-                      </span>
-                    </div>
-                  </a>
+                    </a>
+                  </div>
                 )}
               </div>
             </div>
-
             {/* Payment Info Card */}
             <div className="rounded-xl bg-zinc-950 border border-zinc-800 p-6">
               <h3 className="text-sm font-medium text-zinc-400 mb-4">

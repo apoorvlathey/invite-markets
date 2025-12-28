@@ -1,7 +1,7 @@
 "use client";
 
 import { featuredApps } from "@/data/featuredApps";
-import { fetchEthosScores } from "@/lib/ethos-scores";
+import { fetchEthosData, type EthosData } from "@/lib/ethos-scores";
 
 // ============================================================================
 // TYPES
@@ -26,7 +26,7 @@ export interface Invite {
   price: string;
   priceUsdc: number;
   seller: string;
-  ethos: number | null;
+  ethosData: EthosData | null;
   gradientFrom: string;
   gradientTo: string;
   slug: string;
@@ -104,7 +104,7 @@ function transformListing(listing: Listing): Invite {
     price: `$${listing.priceUsdc}`,
     priceUsdc: listing.priceUsdc,
     seller: shortAddr,
-    ethos: null,
+    ethosData: null,
     gradientFrom: gradient.from,
     gradientTo: gradient.to,
     slug: listing.slug,
@@ -118,7 +118,7 @@ function transformListing(listing: Listing): Invite {
 // ============================================================================
 
 /**
- * Fetch listings data with Ethos scores.
+ * Fetch listings data with Ethos scores and trust levels.
  * This is the single source of truth for the TanStack Query cache.
  * All pages should use this function to ensure cache consistency.
  */
@@ -138,13 +138,12 @@ export async function fetchListingsData(): Promise<ListingsData> {
     ...new Set(transformedInvites.map((invite) => invite.sellerAddress)),
   ];
 
-  const scoreMap = await fetchEthosScores(uniqueAddresses);
+  const ethosDataMap = await fetchEthosData(uniqueAddresses);
 
-  const invitesWithScores = transformedInvites.map((invite) => ({
+  const invitesWithEthosData = transformedInvites.map((invite) => ({
     ...invite,
-    ethos: scoreMap[invite.sellerAddress.toLowerCase()] ?? null,
+    ethosData: ethosDataMap[invite.sellerAddress.toLowerCase()] ?? null,
   }));
 
-  return { invites: invitesWithScores, rawListings: active };
+  return { invites: invitesWithEthosData, rawListings: active };
 }
-

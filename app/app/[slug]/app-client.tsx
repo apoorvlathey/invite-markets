@@ -21,7 +21,7 @@ import {
   AUTO_REFRESH_INTERVAL,
 } from "@/app/components/RefreshIndicator";
 import { PriceChart } from "@/app/components/PriceChart";
-import { fetchEthosScores } from "@/lib/ethos-scores";
+import { fetchEthosData, type EthosData } from "@/lib/ethos-scores";
 import {
   fetchListingsData,
   getGradientForApp,
@@ -34,7 +34,7 @@ import { blo } from "blo";
 /* ---------- Types ---------- */
 
 interface ListingWithEthos extends Listing {
-  ethosScore: number | null;
+  ethosData: EthosData | null;
 }
 
 interface SaleData {
@@ -45,6 +45,56 @@ interface SaleData {
 
 type SortField = "price" | "date" | "ethos";
 type SortDirection = "asc" | "desc";
+
+/* ---------- Helper Functions ---------- */
+
+// Helper function to get trust level color and label
+function getTrustLevelConfig(level: string) {
+  const normalizedLevel = level.toLowerCase();
+
+  switch (normalizedLevel) {
+    case "trusted":
+      return {
+        bg: "bg-emerald-500/10",
+        border: "border-emerald-500/30",
+        text: "text-emerald-400",
+        dot: "bg-emerald-400",
+        label: "Trusted",
+      };
+    case "neutral":
+      return {
+        bg: "bg-blue-500/10",
+        border: "border-blue-500/30",
+        text: "text-blue-400",
+        dot: "bg-blue-400",
+        label: "Neutral",
+      };
+    case "questionable":
+      return {
+        bg: "bg-yellow-500/10",
+        border: "border-yellow-500/30",
+        text: "text-yellow-400",
+        dot: "bg-yellow-400",
+        label: "Questionable",
+      };
+    case "untrusted":
+      return {
+        bg: "bg-red-500/10",
+        border: "border-red-500/30",
+        text: "text-red-400",
+        dot: "bg-red-400",
+        label: "Untrusted",
+      };
+    default:
+      return {
+        bg: "bg-zinc-500/10",
+        border: "border-zinc-500/30",
+        text: "text-zinc-400",
+        dot: "bg-zinc-400",
+        label: "Unknown",
+      };
+  }
+}
 
 /* ---------- Sort Icon Component ---------- */
 
@@ -109,7 +159,9 @@ export default function AppPageClient() {
   const [sortField, setSortField] = useState<SortField>("price");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [purchasingSlug, setPurchasingSlug] = useState<string | null>(null);
-  const [ethosScores, setEthosScores] = useState<Record<string, number>>({});
+  const [ethosDataMap, setEthosDataMap] = useState<Record<string, EthosData>>(
+    {}
+  );
   const [countdown, setCountdown] = useState(AUTO_REFRESH_INTERVAL);
 
   // TanStack Query for listings - shares cache with homepage
@@ -198,13 +250,15 @@ export default function AppPageClient() {
     [featuredApp, appInfo]
   );
 
-  // Listings with Ethos scores
+  // Listings with Ethos data
   const listings: ListingWithEthos[] = useMemo(() => {
-    return appListings.map((l) => ({
+    const result = appListings.map((l) => ({
       ...l,
-      ethosScore: ethosScores[l.sellerAddress.toLowerCase()] ?? null,
+      ethosData: ethosDataMap[l.sellerAddress.toLowerCase()] ?? null,
     }));
-  }, [appListings, ethosScores]);
+    console.log("Listings with ethos data:", result);
+    return result;
+  }, [appListings, ethosDataMap]);
 
   // Get seller addresses for resolution
   const sellerAddresses = useMemo(
@@ -219,14 +273,18 @@ export default function AppPageClient() {
     window.scrollTo(0, 0);
   }, []);
 
-  // Fetch Ethos scores when app listings change
+  // Fetch Ethos data when app listings change
   useEffect(() => {
     if (appListings.length === 0) return;
 
     const uniqueAddresses = [
       ...new Set(appListings.map((l) => l.sellerAddress)),
     ];
-    fetchEthosScores(uniqueAddresses).then(setEthosScores);
+
+    fetchEthosData(uniqueAddresses).then((data) => {
+      console.log("Ethos data received:", data);
+      setEthosDataMap(data);
+    });
   }, [appListings]);
 
   // Countdown timer - calculates time since last fetch
@@ -275,10 +333,10 @@ export default function AppPageClient() {
             multiplier
           );
         case "ethos":
-          if (a.ethosScore === null && b.ethosScore === null) return 0;
-          if (a.ethosScore === null) return 1;
-          if (b.ethosScore === null) return -1;
-          return (a.ethosScore - b.ethosScore) * multiplier;
+          if (a.ethosData === null && b.ethosData === null) return 0;
+          if (a.ethosData === null) return 1;
+          if (b.ethosData === null) return -1;
+          return (a.ethosData.score - b.ethosData.score) * multiplier;
         default:
           return 0;
       }
@@ -665,9 +723,9 @@ export default function AppPageClient() {
                     <div className="col-span-1 md:col-span-2 flex items-center">
                       <div className="h-4 w-16 bg-zinc-800 rounded" />
                     </div>
-                    {/* Ethos Score */}
+                    {/* Trust Level */}
                     <div className="col-span-1 md:col-span-2 flex items-center">
-                      <div className="h-6 w-16 bg-zinc-800 rounded-full" />
+                      <div className="h-6 w-20 bg-zinc-800 rounded-full" />
                     </div>
                     {/* Price */}
                     <div className="col-span-1 md:col-span-2 flex items-center md:justify-end">
@@ -763,7 +821,7 @@ export default function AppPageClient() {
                           : "text-zinc-500"
                       }
                     >
-                      Ethos Score
+                      Trust Level
                     </span>
                     <SortIcon
                       active={sortField === "ethos"}
@@ -797,6 +855,9 @@ export default function AppPageClient() {
                     listing.sellerAddress,
                     resolvedAddresses
                   );
+                  const trustLevelConfig = listing.ethosData
+                    ? getTrustLevelConfig(listing.ethosData.level)
+                    : null;
 
                   return (
                     <motion.div
@@ -877,22 +938,43 @@ export default function AppPageClient() {
                         </span>
                       </div>
 
-                      {/* Ethos Score */}
+                      {/* Trust Level */}
                       <div className="col-span-1 md:col-span-2 flex items-center">
                         <span className="md:hidden text-xs text-zinc-500 mr-2">
-                          Ethos:
+                          Trust:
                         </span>
-                        {listing.ethosScore !== null ? (
+                        {listing.ethosData ? (
                           <a
                             href={`https://app.ethos.network/profile/${listing.sellerAddress}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 hover:border-emerald-500/50 transition-colors cursor-pointer"
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${
+                              trustLevelConfig?.bg || "bg-zinc-800"
+                            } border ${
+                              trustLevelConfig?.border || "border-zinc-700"
+                            } hover:border-opacity-70 transition-colors cursor-pointer`}
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                            <span className="text-xs font-bold text-emerald-400">
-                              {listing.ethosScore}
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                trustLevelConfig?.dot || "bg-zinc-400"
+                              }`}
+                            />
+                            <span
+                              className={`text-xs font-semibold ${
+                                trustLevelConfig?.text || "text-zinc-300"
+                              }`}
+                            >
+                              {listing.ethosData.score}
+                            </span>
+                            <span
+                              className={`text-xs ${
+                                trustLevelConfig?.text || "text-zinc-300"
+                              } opacity-70`}
+                            >
+                              {trustLevelConfig?.label ||
+                                listing.ethosData.level ||
+                                "Unknown"}
                             </span>
                           </a>
                         ) : (
@@ -916,7 +998,7 @@ export default function AppPageClient() {
                       {/* Actions */}
                       <div className="col-span-1 md:col-span-3 flex items-center gap-2 justify-end">
                         <QuickBuyButton
-                          price={`$${listing.priceUsdc}`}
+                          price={`${listing.priceUsdc}`}
                           isPending={
                             isPending && purchasingSlug === listing.slug
                           }
@@ -952,4 +1034,3 @@ export default function AppPageClient() {
     </div>
   );
 }
-

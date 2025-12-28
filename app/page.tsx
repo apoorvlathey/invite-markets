@@ -36,6 +36,56 @@ interface FeaturedAppWithCount {
   gradient: { from: string; to: string };
 }
 
+/* ---------- Helper Functions ---------- */
+
+// Helper function to get trust level color and label
+function getTrustLevelConfig(level: string) {
+  const normalizedLevel = level.toLowerCase();
+  
+  switch (normalizedLevel) {
+    case "trusted":
+      return {
+        bg: "bg-emerald-500/10",
+        border: "border-emerald-500/30",
+        text: "text-emerald-400",
+        dot: "bg-emerald-400",
+        label: "Trusted",
+      };
+    case "neutral":
+      return {
+        bg: "bg-blue-500/10",
+        border: "border-blue-500/30",
+        text: "text-blue-400",
+        dot: "bg-blue-400",
+        label: "Neutral",
+      };
+    case "questionable":
+      return {
+        bg: "bg-yellow-500/10",
+        border: "border-yellow-500/30",
+        text: "text-yellow-400",
+        dot: "bg-yellow-400",
+        label: "Questionable",
+      };
+    case "untrusted":
+      return {
+        bg: "bg-red-500/10",
+        border: "border-red-500/30",
+        text: "text-red-400",
+        dot: "bg-red-400",
+        label: "Untrusted",
+      };
+    default:
+      return {
+        bg: "bg-zinc-500/10",
+        border: "border-zinc-500/30",
+        text: "text-zinc-400",
+        dot: "bg-zinc-400",
+        label: "Unknown",
+      };
+  }
+}
+
 /* ---------- Page ---------- */
 
 export default function Home() {
@@ -232,25 +282,6 @@ export default function Home() {
               </motion.button>
             </Link>
           </div>
-
-          {/* Stats */}
-          {/* <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mt-16 grid grid-cols-3 gap-8 max-w-2xl mx-auto"
-          >
-            {[
-              { label: "Active Listings", value: invites.length },
-              { label: "Total Sales", value: "0" },
-              { label: "Avg. Response", value: "< 1min" },
-            ].map((stat, i) => (
-              <div key={i} className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white mb-1">{stat.value}</div>
-                <div className="text-xs md:text-sm text-zinc-500">{stat.label}</div>
-              </div>
-            ))}
-          </motion.div> */}
         </motion.div>
       </section>
 
@@ -476,195 +507,204 @@ export default function Home() {
 
         {!loading && !error && invites.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {invites.map((invite, i) => (
-              <motion.div
-                key={invite.slug}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                whileHover={{ y: -4 }}
-                className="group"
-              >
-                <div
-                  onClick={() => {
-                    NProgress.start();
-                    router.push(`/listing/${invite.slug}`);
-                  }}
-                  className="relative rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 shadow-lg cursor-pointer"
+            {invites.map((invite, i) => {
+              const trustLevelConfig = invite.ethosData 
+                ? getTrustLevelConfig(invite.ethosData.level)
+                : null;
+
+              return (
+                <motion.div
+                  key={invite.slug}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
+                  whileHover={{ y: -4 }}
+                  className="group"
                 >
-                  {/* Top accent bar with gradient */}
                   <div
-                    className="h-1"
-                    style={{
-                      background: `linear-gradient(90deg, ${invite.gradientFrom}, ${invite.gradientTo})`,
+                    onClick={() => {
+                      NProgress.start();
+                      router.push(`/listing/${invite.slug}`);
                     }}
-                  />
+                    className="relative rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 shadow-lg cursor-pointer"
+                  >
+                    {/* Top accent bar with gradient */}
+                    <div
+                      className="h-1"
+                      style={{
+                        background: `linear-gradient(90deg, ${invite.gradientFrom}, ${invite.gradientTo})`,
+                      }}
+                    />
 
-                  {/* Header */}
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      {invite.appIconUrl ? (
-                        <div className="w-12 h-12 rounded-lg overflow-hidden border border-zinc-700 bg-white p-1">
-                          <Image
-                            src={invite.appIconUrl}
-                            alt={`${invite.app} icon`}
-                            width={40}
-                            height={40}
-                            className="object-contain rounded-md w-full h-full"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center font-bold text-xl text-white">
-                          {invite.app.charAt(0)}
-                        </div>
-                      )}
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-cyan-400">
-                          {invite.price}
-                        </div>
-                        <div className="text-xs text-zinc-500 font-medium">
-                          USDC
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Time since listed */}
-                    <div className="text-xs text-zinc-500 mb-3">
-                      Listed {timeAgo(invite.createdAt)}
-                    </div>
-
-                    <h3 className="text-2xl font-bold text-white mb-2">
-                      {invite.app}
-                    </h3>
-
-                    <p className="text-sm text-zinc-400 leading-relaxed mb-6">
-                      {invite.description}
-                    </p>
-
-                    <div className="mb-6 pb-6 border-b border-zinc-800">
-                      <p className="text-xs text-zinc-500 mb-2">Seller:</p>
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-2 min-w-0">
-                          {/* Seller avatar */}
-                          <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-zinc-700">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={
-                                resolvedAddresses[
-                                  invite.sellerAddress.toLowerCase()
-                                ]?.avatarUrl ||
-                                blo(invite.sellerAddress as `0x${string}`)
-                              }
-                              alt="Seller avatar"
-                              width={24}
-                              height={24}
-                              className="w-full h-full object-cover"
+                    {/* Header */}
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        {invite.appIconUrl ? (
+                          <div className="w-12 h-12 rounded-lg overflow-hidden border border-zinc-700 bg-white p-1">
+                            <Image
+                              src={invite.appIconUrl}
+                              alt={`${invite.app} icon`}
+                              width={40}
+                              height={40}
+                              className="object-contain rounded-md w-full h-full"
                             />
                           </div>
-                          <div className="min-w-0">
-                            {/* Resolved display name or fallback to truncated address */}
-                            {resolvedAddresses[
-                              invite.sellerAddress.toLowerCase()
-                            ]?.displayName ? (
-                              <>
-                                <Link
-                                  href={`/profile/${invite.sellerAddress}`}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="font-medium text-sm text-zinc-300 truncate flex items-center gap-1 hover:text-cyan-400 transition-colors"
-                                >
-                                  {resolvedAddresses[
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center font-bold text-xl text-white">
+                            {invite.app.charAt(0)}
+                          </div>
+                        )}
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-cyan-400">
+                            {invite.price}
+                          </div>
+                          <div className="text-xs text-zinc-500 font-medium">
+                            USDC
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Time since listed */}
+                      <div className="text-xs text-zinc-500 mb-3">
+                        Listed {timeAgo(invite.createdAt)}
+                      </div>
+
+                      <h3 className="text-2xl font-bold text-white mb-2">
+                        {invite.app}
+                      </h3>
+
+                      <p className="text-sm text-zinc-400 leading-relaxed mb-6">
+                        {invite.description}
+                      </p>
+
+                      <div className="mb-6 pb-6 border-b border-zinc-800">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs text-zinc-500">Seller</p>
+                          <p className="text-xs text-zinc-500">Ethos Score</p>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {/* Seller avatar */}
+                            <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-zinc-700">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={
+                                  resolvedAddresses[
                                     invite.sellerAddress.toLowerCase()
-                                  ].resolvedType === "farcaster" && "@"}
-                                  {
-                                    resolvedAddresses[
+                                  ]?.avatarUrl ||
+                                  blo(invite.sellerAddress as `0x${string}`)
+                                }
+                                alt="Seller avatar"
+                                width={24}
+                                height={24}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              {/* Resolved display name or fallback to truncated address */}
+                              {resolvedAddresses[
+                                invite.sellerAddress.toLowerCase()
+                              ]?.displayName ? (
+                                <>
+                                  <Link
+                                    href={`/profile/${invite.sellerAddress}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="font-medium text-sm text-zinc-300 truncate flex items-center gap-1 hover:text-cyan-400 transition-colors"
+                                  >
+                                    {resolvedAddresses[
                                       invite.sellerAddress.toLowerCase()
-                                    ].displayName
-                                  }
-                                  {resolvedAddresses[
-                                    invite.sellerAddress.toLowerCase()
-                                  ].resolvedType === "farcaster" && (
-                                    <Image
-                                      src="/farcaster-logo.svg"
-                                      alt="Farcaster"
-                                      width={12}
-                                      height={12}
-                                      className="inline-block opacity-60"
-                                    />
-                                  )}
-                                </Link>
-                                {/* Show address below */}
+                                    ].resolvedType === "farcaster" && "@"}
+                                    {
+                                      resolvedAddresses[
+                                        invite.sellerAddress.toLowerCase()
+                                      ].displayName
+                                    }
+                                    {resolvedAddresses[
+                                      invite.sellerAddress.toLowerCase()
+                                    ].resolvedType === "farcaster" && (
+                                      <Image
+                                        src="/farcaster-logo.svg"
+                                        alt="Farcaster"
+                                        width={12}
+                                        height={12}
+                                        className="inline-block opacity-60"
+                                      />
+                                    )}
+                                  </Link>
+                                  {/* Show address below */}
+                                  <Link
+                                    href={`/profile/${invite.sellerAddress}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-xs text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
+                                  >
+                                    {invite.seller}
+                                  </Link>
+                                </>
+                              ) : (
                                 <Link
                                   href={`/profile/${invite.sellerAddress}`}
                                   onClick={(e) => e.stopPropagation()}
-                                  className="text-xs text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
+                                  className="font-medium text-sm text-zinc-300 font-mono hover:text-cyan-400 transition-colors"
                                 >
                                   {invite.seller}
                                 </Link>
-                              </>
-                            ) : (
-                              <Link
-                                href={`/profile/${invite.sellerAddress}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="font-medium text-sm text-zinc-300 font-mono hover:text-cyan-400 transition-colors"
-                              >
-                                {invite.seller}
-                              </Link>
-                            )}
-                          </div>
-                        </div>
-                        {invite.ethos !== null && (
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-xs text-zinc-500">
-                              Ethos:
-                            </span>
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                              <span className="text-xs font-bold text-emerald-400">
-                                {invite.ethos}
-                              </span>
+                              )}
                             </div>
                           </div>
-                        )}
+                          {invite.ethosData && trustLevelConfig && (
+                            <div className="flex flex-col items-end gap-1 shrink-0">
+                              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${trustLevelConfig.bg} border ${trustLevelConfig.border}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${trustLevelConfig.dot}`} />
+                                <span className={`text-sm font-bold ${trustLevelConfig.text}`}>
+                                  {invite.ethosData.score}
+                                </span>
+                              </div>
+                              <span className={`text-xs ${trustLevelConfig.text}`}>
+                                {trustLevelConfig.label}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* CTA Buttons */}
+                      <div className="flex gap-3">
+                        <QuickBuyButton
+                          price={invite.price}
+                          isPending={isPending && purchasingSlug === invite.slug}
+                          onBuy={() => handleQuickBuy(invite.slug)}
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            NProgress.start();
+                            router.push(`/listing/${invite.slug}`);
+                          }}
+                          className="rounded-lg py-3 px-4 font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 transition-all cursor-pointer"
+                        >
+                          <span className="text-white flex items-center justify-center gap-2">
+                            Details
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 7l5 5m0 0l-5 5m5-5H6"
+                              />
+                            </svg>
+                          </span>
+                        </button>
                       </div>
                     </div>
-
-                    {/* CTA Buttons */}
-                    <div className="flex gap-3">
-                      <QuickBuyButton
-                        price={invite.price}
-                        isPending={isPending && purchasingSlug === invite.slug}
-                        onBuy={() => handleQuickBuy(invite.slug)}
-                      />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          NProgress.start();
-                          router.push(`/listing/${invite.slug}`);
-                        }}
-                        className="rounded-lg py-3 px-4 font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 transition-all cursor-pointer"
-                      >
-                        <span className="text-white flex items-center justify-center gap-2">
-                          Details
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M13 7l5 5m0 0l-5 5m5-5H6"
-                            />
-                          </svg>
-                        </span>
-                      </button>
-                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </section>

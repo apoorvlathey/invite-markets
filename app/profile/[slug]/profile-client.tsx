@@ -10,10 +10,58 @@ import {
   getSellerDisplayInfo,
 } from "@/lib/resolve-addresses";
 import { getExplorerAddressUrl } from "@/lib/chain";
-import { fetchEthosScores } from "@/lib/ethos-scores";
+import { fetchEthosData, type EthosData } from "@/lib/ethos-scores";
 
 interface ProfileClientProps {
   address: string;
+}
+
+// Helper function to get trust level color and label
+function getTrustLevelConfig(level: string) {
+  const normalizedLevel = level.toLowerCase();
+
+  switch (normalizedLevel) {
+    case "trusted":
+      return {
+        bg: "bg-emerald-500/10",
+        border: "border-emerald-500/30",
+        text: "text-emerald-400",
+        dot: "bg-emerald-400",
+        label: "Trusted",
+      };
+    case "neutral":
+      return {
+        bg: "bg-blue-500/10",
+        border: "border-blue-500/30",
+        text: "text-blue-400",
+        dot: "bg-blue-400",
+        label: "Neutral",
+      };
+    case "questionable":
+      return {
+        bg: "bg-yellow-500/10",
+        border: "border-yellow-500/30",
+        text: "text-yellow-400",
+        dot: "bg-yellow-400",
+        label: "Questionable",
+      };
+    case "untrusted":
+      return {
+        bg: "bg-red-500/10",
+        border: "border-red-500/30",
+        text: "text-red-400",
+        dot: "bg-red-400",
+        label: "Untrusted",
+      };
+    default:
+      return {
+        bg: "bg-zinc-500/10",
+        border: "border-zinc-500/30",
+        text: "text-zinc-400",
+        dot: "bg-zinc-400",
+        label: "Unknown",
+      };
+  }
 }
 
 // Copy button with feedback
@@ -78,7 +126,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
   const router = useRouter();
   const { resolvedAddresses, isLoading } = useResolveAddresses([address]);
   const displayInfo = getSellerDisplayInfo(address, resolvedAddresses);
-  const [ethosScore, setEthosScore] = useState<number | null>(null);
+  const [ethosData, setEthosData] = useState<EthosData | null>(null);
 
   // Generate blockie avatar as fallback
   const bloAvatar = blo(address as `0x${string}`);
@@ -88,12 +136,16 @@ export default function ProfileClient({ address }: ProfileClientProps) {
     window.scrollTo(0, 0);
   }, []);
 
-  // Fetch Ethos score
+  // Fetch Ethos data
   useEffect(() => {
-    fetchEthosScores([address]).then((scores) => {
-      setEthosScore(scores[address.toLowerCase()] ?? null);
+    fetchEthosData([address]).then((data) => {
+      setEthosData(data[address.toLowerCase()] ?? null);
     });
   }, [address]);
+
+  const trustLevelConfig = ethosData
+    ? getTrustLevelConfig(ethosData.level)
+    : null;
 
   return (
     <div className="min-h-screen text-zinc-100">
@@ -203,8 +255,8 @@ export default function ProfileClient({ address }: ProfileClientProps) {
               )}
             </motion.div>
 
-            {/* Ethos Score */}
-            {ethosScore !== null && (
+            {/* Ethos Score & Trust Level */}
+            {ethosData && trustLevelConfig && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -215,7 +267,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                   href={`https://app.ethos.network/profile/${address}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:border-emerald-500/50 transition-colors cursor-pointer group"
+                  className={`inline-flex items-center gap-3 px-4 py-3 rounded-xl ${trustLevelConfig.bg} border ${trustLevelConfig.border} hover:border-opacity-70 transition-colors cursor-pointer group`}
                 >
                   <Image
                     src="/images/ethos.svg"
@@ -224,16 +276,26 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                     height={24}
                     className="opacity-80 group-hover:opacity-100 transition-opacity"
                   />
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-emerald-300/70">
-                      Ethos Score:
-                    </span>
-                    <span className="text-lg font-bold text-emerald-400">
-                      {ethosScore}
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`w-2 h-2 rounded-full ${trustLevelConfig.dot}`}
+                      />
+                      <span
+                        className={`text-lg font-bold ${trustLevelConfig.text}`}
+                      >
+                        {ethosData.score}
+                      </span>
+                    </div>
+                    <div className="h-4 w-px bg-zinc-700" />
+                    <span
+                      className={`text-sm font-semibold ${trustLevelConfig.text}`}
+                    >
+                      {trustLevelConfig.label}
                     </span>
                   </div>
                   <svg
-                    className="w-4 h-4 text-emerald-400/50 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all ml-1"
+                    className={`w-4 h-4 ${trustLevelConfig.text} opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all ml-1`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
