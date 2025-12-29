@@ -311,7 +311,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
           // Extract unique seller addresses
           const sellers = [
             ...new Set(data.purchases.map((p: Purchase) => p.sellerAddress)),
-          ];
+          ] as string[];
           setSellerAddresses(sellers);
         }
       } catch (error) {

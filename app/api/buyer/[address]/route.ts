@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/mongoose";
 
 export async function GET(
   request: Request,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
   try {
     const { address } = await params; 

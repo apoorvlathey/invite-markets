@@ -41,7 +41,7 @@ interface FeaturedAppWithCount {
 // Helper function to get trust level color and label
 function getTrustLevelConfig(level: string) {
   const normalizedLevel = level.toLowerCase();
-  
+
   switch (normalizedLevel) {
     case "trusted":
       return {
@@ -528,8 +528,8 @@ export default function Home() {
 
         {!loading && !error && invites.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {invites.map((invite, i) => {
-              const trustLevelConfig = invite.ethosData 
+            {invites.slice(0, 6).map((invite, i) => {
+              const trustLevelConfig = invite.ethosData
                 ? getTrustLevelConfig(invite.ethosData.level)
                 : null;
 
@@ -674,13 +674,21 @@ export default function Home() {
                           </div>
                           {invite.ethosData && trustLevelConfig && (
                             <div className="flex flex-col items-end gap-1 shrink-0">
-                              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${trustLevelConfig.bg} border ${trustLevelConfig.border}`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${trustLevelConfig.dot}`} />
-                                <span className={`text-sm font-bold ${trustLevelConfig.text}`}>
+                              <div
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${trustLevelConfig.bg} border ${trustLevelConfig.border}`}
+                              >
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full ${trustLevelConfig.dot}`}
+                                />
+                                <span
+                                  className={`text-sm font-bold ${trustLevelConfig.text}`}
+                                >
                                   {invite.ethosData.score}
                                 </span>
                               </div>
-                              <span className={`text-xs ${trustLevelConfig.text}`}>
+                              <span
+                                className={`text-xs ${trustLevelConfig.text}`}
+                              >
                                 {trustLevelConfig.label}
                               </span>
                             </div>
@@ -692,7 +700,9 @@ export default function Home() {
                       <div className="flex gap-3">
                         <QuickBuyButton
                           price={invite.price}
-                          isPending={isPending && purchasingSlug === invite.slug}
+                          isPending={
+                            isPending && purchasingSlug === invite.slug
+                          }
                           onBuy={() => handleQuickBuy(invite.slug)}
                         />
                         <button
