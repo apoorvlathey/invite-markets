@@ -134,11 +134,14 @@ export async function fetchListingsData(): Promise<ListingsData> {
   const active = listings.filter((l) => l.status === "active");
   const transformedInvites = active.map(transformListing);
 
-  const uniqueAddresses = [
-    ...new Set(transformedInvites.map((invite) => invite.sellerAddress)),
-  ];
-
-  const ethosDataMap = await fetchEthosData(uniqueAddresses);
+  // Only fetch Ethos data if there are active listings
+  let ethosDataMap: Record<string, EthosData> = {};
+  if (transformedInvites.length > 0) {
+    const uniqueAddresses = [
+      ...new Set(transformedInvites.map((invite) => invite.sellerAddress)),
+    ];
+    ethosDataMap = await fetchEthosData(uniqueAddresses);
+  }
 
   const invitesWithEthosData = transformedInvites.map((invite) => ({
     ...invite,

@@ -203,6 +203,9 @@ export async function fetchEthosData(
   const freshData: Record<string, EthosData> = {};
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     const response = await fetch(
       "https://api.ethos.network/api/v2/score/addresses",
       {
@@ -211,40 +214,52 @@ export async function fetchEthosData(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ addresses: uncachedAddresses }),
+        signal: controller.signal,
       }
     );
 
+    clearTimeout(timeoutId);
+
     if (response.ok) {
-      const data = await response.json();      
+      const data = await response.json();
       // Process the response data based on API structure
-      if (typeof data === 'object' && data !== null) {
+      if (typeof data === "object" && data !== null) {
         Object.keys(data).forEach((address) => {
           const scoreData = data[address];
-          
-          if (scoreData && typeof scoreData === 'object') {
+
+          if (scoreData && typeof scoreData === "object") {
             const score = scoreData.score;
             const level = scoreData.level;
-            
+
             if (score !== undefined) {
               freshData[address.toLowerCase()] = {
                 score: score,
-                level: level
+                level: level,
               };
             }
           }
         });
-      }    
+      }
       // Save fresh data to cache
       if (Object.keys(freshData).length > 0) {
         saveEthosDataToCache(freshData);
       }
     } else {
-      console.log("Response not ok:", response.status, response.statusText);
+      // Silently handle non-ok responses - Ethos data is optional
+      console.debug(
+        "Ethos API response not ok:",
+        response.status,
+        response.statusText
+      );
     }
   } catch (err) {
-    console.error("Error fetching Ethos data:", err);
+    // Silently handle network errors - Ethos data is optional, not critical
+    // Only log in development for debugging
+    if (process.env.NODE_ENV === "development") {
+      console.debug("Ethos API fetch error (non-critical):", err);
+    }
   }
 
-  // Combine cached and fresh results
+  // Combine cached and fresh results - return what we have even if API failed
   return { ...cached, ...freshData };
 }

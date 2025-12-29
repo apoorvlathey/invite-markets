@@ -7,7 +7,9 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  // Decode the slug in case it's URL-encoded (e.g., "Base%20App" -> "Base App")
+  const slug = decodeURIComponent(rawSlug);
 
   // Check if it's a featured app
   const featuredApp = featuredApps.find((a) => a.id === slug);
