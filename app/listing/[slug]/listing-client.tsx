@@ -35,6 +35,18 @@ async function fetchSingleListing(slug: string): Promise<Listing | null> {
   }
 }
 
+// Fetch seller statistics
+async function fetchSellerStats(address: string) {
+  try {
+    const response = await fetch(`/api/seller/${address}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.stats;
+  } catch {
+    return null;
+  }
+}
+
 // Helper function to get trust level color and label
 function getTrustLevelConfig(level: string) {
   const normalizedLevel = level.toLowerCase();
@@ -162,6 +174,14 @@ export default function ListingClient() {
     if (!listing) return null;
     return getSellerDisplayInfo(listing.sellerAddress, resolvedAddresses);
   }, [listing, resolvedAddresses]);
+
+  // Fetch seller statistics
+  const { data: sellerStats } = useQuery({
+    queryKey: ["seller", listing?.sellerAddress],
+    queryFn: () => fetchSellerStats(listing!.sellerAddress),
+    enabled: !!listing?.sellerAddress,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Find cheaper listing for the same app
   const cheaperListing = useMemo(() => {
@@ -917,6 +937,30 @@ export default function ListingClient() {
                           {listing.sellerAddress}
                         </Link>
                       )}
+                      
+                      {/* Sales Count Badge */}
+                      {sellerStats && sellerStats.salesCount > 0 && (
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30">
+                            <svg
+                              className="w-3 h-3 text-emerald-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            <span className="text-xs font-medium text-emerald-400">
+                              {sellerStats.salesCount} {sellerStats.salesCount === 1 ? 'sale' : 'sales'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -958,6 +1002,7 @@ export default function ListingClient() {
                 )}
               </div>
             </div>
+            
             {/* Payment Info Card */}
             <div className="rounded-xl bg-zinc-950 border border-zinc-800 p-6">
               <h3 className="text-sm font-medium text-zinc-400 mb-4">
