@@ -4,7 +4,7 @@ import { Transaction } from "@/models/transaction";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
   try {
     await connectDB();
