@@ -3,7 +3,13 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
+import { createThirdwebClient } from "thirdweb";
+import {
+  useActiveAccount,
+  useActiveWalletChain,
+  useConnectModal,
+} from "thirdweb/react";
+import { base, baseSepolia } from "thirdweb/chains";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -15,6 +21,13 @@ import { featuredApps } from "@/data/featuredApps";
 import { LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
 import { type Listing, type ListingsData } from "@/lib/listings";
 import { chainId as defaultChainId } from "@/lib/chain";
+
+const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET === "true";
+const thirdwebChain = isTestnet ? baseSepolia : base;
+
+const thirdwebClient = createThirdwebClient({
+  clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID!,
+});
 
 interface ExistingApp {
   id: string;
@@ -28,6 +41,7 @@ export default function SellClient() {
   const queryClient = useQueryClient();
   const account = useActiveAccount();
   const chain = useActiveWalletChain();
+  const { connect } = useConnectModal();
   const address = account?.address;
   const isConnected = !!account;
   const chainId = chain?.id ?? defaultChainId;
@@ -823,10 +837,16 @@ export default function SellClient() {
             )}
 
             <motion.button
-              whileHover={{ scale: isConnected && !isSubmitting ? 1.02 : 1 }}
-              whileTap={{ scale: isConnected && !isSubmitting ? 0.98 : 1 }}
-              type="submit"
-              disabled={isSubmitting || !isConnected}
+              whileHover={{ scale: !isSubmitting ? 1.02 : 1 }}
+              whileTap={{ scale: !isSubmitting ? 0.98 : 1 }}
+              type={isConnected ? "submit" : "button"}
+              disabled={isSubmitting}
+              onClick={
+                !isConnected
+                  ? () =>
+                      connect({ client: thirdwebClient, chain: thirdwebChain })
+                  : undefined
+              }
               className="group relative w-full rounded-xl py-4 px-6 font-bold text-lg overflow-hidden disabled:cursor-not-allowed cursor-pointer"
             >
               {isConnected && !isSubmitting ? (
@@ -896,12 +916,24 @@ export default function SellClient() {
                 </>
               ) : (
                 <>
-                  <div className="absolute inset-0 bg-zinc-800" />
-                  <span className="relative z-10 text-zinc-400">
-                    {!isConnected
-                      ? "Connect Wallet to Continue"
-                      : "Create Listing"}
+                  <div className="absolute inset-0 bg-linear-to-r from-cyan-500 to-blue-500 transition-transform group-hover:scale-110" />
+                  <span className="relative z-10 text-black flex items-center justify-center gap-2">
+                    Connect Wallet
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
+                    </svg>
                   </span>
+                  <div className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl bg-linear-to-r from-cyan-500 to-blue-500" />
                 </>
               )}
             </motion.button>
