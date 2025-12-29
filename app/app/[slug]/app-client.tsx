@@ -31,6 +31,25 @@ import {
 } from "@/lib/listings";
 import { blo } from "blo";
 
+/* ---------- App Data Types ---------- */
+
+interface AppData {
+  id: string;
+  name: string;
+  iconUrl: string;
+  description: string;
+  siteUrl?: string;
+  totalListings: number;
+  activeListings: number;
+  lowestPrice: number | null;
+  isFeatured: boolean;
+}
+
+interface AppsResponse {
+  success: boolean;
+  apps: AppData[];
+}
+
 /* ---------- Types ---------- */
 
 interface ListingWithEthos extends Listing {
@@ -152,7 +171,9 @@ function SortIcon({
 }
 
 export default function AppPageClient() {
-  const { slug } = useParams<{ slug: string }>();
+  const params = useParams<{ slug: string }>();
+  // Decode the slug in case it's URL-encoded (e.g., "Base%20App" -> "Base App")
+  const slug = params.slug ? decodeURIComponent(params.slug) : "";
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -179,15 +200,28 @@ export default function AppPageClient() {
     gcTime: 5 * 60 * 1000,
   });
 
+  // Fetch all apps to get info for non-featured apps
+  const { data: appsData, isLoading: appsLoading } = useQuery<AppsResponse>({
+    queryKey: ["apps"],
+    queryFn: async () => {
+      const response = await fetch("/api/apps");
+      if (!response.ok) throw new Error("Failed to fetch apps");
+      return response.json();
+    },
+    staleTime: 60 * 1000, // 1 minute
+    gcTime: 5 * 60 * 1000,
+  });
+
   const { data: salesData, isLoading: salesLoading } = useQuery<SaleData[]>({
     queryKey: ["sales", slug],
     queryFn: async () => {
-      const response = await fetch(`/api/sales/${slug}`);
+      const response = await fetch(`/api/sales/${encodeURIComponent(slug)}`);
       if (!response.ok) throw new Error("Failed to fetch sales");
       return response.json();
     },
     staleTime: AUTO_REFRESH_INTERVAL * 1000,
     gcTime: 5 * 60 * 1000,
+    enabled: !!slug,
   });
 
   const error = queryError instanceof Error ? queryError.message : "";
@@ -198,13 +232,19 @@ export default function AppPageClient() {
     [listingsData?.rawListings]
   );
 
-  // Filter listings for this specific app
+  // Filter listings for this specific app - match by appId OR appName
   const appListings = useMemo(() => {
     return allListings.filter((l) => l.appId === slug || l.appName === slug);
   }, [allListings, slug]);
 
-  // Get app info from listings for non-featured apps
-  const appInfo = useMemo(() => {
+  // Get app info from /api/apps for non-featured apps (works even with no active listings)
+  const appDataFromApi = useMemo(() => {
+    if (!appsData?.apps) return null;
+    return appsData.apps.find((app) => app.id === slug) || null;
+  }, [appsData, slug]);
+
+  // Get app info from listings as fallback
+  const appInfoFromListings = useMemo(() => {
     if (appListings.length > 0) {
       const firstListing = appListings[0];
       return {
@@ -214,6 +254,19 @@ export default function AppPageClient() {
     }
     return null;
   }, [appListings, slug]);
+
+  // Combined app info - prefer API data, fallback to listings
+  const appInfo = useMemo(() => {
+    if (appDataFromApi) {
+      return {
+        name: appDataFromApi.name,
+        iconUrl: appDataFromApi.iconUrl,
+        description: appDataFromApi.description,
+        siteUrl: appDataFromApi.siteUrl,
+      };
+    }
+    return appInfoFromListings;
+  }, [appDataFromApi, appInfoFromListings]);
 
   // Toggle sort - if same field, toggle direction; if different field, set new field with default direction
   const handleSort = (field: SortField) => {
@@ -364,10 +417,19 @@ export default function AppPageClient() {
   // Determine the display info
   const displayName = featuredApp?.appName || appInfo?.name || slug;
   const displayIconUrl = featuredApp?.appIconUrl || appInfo?.iconUrl;
+  const displayDescription =
+    featuredApp?.description ||
+    (appInfo && "description" in appInfo ? appInfo.description : null);
+  const displaySiteUrl =
+    featuredApp?.siteUrl ||
+    (appInfo && "siteUrl" in appInfo ? appInfo.siteUrl : null);
   const isFeatured = !!featuredApp;
 
-  // 404 if no featured app and no listings found (after loading)
-  if (!loading && !featuredApp && listings.length === 0 && !appInfo) {
+  // Combined loading state - wait for both listings and apps data
+  const isPageLoading = loading || appsLoading;
+
+  // 404 if no featured app and no app found in database (after loading)
+  if (!isPageLoading && !featuredApp && !appInfo) {
     return (
       <div className="min-h-screen bg-black text-zinc-100 flex items-center justify-center px-4">
         <motion.div
@@ -392,7 +454,7 @@ export default function AppPageClient() {
           </div>
           <h2 className="text-2xl font-bold mb-3">App Not Found</h2>
           <p className="text-zinc-400 mb-8">
-            This app doesn&apos;t exist or has no active listings atm.
+            This app doesn&apos;t exist in our marketplace.
           </p>
           <Link href="/">
             <button className="px-6 py-3 rounded-xl bg-linear-to-r from-cyan-500 to-blue-500 font-semibold text-black cursor-pointer hover:from-cyan-400 hover:to-blue-400 transition-all">
@@ -450,9 +512,9 @@ export default function AppPageClient() {
                 }}
               />
 
-              {/* Header - Different for featured vs non-featured */}
-              {isFeatured && displayIconUrl ? (
-                /* Featured: Tiled Background Header */
+              {/* Header - Tiled background if icon available, otherwise simple gradient */}
+              {displayIconUrl ? (
+                /* Tiled Background Header */
                 <div className="relative h-32 md:h-40 overflow-hidden bg-zinc-900/50">
                   {/* Tiled pattern */}
                   <div
@@ -493,18 +555,17 @@ export default function AppPageClient() {
                   {/* Main Icon */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-zinc-600 shadow-2xl bg-white p-2 ring-4 ring-black/50">
-                      <Image
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
                         src={displayIconUrl}
                         alt={`${displayName} icon`}
-                        width={80}
-                        height={80}
                         className="object-contain w-full h-full rounded-lg"
                       />
                     </div>
                   </div>
                 </div>
               ) : (
-                /* Non-featured: Simpler gradient header */
+                /* No icon: Simple gradient header */
                 <div
                   className="relative h-24 md:h-28 overflow-hidden"
                   style={{
@@ -513,29 +574,15 @@ export default function AppPageClient() {
                 >
                   {/* Vignette */}
                   <div className="absolute inset-0 bg-linear-to-t from-zinc-950 via-transparent to-transparent" />
-
-                  {/* Icon if available */}
-                  {displayIconUrl && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-zinc-600 shadow-2xl bg-white p-2 ring-4 ring-black/50">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={displayIconUrl}
-                          alt={`${displayName} icon`}
-                          className="object-contain w-full h-full rounded-lg"
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
               {/* App Info */}
               <div className="p-6 flex-1 flex flex-col">
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  {isFeatured && featuredApp?.siteUrl ? (
+                  {displaySiteUrl ? (
                     <a
-                      href={featuredApp.siteUrl}
+                      href={displaySiteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="group flex items-center gap-2 text-2xl md:text-3xl font-bold text-white hover:text-cyan-400 transition-colors"
@@ -567,17 +614,17 @@ export default function AppPageClient() {
                   )}
                 </div>
 
-                {/* Description - only for featured apps */}
-                {isFeatured && featuredApp?.description && (
+                {/* Description */}
+                {displayDescription && (
                   <p className="text-zinc-400 text-sm leading-relaxed mb-6">
-                    {featuredApp.description}
+                    {displayDescription}
                   </p>
                 )}
 
                 {/* Stats */}
                 <div
                   className={`flex items-center gap-3 ${
-                    isFeatured ? "" : "mt-4"
+                    displayDescription ? "" : "mt-4"
                   } mb-6`}
                 >
                   {listings.length > 0 ? (
@@ -694,7 +741,7 @@ export default function AppPageClient() {
             </div>
 
             {/* Loading State */}
-            {loading && (
+            {isPageLoading && (
               <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
                 {/* Skeleton Table Header */}
                 <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 bg-zinc-900/50 border-b border-zinc-800">
@@ -753,7 +800,7 @@ export default function AppPageClient() {
             )}
 
             {/* Empty State */}
-            {!loading && !error && listings.length === 0 && (
+            {!isPageLoading && !error && listings.length === 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -789,7 +836,7 @@ export default function AppPageClient() {
             )}
 
             {/* Listings Table */}
-            {!loading && !error && sortedListings.length > 0 && (
+            {!isPageLoading && !error && sortedListings.length > 0 && (
               <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
                 {/* Table Header with Sortable Columns */}
                 <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 bg-zinc-900/50 border-b border-zinc-800 text-xs font-medium uppercase tracking-wider">
@@ -998,7 +1045,7 @@ export default function AppPageClient() {
                       {/* Actions */}
                       <div className="col-span-1 md:col-span-3 flex items-center gap-2 justify-end">
                         <QuickBuyButton
-                          price={`${listing.priceUsdc}`}
+                          price={`$${listing.priceUsdc}`}
                           isPending={
                             isPending && purchasingSlug === listing.slug
                           }

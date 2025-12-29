@@ -414,8 +414,11 @@ export default function ListingClient() {
   }
 
   const app = featuredApps.find((a) => a.id === listing.appId) ?? null;
-  const appName = app?.appName ?? listing.appName ?? "Invite";
+  // For non-featured apps, appId might contain the app name (when selected from existing apps)
+  const appName = app?.appName ?? listing.appName ?? listing.appId ?? "Invite";
   const appIconUrl = app?.appIconUrl ?? listing.appIconUrl;
+  // For linking to app page: use appId for featured apps, appName for custom apps
+  const appSlug = listing.appId || listing.appName;
   const gradient = getGradientForApp(appName);
   const status = getStatusConfig(listing.status);
 
@@ -560,9 +563,9 @@ export default function ListingClient() {
                     />
                     <span className="text-sm text-zinc-400">Base Network</span>
                   </div>
-                  {listing.appId && (
+                  {appSlug && (
                     <Link
-                      href={`/app/${listing.appId}`}
+                      href={`/app/${appSlug}`}
                       className="group flex items-center gap-1.5 text-xs text-zinc-400 hover:text-cyan-400 transition-colors"
                     >
                       <span>View all {appName} listings</span>
@@ -760,9 +763,9 @@ export default function ListingClient() {
 
               {/* App Name */}
               <div className="flex items-start justify-between gap-3 mb-2">
-                {listing.appId ? (
+                {appSlug ? (
                   <Link
-                    href={`/app/${listing.appId}`}
+                    href={`/app/${appSlug}`}
                     className="group inline-flex items-center gap-2"
                   >
                     <h1 className="text-3xl md:text-4xl font-bold text-white group-hover:text-cyan-400 transition-colors">
