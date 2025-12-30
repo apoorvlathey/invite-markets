@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import { Listing } from "@/models/listing";
 
+interface SalesQueryResult {
+  priceUsdc: number;
+  updatedAt: Date;
+  appId: string;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -17,9 +23,9 @@ export async function GET(
       .sort({ updatedAt: -1 })
       .limit(100)
       .select("priceUsdc updatedAt appId")
-      .lean();
+      .lean<SalesQueryResult[]>();
 
-    const formattedSales = sales.map((sale: any) => ({
+    const formattedSales = sales.map((sale) => ({
       timestamp: sale.updatedAt,
       priceUsdc: sale.priceUsdc,
       slug: sale.appId,

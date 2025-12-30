@@ -10,7 +10,7 @@ import {
   useResolveAddresses,
   getSellerDisplayInfo,
 } from "@/lib/resolve-addresses";
-import { getExplorerAddressUrl, getExplorerTxUrl } from "@/lib/chain";
+import { getExplorerAddressUrl } from "@/lib/chain";
 import { fetchEthosData, type EthosData } from "@/lib/ethos-scores";
 
 interface ProfileClientProps {
@@ -19,7 +19,6 @@ interface ProfileClientProps {
 
 interface Purchase {
   id: string;
-  txHash: string;
   listingSlug: string;
   sellerAddress: string;
   priceUsdc: number;
@@ -161,7 +160,7 @@ function PurchaseCard({
             href={`/listing/${purchase.listingSlug}`}
             className="text-base font-semibold text-white hover:text-cyan-400 transition-colors block mb-2"
           >
-            {purchase.appId}
+            {purchase.appId || purchase.listingSlug}
           </Link>
 
           {/* Seller info */}
@@ -225,27 +224,7 @@ function PurchaseCard({
 
         {/* Action buttons */}
         <div className="flex flex-col gap-2">
-          <a
-            href={getExplorerTxUrl(purchase.txHash)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 rounded-lg bg-zinc-800 border border-zinc-700 hover:bg-zinc-750 hover:border-zinc-600 transition-all cursor-pointer group"
-            title="View transaction"
-          >
-            <svg
-              className="w-4 h-4 text-zinc-400 group-hover:text-cyan-400 transition-colors"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-              />
-            </svg>
-          </a>
+
           <Link
             href={`/profile/${purchase.sellerAddress}?review=true`}
             className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 hover:border-purple-500/50 transition-all cursor-pointer group"
@@ -304,14 +283,14 @@ export default function ProfileClient({ address }: ProfileClientProps) {
     const fetchPurchases = async () => {
       try {
         const response = await fetch(`/api/buyer/${address}`);
-        const data = await response.json();
+        const data: { success: boolean; purchases: Purchase[] } = await response.json();
 
         if (data.success) {
           setPurchases(data.purchases);
           // Extract unique seller addresses
           const sellers = [
-            ...new Set(data.purchases.map((p: Purchase) => p.sellerAddress)),
-          ] as string[];
+            ...new Set(data.purchases.map((p) => p.sellerAddress)),
+          ];
           setSellerAddresses(sellers);
         }
       } catch (error) {
@@ -378,8 +357,8 @@ export default function ProfileClient({ address }: ProfileClientProps) {
           className="rounded-2xl bg-zinc-950 border border-zinc-800 shadow-premium overflow-hidden"
         >
           {/* Header gradient */}
-          <div className="h-24 bg-linear-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 relative">
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-size-[40px_40px]" />
+          <div className="h-24 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 relative">
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[length:40px_40px]" />
           </div>
 
           {/* Avatar */}

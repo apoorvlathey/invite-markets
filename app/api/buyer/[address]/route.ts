@@ -31,7 +31,6 @@ export async function GET(
       success: true,
       purchases: purchases.map((p) => ({
         id: p._id.toString(),
-        txHash: p.txHash,
         listingSlug: p.listingSlug,
         sellerAddress: p.sellerAddress,
         priceUsdc: p.priceUsdc,
