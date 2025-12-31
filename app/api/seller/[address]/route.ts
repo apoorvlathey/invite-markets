@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import { Transaction } from "@/models/transaction";
+import { Listing } from "@/models/listing";
 
 export async function GET(
   request: NextRequest,
@@ -9,7 +10,7 @@ export async function GET(
   try {
     await connectDB();
 
-    const { address } = await params; 
+    const { address } = await params;
 
     // Count completed sales for this seller
     const salesCount = await Transaction.countDocuments({
@@ -24,12 +25,18 @@ export async function GET(
 
     const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
 
+    // Get all listings for this seller
+    const listings = await Listing.find({
+      sellerAddress: address.toLowerCase(),
+    }).sort({ createdAt: -1 });
+
     return NextResponse.json({
       success: true,
       stats: {
         salesCount,
         totalRevenue,
       },
+      listings,
     });
   } catch (error) {
     console.error("Error fetching seller stats:", error);
