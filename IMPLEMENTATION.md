@@ -2,7 +2,12 @@
 
 ## Overview
 
-A marketplace for buying and selling invite links with MongoDB backend and Next.js API routes.
+A marketplace for buying and selling invite links and access codes with MongoDB backend and Next.js API routes.
+
+**Supported Listing Types:**
+
+- **Invite Link** (default): Single private URL revealed after payment
+- **Access Code**: Public app URL (displayed before purchase) + private access code (revealed after payment)
 
 ## Database Structure
 
@@ -17,10 +22,16 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 ```typescript
 {
   slug: string (unique, indexed)
-  inviteUrl: string
+  listingType: "invite_link" | "access_code" (defaults to "invite_link")
+  inviteUrl?: string              // For invite_link type - PRIVATE
+  appUrl?: string                 // For access_code type - PUBLIC (displayed before payment)
+  accessCode?: string             // For access_code type - PRIVATE (revealed after payment)
   priceUsdc: number
   sellerAddress: string (lowercase Ethereum address)
   status: "active" | "sold" | "cancelled"
+  appId?: string                  // For featured apps
+  appName?: string                // For custom apps
+  chainId: number                 // Network ID (e.g., 8453 for Base Mainnet)
   createdAt: Date (auto-generated)
   updatedAt: Date (auto-generated)
 }
@@ -44,25 +55,86 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 - Unique slug generation (8-character alphanumeric)
 - Timestamps enabled for automatic `createdAt` and `updatedAt`
 - Status tracking for listing lifecycle
+- Listing type support for both invite links and access codes
 
-### 3. API Endpoints
+### 3. EIP-712 Signatures
+
+**File**: `lib/signature.ts`
+
+All listing operations (create, update, delete) require EIP-712 typed data signatures for authentication.
+
+**CreateListing Message:**
+
+```typescript
+{
+  listingType: string,
+  inviteUrl: string,
+  appUrl: string,
+  accessCode: string,
+  priceUsdc: string,
+  sellerAddress: address,
+  appId: string,
+  appName: string,
+  nonce: uint256
+}
+```
+
+**UpdateListing Message:**
+
+```typescript
+{
+  slug: string,
+  listingType: string,
+  inviteUrl: string,
+  appUrl: string,
+  accessCode: string,
+  priceUsdc: string,
+  sellerAddress: address,
+  appName: string,
+  nonce: uint256
+}
+```
+
+### 4. API Endpoints
 
 #### Create Listing - POST `/api/listings`
 
 **File**: `app/api/listings/route.ts`
 
-- Validates all required fields
+- Validates all required fields based on listing type
 - Validates Ethereum address format
+- Verifies EIP-712 signature
 - Generates unique slug using nanoid
 - Returns created listing with 201 status
 
-**Request Body**:
+**Request Body (Invite Link type)**:
 
 ```json
 {
-  "inviteUrl": "https://...",
+  "listingType": "invite_link",
+  "inviteUrl": "https://app.example.com/invite/abc123",
   "priceUsdc": 10.5,
-  "sellerAddress": "0x..."
+  "sellerAddress": "0x...",
+  "nonce": "1704067200000",
+  "chainId": 8453,
+  "signature": "0x...",
+  "appId": "ethos"
+}
+```
+
+**Request Body (Access Code type)**:
+
+```json
+{
+  "listingType": "access_code",
+  "appUrl": "https://app.example.com",
+  "accessCode": "SECRET123",
+  "priceUsdc": 10.5,
+  "sellerAddress": "0x...",
+  "nonce": "1704067200000",
+  "chainId": 8453,
+  "signature": "0x...",
+  "appName": "Example App"
 }
 ```
 
@@ -73,17 +145,18 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
   "success": true,
   "listing": {
     "slug": "abc123xy",
+    "listingType": "access_code",
+    "appUrl": "https://app.example.com",
     "priceUsdc": 10.5,
     "sellerAddress": "0x...",
     "status": "active",
-    "appId": "ethos",
-    "appName": null,
+    "appName": "Example App",
     "createdAt": "2024-01-01T00:00:00.000Z"
   }
 }
 ```
 
-> **Note**: `inviteUrl` is intentionally omitted from the response for security. See [Invite URL Protection](#invite-url-protection) for details.
+> **Note**: `inviteUrl` and `accessCode` are intentionally omitted from the response for security. See [Secret Data Protection](#secret-data-protection) for details.
 
 #### Get Listing - GET `/api/listings/[slug]`
 
@@ -91,24 +164,41 @@ A marketplace for buying and selling invite links with MongoDB backend and Next.
 
 - Fetches listing by unique slug
 - Returns 404 if not found
-- Includes all listing details with timestamps
-- **Does NOT include inviteUrl** (security measure)
+- Includes `listingType` and `appUrl` (for access_code type)
+- **Does NOT include inviteUrl or accessCode** (security measure)
+
+**Response**:
+
+```json
+{
+  "success": true,
+  "listing": {
+    "slug": "abc123xy",
+    "listingType": "access_code",
+    "appUrl": "https://app.example.com",
+    "priceUsdc": 10.5,
+    "sellerAddress": "0x...",
+    "status": "active",
+    "appName": "Example App"
+  }
+}
+```
 
 #### Purchase Listing - POST `/api/purchase/[slug]`
 
 **File**: `app/api/purchase/[slug]/route.ts`
 
-This is the **only endpoint** that returns the `inviteUrl`, and only after successful x402 payment verification.
+This is the **only endpoint** that returns the secret data (`inviteUrl` or `accessCode`), and only after successful x402 payment verification.
 
 **Flow**:
 
 1. Client sends request with `x-payment` header containing x402 payment data
 2. Server calls `settlePayment()` to verify payment via thirdweb facilitator
-3. If payment verification fails → Returns error (no inviteUrl)
+3. If payment verification fails → Returns error (no secret data)
 4. If payment succeeds:
    - Creates transaction record
    - Marks listing as sold
-   - Returns `inviteUrl` to buyer
+   - Returns secret data to buyer based on listing type
 
 **Request Headers**:
 
@@ -116,11 +206,22 @@ This is the **only endpoint** that returns the `inviteUrl`, and only after succe
 x-payment: <x402 payment data>
 ```
 
-**Success Response** (only after verified payment):
+**Success Response (Invite Link type)**:
 
 ```json
 {
+  "listingType": "invite_link",
   "inviteUrl": "https://app.example.com/invite/abc123"
+}
+```
+
+**Success Response (Access Code type)**:
+
+```json
+{
+  "listingType": "access_code",
+  "appUrl": "https://app.example.com",
+  "accessCode": "SECRET123"
 }
 ```
 
@@ -128,7 +229,7 @@ x-payment: <x402 payment data>
 
 **File**: `app/api/seller/[address]/route.ts`
 
-Returns seller statistics and listings. The `inviteUrl` is only included when the request is authenticated as the seller.
+Returns seller statistics and listings. Secret data (`inviteUrl` and `accessCode`) is only included when the request is authenticated as the seller.
 
 **Optional Authentication Headers**:
 
@@ -145,7 +246,7 @@ x-seller-message: <base64 encoded message>
   "isAuthenticated": false,
   "stats": { "salesCount": 5, "totalRevenue": 125.50 },
   "listings": [
-    { "slug": "...", "priceUsdc": 25, "status": "active", ... }
+    { "slug": "...", "listingType": "access_code", "appUrl": "https://...", "priceUsdc": 25, "status": "active", ... }
   ]
 }
 ```
@@ -158,63 +259,159 @@ x-seller-message: <base64 encoded message>
   "isAuthenticated": true,
   "stats": { "salesCount": 5, "totalRevenue": 125.50 },
   "listings": [
-    { "slug": "...", "priceUsdc": 25, "inviteUrl": "https://...", "status": "active", ... }
+    {
+      "slug": "...",
+      "listingType": "access_code",
+      "appUrl": "https://...",
+      "accessCode": "SECRET123",
+      "priceUsdc": 25,
+      "status": "active",
+      ...
+    }
   ]
 }
 ```
 
-### 4. User Interface
+#### Update Listing - PATCH `/api/listings/update`
+
+**File**: `app/api/listings/update/route.ts`
+
+- Requires EIP-712 signature verification
+- Supports updating fields based on listing type
+- Cannot change listing type after creation
+
+**Request Body (Access Code type)**:
+
+```json
+{
+  "slug": "abc123xy",
+  "sellerAddress": "0x...",
+  "priceUsdc": 15.0,
+  "appUrl": "https://newurl.example.com",
+  "accessCode": "NEWSECRET456",
+  "nonce": "1704067200000",
+  "chainId": 8453,
+  "signature": "0x..."
+}
+```
+
+### 5. User Interface
 
 #### Sell Page - `/sell`
 
-**File**: `app/sell/page.tsx`
+**File**: `app/sell/sell-client.tsx`
 
-- Form with 3 fields: Invite URL, Price (USDC), Wallet Address
-- Client-side validation
-- Success screen with link to listing page
-- Option to create another listing
+- **Listing Type Tabs**: Toggle between "Invite Link" and "Access Code" modes
+- App name autocomplete with featured apps
+- Different form fields based on listing type
+
+**Invite Link Mode:**
+
+- App Name (with autocomplete)
+- Invite URL (private)
+- Price (USDC)
+
+**Access Code Mode:**
+
+- App Name (with autocomplete)
+- App URL (public - with warning notice)
+- Access Code (private)
+- Price (USDC)
 
 **Features**:
 
-- URL validation for invite link
+- URL validation for links
 - Number input with decimal support for price
 - Ethereum address pattern validation
 - Loading states during submission
 - Error handling with user-friendly messages
+- Warning that App URL is publicly visible (for access_code type)
 
 #### Listing Page - `/listing/[slug]`
 
-**File**: `app/listing/[slug]/page.tsx`
+**File**: `app/listing/[slug]/listing-client.tsx`
 
 - Displays full listing details
 - Status badge with color coding
+- Listing type badge (Invite Link / Access Code)
+- For access_code type: Shows public App URL with link
 - Formatted dates and prices
-- Back navigation to home
-- Purchase button (placeholder for future implementation)
+- Purchase button triggers x402 payment flow
 
 **Features**:
 
 - Loading spinner while fetching
 - Error state for invalid/missing listings
 - Responsive design
-- Clickable invite URL
 - Status-based UI (active/sold/cancelled)
+- Different messaging based on listing type
+
+#### Payment Success Modal
+
+**File**: `app/components/PaymentSuccessModal.tsx`
+
+Displays secret data after successful purchase:
+
+**Invite Link type:**
+
+- Shows "Your Invite Link:" with copy button
+
+**Access Code type:**
+
+- Shows "App Link:" as clickable external link
+- Shows "Your Access Code:" with copy button
+
+Both include:
+
+- Warning that data is only shown once
+- Confirmation dialog if closing without copying
+- Option to rate seller on Ethos
+
+#### Edit Listing Modal
+
+**File**: `app/profile/[slug]/profile-client.tsx`
+
+The edit modal adapts based on listing type:
+
+**Invite Link type:**
+
+- Price (USDC)
+- Invite URL (masked, optional update)
+- App Name (for custom apps)
+
+**Access Code type:**
+
+- Price (USDC)
+- App URL (public)
+- Access Code (masked, optional update)
+- App Name (for custom apps)
 
 ## User Flow
 
-1. **Create Listing**:
+### Creating a Listing
 
-   - Seller visits `/sell`
-   - Fills form with invite URL, price, and wallet address
-   - Submits form → POST to `/api/listings`
-   - Server generates unique slug and saves to MongoDB
-   - Success screen shows with link to listing page
+1. **Seller visits `/sell`**
+2. **Selects listing type** (Invite Link or Access Code tab)
+3. **Fills form**:
+   - For Invite Link: App name, Invite URL, Price
+   - For Access Code: App name, App URL (public), Access Code (private), Price
+4. **Signs EIP-712 message** with wallet
+5. **Submits form** → POST to `/api/listings`
+6. **Server validates** signature and creates listing
+7. **Success screen** shows with link to listing page
 
-2. **View Listing**:
-   - Anyone visits `/listing/[slug]`
-   - Page fetches data from `/api/listings/[slug]`
-   - Displays all listing details
-   - Purchase button available for active listings
+### Purchasing a Listing
+
+1. **Buyer visits listing page** `/listing/[slug]`
+2. **Views listing details**:
+   - For access_code type: Can see App URL before purchase
+   - For invite_link type: No URL visible
+3. **Clicks Purchase** button
+4. **x402 payment flow** initiates
+5. **On success**:
+   - For invite_link: Receives `inviteUrl`
+   - For access_code: Receives `appUrl` + `accessCode`
+6. **PaymentSuccessModal** displays secret data with copy buttons
 
 ## Technical Features
 
@@ -224,25 +421,28 @@ x-seller-message: <base64 encoded message>
 - Ethereum address format validation
 - MongoDB injection protection via Mongoose
 - Error handling without exposing internals
+- EIP-712 signature verification for all mutations
 
-#### Invite URL Protection
+#### Secret Data Protection
 
-The `inviteUrl` field is the core asset being sold and is protected from public exposure. The **only** way to obtain an invite URL is through successful payment via x402.
+The `inviteUrl` and `accessCode` fields are the core assets being sold and are protected from public exposure. The **only** way to obtain these secrets is through successful payment via x402.
 
 **API Endpoint Security:**
 
-| Endpoint                     | inviteUrl Exposure    | Notes                                       |
-| ---------------------------- | --------------------- | ------------------------------------------- |
-| `GET /api/listings`          | ❌ Never              | Public listing view                         |
-| `GET /api/listings/[slug]`   | ❌ Never              | Single listing view                         |
-| `POST /api/listings`         | ❌ Never              | Create listing (seller knows their own URL) |
-| `PATCH /api/listings/update` | ❌ Never              | Update listing                              |
-| `GET /api/seller/[address]`  | 🔐 Authenticated only | Seller can view their own URLs              |
-| `POST /api/purchase/[slug]`  | ✅ After x402 payment | **Only way to get inviteUrl**               |
+| Endpoint                     | `inviteUrl`           | `accessCode`          | `appUrl`  |
+| ---------------------------- | --------------------- | --------------------- | --------- |
+| `GET /api/listings`          | ❌ Never              | ❌ Never              | ✅ Always |
+| `GET /api/listings/[slug]`   | ❌ Never              | ❌ Never              | ✅ Always |
+| `POST /api/listings`         | ❌ Never              | ❌ Never              | ✅ Always |
+| `PATCH /api/listings/update` | ❌ Never              | ❌ Never              | ✅ Always |
+| `GET /api/seller/[address]`  | 🔐 Authenticated only | 🔐 Authenticated only | ✅ Always |
+| `POST /api/purchase/[slug]`  | ✅ After x402 payment | ✅ After x402 payment | ✅ Always |
+
+> **Note**: `appUrl` is public for access_code type listings because buyers need to know which app they're purchasing access to.
 
 **Seller Authentication for `/api/seller/[address]`:**
 
-Sellers can view their own invite URLs on their profile page through signature-based authentication:
+Sellers can view their own secrets on their profile page through signature-based authentication:
 
 1. Request headers required:
 
@@ -260,7 +460,7 @@ Sellers can view their own invite URLs on their profile page through signature-b
 3. Validation:
    - Signature must match the seller's address
    - Timestamp must be within 5 minutes (prevents replay attacks)
-   - Cannot view another user's invite URLs
+   - Cannot view another user's secrets
 
 **Frontend Signature Caching:**
 
@@ -287,7 +487,7 @@ Cache validation:
 2. If valid cached signature exists → Use it, open modal immediately
 3. If no cache/expired → Request new signature
 4. If signature rejected → Modal doesn't open
-5. If signature accepted → Fetch authenticated data → Open modal with inviteUrl
+5. If signature accepted → Fetch authenticated data → Open modal with secrets
 
 ### Performance
 
@@ -302,11 +502,17 @@ Cache validation:
 - Loading indicators
 - Success confirmation with next steps
 - Easy navigation between pages
+- Listing type tabs with smooth transitions
+
+## Migration Strategy
+
+- Existing listings without `listingType` are treated as `"invite_link"`
+- New fields (`listingType`, `appUrl`, `accessCode`) are optional in schema
+- No database migration required for backward compatibility
 
 ## Future Enhancements
 
-- Purchase functionality with smart contracts
-- Listing search and filtering
+- Listing search and filtering by type
 - User authentication
 - Escrow system
 - Rating/review system
@@ -317,9 +523,15 @@ Cache validation:
 
 ```env
 MONGODB_URL=mongodb+srv://xxxxx.mongodb.net/?appName=Cluster0
+SECRET_KEY=<thirdweb secret key>
+SERVER_WALLET=<x402 facilitator wallet address>
+NEXT_PUBLIC_THIRDWEB_CLIENT_ID=<thirdweb client id>
+NEXT_PUBLIC_IS_TESTNET=true|false
 ```
 
 ## Dependencies Added
 
 - `mongoose` - MongoDB ODM
 - `nanoid` - Unique ID generation
+- `thirdweb` - Wallet connection, signatures, and x402 payments
+- `viem` - Ethereum utilities and signature verification

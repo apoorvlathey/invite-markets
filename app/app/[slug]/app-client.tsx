@@ -282,7 +282,7 @@ export default function AppPageClient() {
   const {
     purchase,
     isPending,
-    inviteUrl,
+    purchaseData,
     purchasedSellerAddress,
     showSuccessModal,
     closeSuccessModal,
@@ -1086,7 +1086,7 @@ export default function AppPageClient() {
       {/* Payment Success Modal */}
       <PaymentSuccessModal
         isOpen={showSuccessModal}
-        inviteUrl={inviteUrl || ""}
+        purchaseData={purchaseData}
         sellerAddress={purchasedSellerAddress}
         onClose={closeSuccessModal}
       />

@@ -108,7 +108,7 @@ export default function ListingClient() {
   const {
     purchase,
     isPending,
-    inviteUrl,
+    purchaseData,
     purchasedSellerAddress,
     showSuccessModal,
     closeSuccessModal,
@@ -523,9 +523,57 @@ export default function ListingClient() {
                   </span>
                 )}
               </div>
-              <p className="text-zinc-400 mb-6">
-                Early access invite to {appName}
+              <p className="text-zinc-400 mb-4">
+                {listing.listingType === "access_code" 
+                  ? `Access code for ${appName}` 
+                  : `Early access invite to ${appName}`}
               </p>
+
+              {/* Listing Type Badge */}
+              <div className="flex items-center gap-2 mb-6">
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
+                  listing.listingType === "access_code"
+                    ? "bg-purple-500/20 border border-purple-500/30 text-purple-400"
+                    : "bg-cyan-500/20 border border-cyan-500/30 text-cyan-400"
+                }`}>
+                  {listing.listingType === "access_code" ? (
+                    <>
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                      </svg>
+                      Access Code
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                      Invite Link
+                    </>
+                  )}
+                </span>
+              </div>
+
+              {/* App URL - Only shown for access_code type */}
+              {listing.listingType === "access_code" && listing.appUrl && (
+                <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 mb-5">
+                  <div className="text-sm text-zinc-500 mb-2">App Link (Public)</div>
+                  <a
+                    href={listing.appUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors group"
+                  >
+                    <span className="text-sm font-medium truncate">{listing.appUrl}</span>
+                    <svg className="w-4 h-4 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                  <p className="text-xs text-zinc-500 mt-2">
+                    After purchase, you&apos;ll receive an access code to use on this site.
+                  </p>
+                </div>
+              )}
 
               {/* Price */}
               <div className="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
@@ -746,13 +794,15 @@ export default function ListingClient() {
             </div>
           </motion.div>
 
-          {/* App Banner Section - Second on mobile, Left column on desktop */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="order-2 lg:order-1 lg:col-span-2"
-          >
+          {/* Left Column - App Banner + Payment Details (stacked on desktop) */}
+          <div className="order-2 lg:order-1 lg:col-span-2 contents lg:block lg:space-y-6">
+            {/* App Banner Section - Second on mobile, Left column on desktop */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="order-2 lg:order-none"
+            >
             {/* App Icon Card - Horizontal banner on mobile, square on desktop */}
             <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
               {/* Gradient Header Bar */}
@@ -974,103 +1024,104 @@ export default function ListingClient() {
             )}
           </motion.div>
 
-          {/* Payment Details Section - Last on mobile, stays in left column on desktop */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="order-3 lg:order-3 lg:col-span-2"
-          >
-            <div className="rounded-xl bg-zinc-950 border border-zinc-800 p-4 sm:p-6">
-              <h3 className="text-sm font-medium text-zinc-400 mb-4">
-                Payment Details
-              </h3>
+            {/* Payment Details Section - Last on mobile, stays in left column on desktop */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="order-3 lg:order-none"
+            >
+              <div className="rounded-xl bg-zinc-950 border border-zinc-800 p-4 sm:p-6">
+                <h3 className="text-sm font-medium text-zinc-400 mb-4">
+                  Payment Details
+                </h3>
 
-              <div className="space-y-3 sm:space-y-4">
-                {/* x402 Info */}
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shrink-0">
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                <div className="space-y-3 sm:space-y-4">
+                  {/* x402 Info */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shrink-0">
+                      <svg
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-white text-sm sm:text-base">
+                        Powered by x402
+                      </p>
+                      <p className="text-xs sm:text-sm text-zinc-500">
+                        Instant, gasless payments. No transaction fees for buyers.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Chain Info */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
+                      <Image
+                        src="/images/base.svg"
+                        alt="Base"
+                        width={20}
+                        height={20}
+                        className="rounded"
                       />
-                    </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-white text-sm sm:text-base">
+                        Base Network
+                      </p>
+                      <p className="text-xs sm:text-sm text-zinc-500">
+                        USDC transfers happen securely on Base L2.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-white text-sm sm:text-base">
-                      Powered by x402
-                    </p>
-                    <p className="text-xs sm:text-sm text-zinc-500">
-                      Instant, gasless payments. No transaction fees for buyers.
-                    </p>
-                  </div>
-                </div>
 
-                {/* Chain Info */}
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
-                    <Image
-                      src="/images/base.svg"
-                      alt="Base"
-                      width={20}
-                      height={20}
-                      className="rounded"
-                    />
-                  </div>
-                  <div>
-                    <p className="font-medium text-white text-sm sm:text-base">
-                      Base Network
-                    </p>
-                    <p className="text-xs sm:text-sm text-zinc-500">
-                      USDC transfers happen securely on Base L2.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Security Info */}
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium text-white text-sm sm:text-base">
-                      Secure & Instant
-                    </p>
-                    <p className="text-xs sm:text-sm text-zinc-500">
-                      Receive your invite link immediately after payment.
-                    </p>
+                  {/* Security Info */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                      <svg
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-white text-sm sm:text-base">
+                        Secure & Instant
+                      </p>
+                      <p className="text-xs sm:text-sm text-zinc-500">
+                        Receive your invite link immediately after payment.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       </div>
 
       {/* Payment Success Modal */}
       <PaymentSuccessModal
         isOpen={showSuccessModal}
-        inviteUrl={inviteUrl || ""}
+        purchaseData={purchaseData}
         sellerAddress={purchasedSellerAddress}
         onClose={closeSuccessModal}
       />

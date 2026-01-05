@@ -91,18 +91,29 @@ export async function GET(
     const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
 
     // Get all listings for this seller
-    // Only include inviteUrl if the request is authenticated as the seller
+    // Only include inviteUrl and accessCode if the request is authenticated as the seller
     const listingsQuery = Listing.find({
       sellerAddress: normalizedAddress,
       chainId,
     }).sort({ createdAt: -1 });
 
-    // Exclude inviteUrl for unauthenticated requests (security)
+    // Exclude inviteUrl and accessCode for unauthenticated requests (security)
     if (!isAuthenticated) {
-      listingsQuery.select("-inviteUrl");
+      listingsQuery.select("-inviteUrl -accessCode");
     }
 
     const listings = await listingsQuery.lean();
+
+    // Map listings to include listingType with default and appUrl where applicable
+    const mappedListings = listings.map((listing) => {
+      const listingType = listing.listingType || "invite_link";
+      return {
+        ...listing,
+        listingType,
+        // appUrl is always public for access_code type
+        appUrl: listingType === "access_code" ? listing.appUrl : undefined,
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -111,7 +122,7 @@ export async function GET(
         salesCount,
         totalRevenue,
       },
-      listings,
+      listings: mappedListings,
     });
   } catch (error) {
     console.error("Error fetching seller stats:", error);

@@ -6,6 +6,7 @@ import { useFetchWithPayment } from "thirdweb/react";
 import { useQueryClient } from "@tanstack/react-query";
 import confetti from "canvas-confetti";
 import { useToast } from "@/app/components/Toast";
+import { type ListingType } from "@/lib/signature";
 
 const thirdwebClient = createThirdwebClient({
   clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID!,
@@ -14,10 +15,17 @@ const thirdwebClient = createThirdwebClient({
 // Query key used by the homepage for listings - exported for consistency
 export const LISTINGS_QUERY_KEY = ["listings"];
 
+export interface PurchaseResult {
+  listingType: ListingType;
+  inviteUrl?: string;
+  appUrl?: string;
+  accessCode?: string;
+}
+
 interface UsePurchaseResult {
-  purchase: (slug: string, sellerAddress: string) => Promise<{ inviteUrl: string } | null>;
+  purchase: (slug: string, sellerAddress: string) => Promise<PurchaseResult | null>;
   isPending: boolean;
-  inviteUrl: string | null;
+  purchaseData: PurchaseResult | null;
   purchasedSellerAddress: string | null;
   showSuccessModal: boolean;
   closeSuccessModal: () => void;
@@ -42,30 +50,37 @@ export function usePurchase(): UsePurchaseResult {
   const { fetchWithPayment, isPending } = useFetchWithPayment(thirdwebClient);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
-  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [purchaseData, setPurchaseData] = useState<PurchaseResult | null>(null);
   const [purchasedSellerAddress, setPurchasedSellerAddress] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const purchase = async (
     slug: string,
     sellerAddress: string
-  ): Promise<{ inviteUrl: string } | null> => {
+  ): Promise<PurchaseResult | null> => {
     try {
       const res = (await fetchWithPayment(`/api/purchase/${slug}`, {
         method: "POST",
-      })) as { inviteUrl?: string } | undefined;
+      })) as PurchaseResult | undefined;
 
-      if (res?.inviteUrl) {
-        // Celebrate successful purchase with confetti!
-        triggerConfetti();
+      if (res?.listingType) {
+        // Check if we got valid data based on listing type
+        const hasValidData = 
+          (res.listingType === "invite_link" && res.inviteUrl) ||
+          (res.listingType === "access_code" && res.appUrl && res.accessCode);
 
-        // Invalidate the listings cache so homepage refreshes on next visit
-        queryClient.invalidateQueries({ queryKey: LISTINGS_QUERY_KEY });
+        if (hasValidData) {
+          // Celebrate successful purchase with confetti!
+          triggerConfetti();
 
-        setInviteUrl(res.inviteUrl);
-        setPurchasedSellerAddress(sellerAddress);
-        setShowSuccessModal(true);
-        return { inviteUrl: res.inviteUrl };
+          // Invalidate the listings cache so homepage refreshes on next visit
+          queryClient.invalidateQueries({ queryKey: LISTINGS_QUERY_KEY });
+
+          setPurchaseData(res);
+          setPurchasedSellerAddress(sellerAddress);
+          setShowSuccessModal(true);
+          return res;
+        }
       }
       return null;
     } catch {
@@ -76,14 +91,14 @@ export function usePurchase(): UsePurchaseResult {
 
   const closeSuccessModal = () => {
     setShowSuccessModal(false);
-    setInviteUrl(null);
+    setPurchaseData(null);
     setPurchasedSellerAddress(null);
   };
 
   return {
     purchase,
     isPending,
-    inviteUrl,
+    purchaseData,
     purchasedSellerAddress,
     showSuccessModal,
     closeSuccessModal,

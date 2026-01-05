@@ -68,7 +68,20 @@ export async function POST(
 
   await markListingAsSold(slug);
 
+  // Return appropriate data based on listing type
+  const listingType = listing.listingType || "invite_link";
+
+  if (listingType === "access_code") {
+    return NextResponse.json({
+      listingType: "access_code",
+      appUrl: listing.appUrl,
+      accessCode: listing.accessCode,
+    });
+  }
+
+  // Default: invite_link type
   return NextResponse.json({
+    listingType: "invite_link",
     inviteUrl: listing.inviteUrl,
   });
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
-import { Listing } from "@/models/listing";
+import { Listing, type ListingType } from "@/models/listing";
 import { verifyTypedData } from "viem";
 import {
   getEIP712Domain,
@@ -17,6 +17,8 @@ export async function PATCH(request: NextRequest) {
       sellerAddress,
       priceUsdc,
       inviteUrl,
+      appUrl,
+      accessCode,
       appId,
       appName,
       nonce,
@@ -44,10 +46,32 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    await connectDB();
+
+    // Find the listing first to determine its type
+    const listing = await Listing.findOne({
+      slug,
+      sellerAddress: sellerAddress.toLowerCase(),
+      status: "active",
+      chainId,
+    });
+
+    if (!listing) {
+      return NextResponse.json(
+        { success: false, error: "Listing not found or not owned by seller" },
+        { status: 404 }
+      );
+    }
+
+    const listingType: ListingType = listing.listingType || "invite_link";
+
     // Verify EIP-712 signature
     const message: UpdateListingMessage = {
       slug,
+      listingType,
       inviteUrl: inviteUrl || "",
+      appUrl: appUrl || "",
+      accessCode: accessCode || "",
       priceUsdc: priceUsdc?.toString() || "",
       sellerAddress: sellerAddress as `0x${string}`,
       appName: appName || "",
@@ -85,23 +109,6 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    await connectDB();
-
-    // Find the listing and verify ownership
-    const listing = await Listing.findOne({
-      slug,
-      sellerAddress: sellerAddress.toLowerCase(),
-      status: "active",
-      chainId,
-    });
-
-    if (!listing) {
-      return NextResponse.json(
-        { success: false, error: "Listing not found or not owned by seller" },
-        { status: 404 }
-      );
-    }
-
     // Update allowed fields
     if (priceUsdc !== undefined) {
       if (typeof priceUsdc !== "number" || priceUsdc <= 0) {
@@ -113,16 +120,40 @@ export async function PATCH(request: NextRequest) {
       listing.priceUsdc = priceUsdc;
     }
 
-    // Only update inviteUrl if a non-empty value is provided
-    // Empty string means "keep existing URL" for security (URL not exposed in API)
-    if (inviteUrl !== undefined && inviteUrl !== "") {
-      if (typeof inviteUrl !== "string") {
-        return NextResponse.json(
-          { success: false, error: "Invalid invite URL" },
-          { status: 400 }
-        );
+    // Handle fields based on listing type
+    if (listingType === "invite_link") {
+      // Only update inviteUrl if a non-empty value is provided
+      // Empty string means "keep existing URL" for security (URL not exposed in API)
+      if (inviteUrl !== undefined && inviteUrl !== "") {
+        if (typeof inviteUrl !== "string") {
+          return NextResponse.json(
+            { success: false, error: "Invalid invite URL" },
+            { status: 400 }
+          );
+        }
+        listing.inviteUrl = inviteUrl;
       }
-      listing.inviteUrl = inviteUrl;
+    } else if (listingType === "access_code") {
+      // Update appUrl if provided
+      if (appUrl !== undefined && appUrl !== "") {
+        if (typeof appUrl !== "string") {
+          return NextResponse.json(
+            { success: false, error: "Invalid app URL" },
+            { status: 400 }
+          );
+        }
+        listing.appUrl = appUrl;
+      }
+      // Update accessCode if provided
+      if (accessCode !== undefined && accessCode !== "") {
+        if (typeof accessCode !== "string") {
+          return NextResponse.json(
+            { success: false, error: "Invalid access code" },
+            { status: 400 }
+          );
+        }
+        listing.accessCode = accessCode;
+      }
     }
 
     if (appId !== undefined) {
@@ -148,8 +179,11 @@ export async function PATCH(request: NextRequest) {
       listing: {
         id: listing._id.toString(),
         slug: listing.slug,
+        listingType,
         priceUsdc: listing.priceUsdc,
-        // inviteUrl intentionally omitted for security
+        // inviteUrl and accessCode intentionally omitted for security
+        // appUrl is public for access_code type
+        appUrl: listingType === "access_code" ? listing.appUrl : undefined,
         appId: listing.appId,
         appName: listing.appName,
         status: listing.status,

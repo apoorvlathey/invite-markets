@@ -1,8 +1,17 @@
 import mongoose, { Model } from "mongoose";
 
+export type ListingType = "invite_link" | "access_code";
+
 export interface IListing {
   slug: string;
-  inviteUrl: string;
+  // Listing type: "invite_link" (default) or "access_code"
+  listingType: ListingType;
+  // For invite_link type: the private invite URL
+  inviteUrl?: string;
+  // For access_code type: public app URL (displayed before payment)
+  appUrl?: string;
+  // For access_code type: private access code (revealed after payment)
+  accessCode?: string;
   priceUsdc: number;
   sellerAddress: string;
   status: "active" | "sold" | "cancelled";
@@ -24,9 +33,22 @@ const ListingSchema = new mongoose.Schema<IListing>(
       unique: true,
       index: true,
     },
+    listingType: {
+      type: String,
+      enum: ["invite_link", "access_code"],
+      default: "invite_link",
+    },
     inviteUrl: {
       type: String,
-      required: true,
+      required: false, // Required for invite_link type, validated at API level
+    },
+    appUrl: {
+      type: String,
+      required: false, // Required for access_code type, validated at API level
+    },
+    accessCode: {
+      type: String,
+      required: false, // Required for access_code type, validated at API level
     },
     priceUsdc: {
       type: Number,

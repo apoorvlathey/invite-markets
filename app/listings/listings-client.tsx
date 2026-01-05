@@ -26,7 +26,22 @@ import {
   type Listing,
   type ListingsData,
 } from "@/lib/listings";
+import { featuredApps } from "@/data/featuredApps";
 import { blo } from "blo";
+
+/* ---------- Helper to resolve app name ---------- */
+
+function resolveAppName(listing: Listing): string {
+  // Check if it's a featured app by appId
+  if (listing.appId) {
+    const featuredApp = featuredApps.find((app) => app.id === listing.appId);
+    if (featuredApp) {
+      return featuredApp.appName;
+    }
+  }
+  // Fall back to appName, then appId, then "App"
+  return listing.appName || listing.appId || "App";
+}
 
 /* ---------- Types ---------- */
 
@@ -227,9 +242,7 @@ export default function ListingsClient() {
   // Filter listings by selected apps
   const filteredListings = useMemo(() => {
     if (selectedApps.size === 0) return allListings;
-    return allListings.filter(
-      (l) => l.appId && selectedApps.has(l.appId)
-    );
+    return allListings.filter((l) => l.appId && selectedApps.has(l.appId));
   }, [allListings, selectedApps]);
 
   // Toggle sort
@@ -245,7 +258,7 @@ export default function ListingsClient() {
   const {
     purchase,
     isPending,
-    inviteUrl,
+    purchaseData,
     purchasedSellerAddress,
     showSuccessModal,
     closeSuccessModal,
@@ -597,54 +610,22 @@ export default function ListingsClient() {
             className="flex-1 min-w-0"
           >
             {/* Header */}
-            <div className="flex items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl md:text-2xl font-bold text-white">
-                  {selectedApps.size > 0
-                    ? `Filtered Listings`
-                    : "All Listings"}
-                </h2>
-                {!isPageLoading && (
-                  <span className="px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-400 text-sm font-medium">
-                    {sortedListings.length}{" "}
-                    {sortedListings.length === 1 ? "listing" : "listings"}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-4">
-                {/* Mobile Sort Buttons */}
-                {sortedListings.length > 0 && (
-                  <div className="flex md:hidden items-center gap-2">
-                    <span className="text-xs text-zinc-500">Sort:</span>
-                    <div className="flex gap-1">
-                      {(["price", "date", "ethos"] as SortField[]).map(
-                        (field) => (
-                          <button
-                            key={field}
-                            onClick={() => handleSort(field)}
-                            className={`px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
-                              sortField === field
-                                ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
-                                : "bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-zinc-600"
-                            }`}
-                          >
-                            {field === "price"
-                              ? "Price"
-                              : field === "date"
-                              ? "Date"
-                              : "Ethos"}
-                            {sortField === field && (
-                              <span className="ml-1">
-                                {sortDirection === "asc" ? "↑" : "↓"}
-                              </span>
-                            )}
-                          </button>
-                        )
-                      )}
-                    </div>
-                  </div>
-                )}
+            <div className="space-y-3 mb-6">
+              {/* Title Row */}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl md:text-2xl font-bold text-white">
+                    {selectedApps.size > 0
+                      ? `Filtered Listings`
+                      : "All Listings"}
+                  </h2>
+                  {!isPageLoading && (
+                    <span className="px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-400 text-sm font-medium">
+                      {sortedListings.length}{" "}
+                      {sortedListings.length === 1 ? "listing" : "listings"}
+                    </span>
+                  )}
+                </div>
 
                 <RefreshIndicator
                   countdown={countdown}
@@ -652,48 +633,111 @@ export default function ListingsClient() {
                   onRefresh={handleManualRefresh}
                 />
               </div>
+
+              {/* Mobile Sort Row */}
+              {sortedListings.length > 0 && (
+                <div className="flex lg:hidden items-center gap-2">
+                  <span className="text-xs text-zinc-500">Sort:</span>
+                  <div className="flex gap-1 flex-wrap">
+                    {(["price", "date", "ethos"] as SortField[]).map(
+                      (field) => (
+                        <button
+                          key={field}
+                          onClick={() => handleSort(field)}
+                          className={`px-2.5 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer ${
+                            sortField === field
+                              ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
+                              : "bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-zinc-600"
+                          }`}
+                        >
+                          {field === "price"
+                            ? "Price"
+                            : field === "date"
+                            ? "Date"
+                            : "Ethos"}
+                          {sortField === field && (
+                            <span className="ml-1">
+                              {sortDirection === "asc" ? "↑" : "↓"}
+                            </span>
+                          )}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Loading State */}
             {isPageLoading && (
               <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
-                <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 bg-zinc-900/50 border-b border-zinc-800">
-                  <div className="col-span-2 h-3 w-12 bg-zinc-800 rounded" />
-                  <div className="col-span-3 h-3 w-16 bg-zinc-800 rounded" />
-                  <div className="col-span-2 h-3 w-14 bg-zinc-800 rounded" />
-                  <div className="col-span-2 h-3 w-20 bg-zinc-800 rounded" />
-                  <div className="col-span-1 h-3 w-12 bg-zinc-800 rounded ml-auto" />
-                  <div className="col-span-2" />
+                {/* Desktop Loading Header */}
+                <div className="hidden lg:grid grid-cols-[minmax(120px,1.5fr)_minmax(150px,2fr)_minmax(80px,1fr)_minmax(140px,1.5fr)_minmax(80px,1fr)_minmax(180px,auto)] gap-4 px-5 py-3 bg-zinc-900/50 border-b border-zinc-800">
+                  <div className="h-3 w-12 bg-zinc-800 rounded" />
+                  <div className="h-3 w-16 bg-zinc-800 rounded" />
+                  <div className="h-3 w-14 bg-zinc-800 rounded" />
+                  <div className="h-3 w-20 bg-zinc-800 rounded" />
+                  <div className="h-3 w-12 bg-zinc-800 rounded" />
+                  <div />
                 </div>
 
                 {[...Array(5)].map((_, i) => (
                   <div
                     key={i}
-                    className="grid grid-cols-1 md:grid-cols-12 gap-4 px-5 py-4 border-b border-zinc-800 last:border-b-0 animate-pulse"
+                    className="border-b border-zinc-800 last:border-b-0 animate-pulse"
                   >
-                    <div className="col-span-1 md:col-span-2 flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-zinc-800 shrink-0" />
-                      <div className="h-4 w-16 bg-zinc-800 rounded" />
-                    </div>
-                    <div className="col-span-1 md:col-span-3 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-zinc-800 shrink-0" />
-                      <div className="space-y-2 flex-1">
-                        <div className="h-4 w-28 bg-zinc-800 rounded" />
-                        <div className="h-3 w-20 bg-zinc-800 rounded" />
+                    {/* Desktop Loading Row */}
+                    <div className="hidden lg:grid grid-cols-[minmax(120px,1.5fr)_minmax(150px,2fr)_minmax(80px,1fr)_minmax(140px,1.5fr)_minmax(80px,1fr)_minmax(180px,auto)] gap-4 px-5 py-4 items-center">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-zinc-800 shrink-0" />
+                        <div className="h-4 w-16 bg-zinc-800 rounded" />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-zinc-800 shrink-0" />
+                        <div className="space-y-2 flex-1">
+                          <div className="h-4 w-28 bg-zinc-800 rounded" />
+                          <div className="h-3 w-20 bg-zinc-800 rounded" />
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="h-4 w-16 bg-zinc-800 rounded" />
+                      </div>
+                      <div className="flex items-center">
+                        <div className="h-6 w-24 bg-zinc-800 rounded-full" />
+                      </div>
+                      <div className="flex items-center">
+                        <div className="h-5 w-14 bg-zinc-800 rounded" />
+                      </div>
+                      <div className="flex items-center gap-2 justify-end">
+                        <div className="h-9 w-[100px] bg-zinc-800 rounded-lg" />
+                        <div className="h-9 w-16 bg-zinc-800 rounded-lg" />
                       </div>
                     </div>
-                    <div className="col-span-1 md:col-span-2 flex items-center">
-                      <div className="h-4 w-16 bg-zinc-800 rounded" />
-                    </div>
-                    <div className="col-span-1 md:col-span-2 flex items-center">
-                      <div className="h-6 w-20 bg-zinc-800 rounded-full" />
-                    </div>
-                    <div className="col-span-1 md:col-span-1 flex items-center md:justify-end">
-                      <div className="h-5 w-16 bg-zinc-800 rounded" />
-                    </div>
-                    <div className="col-span-1 md:col-span-2 flex items-center gap-2 justify-end">
-                      <div className="h-9 w-[100px] bg-zinc-800 rounded-lg" />
-                      <div className="h-9 w-16 bg-zinc-800 rounded-lg" />
+
+                    {/* Mobile Loading Card */}
+                    <div className="lg:hidden p-4 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-zinc-800 shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 w-24 bg-zinc-800 rounded" />
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-zinc-800 shrink-0" />
+                            <div className="h-3 w-20 bg-zinc-800 rounded" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="h-4 w-32 bg-zinc-800 rounded" />
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-12 bg-zinc-800 rounded" />
+                        <div className="h-6 w-24 bg-zinc-800 rounded-full" />
+                      </div>
+                      <div className="flex items-center justify-between pt-2 border-t border-zinc-800/50">
+                        <div className="h-6 w-16 bg-zinc-800 rounded" />
+                        <div className="flex items-center gap-2">
+                          <div className="h-9 w-[90px] bg-zinc-800 rounded-lg" />
+                          <div className="h-9 w-16 bg-zinc-800 rounded-lg" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -763,11 +807,11 @@ export default function ListingsClient() {
             {/* Listings Table */}
             {!isPageLoading && !error && sortedListings.length > 0 && (
               <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
-                {/* Table Header */}
-                <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 bg-zinc-900/50 border-b border-zinc-800 text-xs font-medium uppercase tracking-wider">
+                {/* Table Header - Desktop Only */}
+                <div className="hidden lg:grid grid-cols-[minmax(120px,1.5fr)_minmax(150px,2fr)_minmax(80px,1fr)_minmax(140px,1.5fr)_minmax(80px,1fr)_minmax(180px,auto)] gap-4 px-5 py-3 bg-zinc-900/50 border-b border-zinc-800 text-xs font-medium uppercase tracking-wider">
                   <button
                     onClick={() => handleSort("app")}
-                    className="col-span-2 flex items-center gap-1 text-left cursor-pointer hover:text-zinc-300 transition-colors group"
+                    className="flex items-center gap-1 text-left cursor-pointer hover:text-zinc-300 transition-colors group"
                   >
                     <span
                       className={
@@ -781,10 +825,10 @@ export default function ListingsClient() {
                       direction={sortDirection}
                     />
                   </button>
-                  <div className="col-span-3 text-zinc-500">Seller</div>
+                  <div className="text-zinc-500">Seller</div>
                   <button
                     onClick={() => handleSort("date")}
-                    className="col-span-2 flex items-center gap-1 text-left cursor-pointer hover:text-zinc-300 transition-colors group"
+                    className="flex items-center gap-1 text-left cursor-pointer hover:text-zinc-300 transition-colors group"
                   >
                     <span
                       className={
@@ -800,7 +844,7 @@ export default function ListingsClient() {
                   </button>
                   <button
                     onClick={() => handleSort("ethos")}
-                    className="col-span-2 flex items-center gap-1 text-left cursor-pointer hover:text-zinc-300 transition-colors group"
+                    className="flex items-center gap-1 text-left cursor-pointer hover:text-zinc-300 transition-colors group"
                   >
                     <span
                       className={
@@ -818,7 +862,7 @@ export default function ListingsClient() {
                   </button>
                   <button
                     onClick={() => handleSort("price")}
-                    className="col-span-1 flex items-center gap-1 justify-end cursor-pointer hover:text-zinc-300 transition-colors group"
+                    className="flex items-center gap-1 cursor-pointer hover:text-zinc-300 transition-colors group"
                   >
                     <span
                       className={
@@ -834,10 +878,10 @@ export default function ListingsClient() {
                       direction={sortDirection}
                     />
                   </button>
-                  <div className="col-span-2"></div>
+                  <div></div>
                 </div>
 
-                {/* Table Rows - Simplified for mobile performance */}
+                {/* Table Rows */}
                 {sortedListings.map((listing) => {
                   const sellerInfo = getSellerDisplayInfo(
                     listing.sellerAddress,
@@ -846,7 +890,7 @@ export default function ListingsClient() {
                   const trustLevelConfig = listing.ethosData
                     ? getTrustLevelConfig(listing.ethosData.level)
                     : null;
-                  const appName = listing.appName || listing.appId || "App";
+                  const appName = resolveAppName(listing);
                   const gradient = getGradientForApp(appName);
 
                   return (
@@ -856,185 +900,329 @@ export default function ListingsClient() {
                         NProgress.start();
                         router.push(`/listing/${listing.slug}`);
                       }}
-                      className="grid grid-cols-1 md:grid-cols-12 gap-4 px-5 py-4 border-b border-zinc-800 last:border-b-0 hover:bg-zinc-900/30 transition-colors cursor-pointer"
+                      className="border-b border-zinc-800 last:border-b-0 hover:bg-zinc-900/30 transition-colors cursor-pointer"
                     >
-                      {/* App */}
-                      <div className="col-span-1 md:col-span-2 flex items-center gap-2">
-                        {listing.appIconUrl ? (
-                          <div
-                            className="w-8 h-8 rounded-lg overflow-hidden border shrink-0 bg-white p-0.5"
-                            style={{ borderColor: gradient.from }}
+                      {/* Desktop Row */}
+                      <div className="hidden lg:grid grid-cols-[minmax(120px,1.5fr)_minmax(150px,2fr)_minmax(80px,1fr)_minmax(140px,1.5fr)_minmax(80px,1fr)_minmax(180px,auto)] gap-4 px-5 py-4 items-center">
+                        {/* App */}
+                        <div className="flex items-center gap-2 min-w-0">
+                          {listing.appIconUrl ? (
+                            <div
+                              className="w-8 h-8 rounded-lg overflow-hidden border shrink-0 bg-white p-0.5"
+                              style={{ borderColor: gradient.from }}
+                            >
+                              <Image
+                                src={listing.appIconUrl}
+                                alt={appName}
+                                width={28}
+                                height={28}
+                                className="w-full h-full object-contain rounded-md"
+                                unoptimized
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center font-bold text-white text-sm"
+                              style={{
+                                background: `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`,
+                              }}
+                            >
+                              {appName.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <Link
+                            href={`/app/${encodeURIComponent(
+                              listing.appId || appName
+                            )}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="font-medium text-sm text-white hover:text-cyan-400 transition-colors truncate"
                           >
-                            <Image
-                              src={listing.appIconUrl}
-                              alt={appName}
-                              width={28}
-                              height={28}
-                              className="w-full h-full object-contain rounded-md"
-                              unoptimized
-                            />
-                          </div>
-                        ) : (
-                          <div
-                            className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center font-bold text-white text-sm"
-                            style={{
-                              background: `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`,
-                            }}
-                          >
-                            {appName.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <Link
-                          href={`/app/${encodeURIComponent(listing.appId || appName)}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="font-medium text-sm text-white hover:text-cyan-400 transition-colors truncate"
-                        >
-                          {appName}
-                        </Link>
-                      </div>
-
-                      {/* Seller */}
-                      <div className="col-span-1 md:col-span-3 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-zinc-700">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={
-                              sellerInfo.avatarUrl ||
-                              blo(listing.sellerAddress as `0x${string}`)
-                            }
-                            alt="Seller avatar"
-                            width={40}
-                            height={40}
-                            className="w-full h-full object-cover"
-                          />
+                            {appName}
+                          </Link>
                         </div>
 
-                        <div className="min-w-0">
-                          {sellerInfo.resolvedType ? (
-                            <>
+                        {/* Seller */}
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-zinc-700">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={
+                                sellerInfo.avatarUrl ||
+                                blo(listing.sellerAddress as `0x${string}`)
+                              }
+                              alt="Seller avatar"
+                              width={40}
+                              height={40}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+
+                          <div className="min-w-0">
+                            {sellerInfo.resolvedType ? (
+                              <>
+                                <Link
+                                  href={`/profile/${listing.sellerAddress}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="font-medium text-sm text-white flex items-center gap-1 hover:text-cyan-400 transition-colors truncate"
+                                >
+                                  {sellerInfo.resolvedType === "farcaster" &&
+                                    "@"}
+                                  {sellerInfo.displayName}
+                                  {sellerInfo.resolvedType === "farcaster" && (
+                                    <Image
+                                      src="/farcaster-logo.svg"
+                                      alt="Farcaster"
+                                      width={12}
+                                      height={12}
+                                      className="inline-block opacity-60"
+                                    />
+                                  )}
+                                </Link>
+                                <Link
+                                  href={`/profile/${listing.sellerAddress}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-xs text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
+                                >
+                                  {sellerInfo.shortAddress}
+                                </Link>
+                              </>
+                            ) : (
                               <Link
                                 href={`/profile/${listing.sellerAddress}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="font-medium text-sm text-white flex items-center gap-1 hover:text-cyan-400 transition-colors truncate"
-                              >
-                                {sellerInfo.resolvedType === "farcaster" && "@"}
-                                {sellerInfo.displayName}
-                                {sellerInfo.resolvedType === "farcaster" && (
-                                  <Image
-                                    src="/farcaster-logo.svg"
-                                    alt="Farcaster"
-                                    width={12}
-                                    height={12}
-                                    className="inline-block opacity-60"
-                                  />
-                                )}
-                              </Link>
-                              <Link
-                                href={`/profile/${listing.sellerAddress}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="text-xs text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
+                                className="font-mono text-sm text-zinc-300 hover:text-cyan-400 transition-colors"
                               >
                                 {sellerInfo.shortAddress}
                               </Link>
-                            </>
-                          ) : (
-                            <Link
-                              href={`/profile/${listing.sellerAddress}`}
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Listed */}
+                        <div className="flex items-center">
+                          <span className="text-sm text-zinc-400">
+                            {timeAgo(listing.createdAt)}
+                          </span>
+                        </div>
+
+                        {/* Trust Level */}
+                        <div className="flex items-center">
+                          {listing.ethosData ? (
+                            <a
+                              href={`https://app.ethos.network/profile/${listing.sellerAddress}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="font-mono text-sm text-zinc-300 hover:text-cyan-400 transition-colors"
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${
+                                trustLevelConfig?.bg || "bg-zinc-800"
+                              } border ${
+                                trustLevelConfig?.border || "border-zinc-700"
+                              } hover:border-opacity-70 transition-colors cursor-pointer`}
                             >
-                              {sellerInfo.shortAddress}
-                            </Link>
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  trustLevelConfig?.dot || "bg-zinc-400"
+                                }`}
+                              />
+                              <span
+                                className={`text-xs font-semibold ${
+                                  trustLevelConfig?.text || "text-zinc-300"
+                                }`}
+                              >
+                                {listing.ethosData.score}
+                              </span>
+                              <span
+                                className={`text-xs ${
+                                  trustLevelConfig?.text || "text-zinc-300"
+                                } opacity-70`}
+                              >
+                                {trustLevelConfig?.label ||
+                                  listing.ethosData.level ||
+                                  "Unknown"}
+                              </span>
+                            </a>
+                          ) : (
+                            <span className="text-sm text-zinc-500">—</span>
                           )}
                         </div>
-                      </div>
 
-                      {/* Listed */}
-                      <div className="col-span-1 md:col-span-2 flex items-center">
-                        <span className="md:hidden text-xs text-zinc-500 mr-2">
-                          Listed:
-                        </span>
-                        <span className="text-sm text-zinc-400">
-                          {timeAgo(listing.createdAt)}
-                        </span>
-                      </div>
-
-                      {/* Trust Level */}
-                      <div className="col-span-1 md:col-span-2 flex items-center">
-                        <span className="md:hidden text-xs text-zinc-500 mr-2">
-                          Trust:
-                        </span>
-                        {listing.ethosData ? (
-                          <a
-                            href={`https://app.ethos.network/profile/${listing.sellerAddress}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${
-                              trustLevelConfig?.bg || "bg-zinc-800"
-                            } border ${
-                              trustLevelConfig?.border || "border-zinc-700"
-                            } hover:border-opacity-70 transition-colors cursor-pointer`}
-                          >
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                trustLevelConfig?.dot || "bg-zinc-400"
-                              }`}
-                            />
-                            <span
-                              className={`text-xs font-semibold ${
-                                trustLevelConfig?.text || "text-zinc-300"
-                              }`}
-                            >
-                              {listing.ethosData.score}
-                            </span>
-                            <span
-                              className={`text-xs ${
-                                trustLevelConfig?.text || "text-zinc-300"
-                              } opacity-70`}
-                            >
-                              {trustLevelConfig?.label ||
-                                listing.ethosData.level ||
-                                "Unknown"}
-                            </span>
-                          </a>
-                        ) : (
-                          <span className="text-sm text-zinc-500">—</span>
-                        )}
-                      </div>
-
-                      {/* Price */}
-                      <div className="col-span-1 md:col-span-1 flex items-center md:justify-end">
-                        <span className="md:hidden text-xs text-zinc-500 mr-2">
-                          Price:
-                        </span>
-                        <div className="flex items-center gap-1">
+                        {/* Price */}
+                        <div className="flex items-center">
                           <span className="text-lg font-bold text-cyan-400">
                             ${listing.priceUsdc}
                           </span>
                         </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 justify-end">
+                          <QuickBuyButton
+                            price={`$${listing.priceUsdc}`}
+                            isPending={
+                              isPending && purchasingSlug === listing.slug
+                            }
+                            onBuy={() => handleQuickBuy(listing.slug)}
+                            compact
+                          />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              NProgress.start();
+                              router.push(`/listing/${listing.slug}`);
+                            }}
+                            className="px-3 py-2 rounded-lg font-medium text-sm bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 transition-all cursor-pointer"
+                          >
+                            Details
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Actions */}
-                      <div className="col-span-1 md:col-span-2 flex items-center gap-2 justify-end">
-                        <QuickBuyButton
-                          price={`$${listing.priceUsdc}`}
-                          isPending={
-                            isPending && purchasingSlug === listing.slug
-                          }
-                          onBuy={() => handleQuickBuy(listing.slug)}
-                          compact
-                        />
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            NProgress.start();
-                            router.push(`/listing/${listing.slug}`);
-                          }}
-                          className="px-3 py-2 rounded-lg font-medium text-sm bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 transition-all cursor-pointer"
-                        >
-                          Details
-                        </button>
+                      {/* Mobile Card */}
+                      <div className="lg:hidden p-4 space-y-3">
+                        {/* App & Seller Row */}
+                        <div className="flex items-start gap-3">
+                          {listing.appIconUrl ? (
+                            <div
+                              className="w-10 h-10 rounded-lg overflow-hidden border shrink-0 bg-white p-0.5"
+                              style={{ borderColor: gradient.from }}
+                            >
+                              <Image
+                                src={listing.appIconUrl}
+                                alt={appName}
+                                width={36}
+                                height={36}
+                                className="w-full h-full object-contain rounded-md"
+                                unoptimized
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center font-bold text-white text-base"
+                              style={{
+                                background: `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`,
+                              }}
+                            >
+                              {appName.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <Link
+                              href={`/app/${encodeURIComponent(
+                                listing.appId || appName
+                              )}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="font-semibold text-white hover:text-cyan-400 transition-colors block truncate"
+                            >
+                              {appName}
+                            </Link>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-zinc-700">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={
+                                    sellerInfo.avatarUrl ||
+                                    blo(listing.sellerAddress as `0x${string}`)
+                                  }
+                                  alt="Seller avatar"
+                                  width={24}
+                                  height={24}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <Link
+                                href={`/profile/${listing.sellerAddress}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-sm text-zinc-400 hover:text-cyan-400 transition-colors truncate"
+                              >
+                                {sellerInfo.resolvedType
+                                  ? `${
+                                      sellerInfo.resolvedType === "farcaster"
+                                        ? "@"
+                                        : ""
+                                    }${sellerInfo.displayName}`
+                                  : sellerInfo.shortAddress}
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Meta Row */}
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="text-zinc-500">
+                            Listed:{" "}
+                            <span className="text-zinc-400">
+                              {timeAgo(listing.createdAt)}
+                            </span>
+                          </span>
+                        </div>
+
+                        {/* Trust Level */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-zinc-500">Trust:</span>
+                          {listing.ethosData ? (
+                            <a
+                              href={`https://app.ethos.network/profile/${listing.sellerAddress}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${
+                                trustLevelConfig?.bg || "bg-zinc-800"
+                              } border ${
+                                trustLevelConfig?.border || "border-zinc-700"
+                              } hover:border-opacity-70 transition-colors cursor-pointer`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  trustLevelConfig?.dot || "bg-zinc-400"
+                                }`}
+                              />
+                              <span
+                                className={`text-xs font-semibold ${
+                                  trustLevelConfig?.text || "text-zinc-300"
+                                }`}
+                              >
+                                {listing.ethosData.score}
+                              </span>
+                              <span
+                                className={`text-xs ${
+                                  trustLevelConfig?.text || "text-zinc-300"
+                                } opacity-70`}
+                              >
+                                {trustLevelConfig?.label ||
+                                  listing.ethosData.level ||
+                                  "Unknown"}
+                              </span>
+                            </a>
+                          ) : (
+                            <span className="text-sm text-zinc-500">—</span>
+                          )}
+                        </div>
+
+                        {/* Price & Actions Row */}
+                        <div className="flex items-center justify-between gap-3 pt-2 border-t border-zinc-800/50">
+                          <span className="text-xl font-bold text-cyan-400">
+                            ${listing.priceUsdc}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <QuickBuyButton
+                              price={`$${listing.priceUsdc}`}
+                              isPending={
+                                isPending && purchasingSlug === listing.slug
+                              }
+                              onBuy={() => handleQuickBuy(listing.slug)}
+                              compact
+                            />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                NProgress.start();
+                                router.push(`/listing/${listing.slug}`);
+                              }}
+                              className="px-3 py-2 rounded-lg font-medium text-sm bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 transition-all cursor-pointer"
+                            >
+                              Details
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
@@ -1048,11 +1236,10 @@ export default function ListingsClient() {
       {/* Payment Success Modal */}
       <PaymentSuccessModal
         isOpen={showSuccessModal}
-        inviteUrl={inviteUrl || ""}
+        purchaseData={purchaseData}
         sellerAddress={purchasedSellerAddress}
         onClose={closeSuccessModal}
       />
     </div>
   );
 }
-

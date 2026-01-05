@@ -7,13 +7,17 @@ import { fetchEthosData, type EthosData } from "@/lib/ethos-scores";
 // TYPES
 // ============================================================================
 
+export type ListingType = "invite_link" | "access_code";
+
 export interface Listing {
   slug: string;
+  listingType?: ListingType;
   priceUsdc: number;
   sellerAddress: string;
   status: "active" | "sold" | "cancelled";
   appId?: string;
   appName?: string;
+  appUrl?: string; // For access_code type - public URL
   appIconUrl?: string;
   createdAt: string;
   updatedAt: string;

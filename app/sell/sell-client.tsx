@@ -16,6 +16,7 @@ import {
   getEIP712Domain,
   EIP712_TYPES,
   type ListingMessage,
+  type ListingType,
 } from "@/lib/signature";
 import { featuredApps } from "@/data/featuredApps";
 import { LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
@@ -46,8 +47,13 @@ export default function SellClient() {
   const isConnected = !!account;
   const chainId = chain?.id ?? defaultChainId;
 
+  // Listing type state
+  const [listingType, setListingType] = useState<ListingType>("invite_link");
+
   const [formData, setFormData] = useState({
     inviteUrl: "",
+    appUrl: "",
+    accessCode: "",
     priceUsdc: "",
     appInput: "",
   });
@@ -66,6 +72,7 @@ export default function SellClient() {
   const [existingApps, setExistingApps] = useState<ExistingApp[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inviteUrlInputRef = useRef<HTMLInputElement>(null);
+  const appUrlInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch existing apps on mount
   useEffect(() => {
@@ -217,13 +224,33 @@ export default function SellClient() {
       return;
     }
 
+    // Validate based on listing type
+    if (listingType === "invite_link" && !formData.inviteUrl) {
+      setError("Please enter an invite URL");
+      return;
+    }
+
+    if (listingType === "access_code") {
+      if (!formData.appUrl) {
+        setError("Please enter the app URL");
+        return;
+      }
+      if (!formData.accessCode) {
+        setError("Please enter the access code");
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
       const nonce = BigInt(Date.now());
 
       const message: ListingMessage = {
-        inviteUrl: formData.inviteUrl,
+        listingType,
+        inviteUrl: listingType === "invite_link" ? formData.inviteUrl : "",
+        appUrl: listingType === "access_code" ? formData.appUrl : "",
+        accessCode: listingType === "access_code" ? formData.accessCode : "",
         priceUsdc: formData.priceUsdc,
         sellerAddress: address as `0x${string}`,
         appId: selectedApp ? selectedApp.id : "",
@@ -245,7 +272,12 @@ export default function SellClient() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          inviteUrl: formData.inviteUrl,
+          listingType,
+          inviteUrl:
+            listingType === "invite_link" ? formData.inviteUrl : undefined,
+          appUrl: listingType === "access_code" ? formData.appUrl : undefined,
+          accessCode:
+            listingType === "access_code" ? formData.accessCode : undefined,
           priceUsdc: parseFloat(formData.priceUsdc),
           sellerAddress: address,
           nonce: nonce.toString(),
@@ -267,11 +299,14 @@ export default function SellClient() {
       // Add the new listing to the cache immediately so listing page shows it
       const newListing: Listing = {
         slug: data.listing.slug,
+        listingType: data.listing.listingType,
         priceUsdc: data.listing.priceUsdc,
         sellerAddress: data.listing.sellerAddress,
         status: data.listing.status,
         appId: data.listing.appId,
         appName: data.listing.appName,
+        appUrl: data.listing.appUrl,
+        appIconUrl: data.listing.appIconUrl,
         createdAt: data.listing.createdAt,
         updatedAt: data.listing.createdAt,
       };
@@ -317,6 +352,20 @@ export default function SellClient() {
     }));
   };
 
+  const resetForm = () => {
+    setCreatedSlug("");
+    setFormData({
+      inviteUrl: "",
+      appUrl: "",
+      accessCode: "",
+      priceUsdc: "",
+      appInput: "",
+    });
+    setSelectedApp(null);
+    setIsValueConfirmed(false);
+    setListingType("invite_link");
+  };
+
   if (createdSlug) {
     return (
       <div className="min-h-screen text-zinc-100 flex items-center justify-center p-4">
@@ -353,7 +402,8 @@ export default function SellClient() {
               Listing Created!
             </h2>
             <p className="text-zinc-400 mb-10 text-lg">
-              Your invite is now live on the marketplace
+              Your {listingType === "access_code" ? "access code" : "invite"} is
+              now live on the marketplace
             </p>
             <div className="space-y-3">
               <button
@@ -388,12 +438,7 @@ export default function SellClient() {
                 </span>
               </button>
               <button
-                onClick={() => {
-                  setCreatedSlug("");
-                  setFormData({ inviteUrl: "", priceUsdc: "", appInput: "" });
-                  setSelectedApp(null);
-                  setIsValueConfirmed(false);
-                }}
+                onClick={resetForm}
                 className="hover-scale w-full rounded-xl py-4 px-6 font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all cursor-pointer active:scale-95"
               >
                 Create Another Listing
@@ -417,7 +462,7 @@ export default function SellClient() {
             List Your Invite
           </h1>
           <p className="text-base sm:text-lg text-zinc-400">
-            Sell your exclusive invite link and earn instantly
+            Sell your exclusive invite link or access code and earn instantly
           </p>
         </motion.div>
 
@@ -427,6 +472,60 @@ export default function SellClient() {
           transition={{ delay: 0.1 }}
           className="rounded-2xl bg-zinc-950 border border-zinc-800 shadow-premium p-5 sm:p-8 md:p-10"
         >
+          {/* Listing Type Tabs */}
+          <div className="mb-6 sm:mb-8">
+            <div className="flex gap-1 p-1 rounded-xl bg-zinc-900/50 border border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setListingType("invite_link")}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium text-sm transition-all cursor-pointer ${
+                  listingType === "invite_link"
+                    ? "bg-zinc-800 text-white shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/50"
+                }`}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                  />
+                </svg>
+                Invite Link
+              </button>
+              <button
+                type="button"
+                onClick={() => setListingType("access_code")}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium text-sm transition-all cursor-pointer ${
+                  listingType === "access_code"
+                    ? "bg-zinc-800 text-white shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/50"
+                }`}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                  />
+                </svg>
+                Access Code
+              </button>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
             {/* App Name Input with Dropdown */}
             <div>
@@ -504,9 +603,13 @@ export default function SellClient() {
                             }));
                             setIsValueConfirmed(true);
                             setShowDropdown(false);
-                            // Focus next input field
+                            // Focus next input field based on listing type
                             setTimeout(() => {
-                              inviteUrlInputRef.current?.focus();
+                              if (listingType === "invite_link") {
+                                inviteUrlInputRef.current?.focus();
+                              } else {
+                                appUrlInputRef.current?.focus();
+                              }
                             }, 0);
                           }
                         } else if (e.key === "Escape") {
@@ -665,41 +768,150 @@ export default function SellClient() {
               </div>
             </div>
 
-            <div>
-              <label
-                htmlFor="inviteUrl"
-                className="flex items-center gap-2 text-sm font-semibold text-zinc-300 mb-3"
-              >
-                <svg
-                  className="w-4 h-4 text-cyan-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            {/* Conditional fields based on listing type */}
+            <AnimatePresence mode="wait">
+              {listingType === "invite_link" ? (
+                <motion.div
+                  key="invite_link"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                  <label
+                    htmlFor="inviteUrl"
+                    className="flex items-center gap-2 text-sm font-semibold text-zinc-300 mb-3"
+                  >
+                    <svg
+                      className="w-4 h-4 text-cyan-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                      />
+                    </svg>
+                    Invite URL
+                  </label>
+                  <input
+                    type="url"
+                    id="inviteUrl"
+                    name="inviteUrl"
+                    ref={inviteUrlInputRef}
+                    value={formData.inviteUrl}
+                    onChange={handleChange}
+                    required={listingType === "invite_link"}
+                    placeholder="https://app.example.com/invite/.."
+                    className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 text-sm sm:text-base"
                   />
-                </svg>
-                Invite URL
-              </label>
-              <input
-                type="url"
-                id="inviteUrl"
-                name="inviteUrl"
-                ref={inviteUrlInputRef}
-                value={formData.inviteUrl}
-                onChange={handleChange}
-                required
-                placeholder="https://app.example.com/invite/.."
-                className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 text-sm sm:text-base"
-              />
-              <p className="mt-2 text-xs text-zinc-500">
-                The unique invite link you want to sell
-              </p>
-            </div>
+                  <p className="mt-2 text-xs text-zinc-500">
+                    The unique invite link you want to sell
+                  </p>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="access_code"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-6"
+                >
+                  {/* App URL */}
+                  <div>
+                    <label
+                      htmlFor="appUrl"
+                      className="flex items-center gap-2 text-sm font-semibold text-zinc-300 mb-3"
+                    >
+                      <svg
+                        className="w-4 h-4 text-cyan-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                        />
+                      </svg>
+                      App URL
+                    </label>
+                    <input
+                      type="url"
+                      id="appUrl"
+                      name="appUrl"
+                      ref={appUrlInputRef}
+                      value={formData.appUrl}
+                      onChange={handleChange}
+                      required={listingType === "access_code"}
+                      placeholder="https://app.example.com"
+                      className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 text-sm sm:text-base"
+                    />
+                    <div className="mt-2 p-2.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                      <p className="text-xs text-yellow-400 flex items-center gap-1.5">
+                        <svg
+                          className="w-3.5 h-3.5 shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        This URL will be publicly visible to potential buyers
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Access Code */}
+                  <div>
+                    <label
+                      htmlFor="accessCode"
+                      className="flex items-center gap-2 text-sm font-semibold text-zinc-300 mb-3"
+                    >
+                      <svg
+                        className="w-4 h-4 text-cyan-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                        />
+                      </svg>
+                      Access Code
+                    </label>
+                    <input
+                      type="text"
+                      id="accessCode"
+                      name="accessCode"
+                      value={formData.accessCode}
+                      onChange={handleChange}
+                      required={listingType === "access_code"}
+                      placeholder="Enter the access code"
+                      className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 text-sm sm:text-base font-mono"
+                    />
+                    <p className="mt-2 text-xs text-zinc-500">
+                      The secret code buyers will use to access the app (only
+                      revealed after payment)
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div>
               <label
@@ -740,7 +952,8 @@ export default function SellClient() {
                 </span>
               </div>
               <p className="mt-2 text-xs text-zinc-500">
-                Set a competitive price for your invite
+                Set a competitive price for your{" "}
+                {listingType === "access_code" ? "access code" : "invite"}
               </p>
               <AnimatePresence>
                 {isValueConfirmed && lowestPrice !== null && (
@@ -841,7 +1054,9 @@ export default function SellClient() {
                       connect({ client: thirdwebClient, chain: thirdwebChain })
                   : undefined
               }
-              className={`group relative w-full rounded-xl py-4 px-6 font-bold text-lg overflow-hidden disabled:cursor-not-allowed cursor-pointer transition-transform ${!isSubmitting ? "hover-scale active:scale-95" : ""}`}
+              className={`group relative w-full rounded-xl py-4 px-6 font-bold text-lg overflow-hidden disabled:cursor-not-allowed cursor-pointer transition-transform ${
+                !isSubmitting ? "hover-scale active:scale-95" : ""
+              }`}
             >
               {isConnected && !isSubmitting ? (
                 <>
@@ -943,7 +1158,11 @@ export default function SellClient() {
                 <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-[10px] sm:text-xs font-bold text-cyan-400">
                   2
                 </span>
-                <span>Buyers discover your invite on the marketplace</span>
+                <span>
+                  Buyers discover your{" "}
+                  {listingType === "access_code" ? "access code" : "invite"} on
+                  the marketplace
+                </span>
               </li>
               <li className="flex items-start gap-2.5 sm:gap-3">
                 <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-[10px] sm:text-xs font-bold text-cyan-400">

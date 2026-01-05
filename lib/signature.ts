@@ -1,5 +1,7 @@
 // EIP-712 Domain and Types for Listing Operations
 
+export type ListingType = "invite_link" | "access_code";
+
 export const getEIP712Domain = (chainId: number) =>
   ({
     name: "Invite Markets",
@@ -9,7 +11,10 @@ export const getEIP712Domain = (chainId: number) =>
 
 export const EIP712_TYPES = {
   CreateListing: [
+    { name: "listingType", type: "string" },
     { name: "inviteUrl", type: "string" },
+    { name: "appUrl", type: "string" },
+    { name: "accessCode", type: "string" },
     { name: "priceUsdc", type: "string" },
     { name: "sellerAddress", type: "address" },
     { name: "appId", type: "string" },
@@ -21,7 +26,10 @@ export const EIP712_TYPES = {
 export const EIP712_UPDATE_TYPES = {
   UpdateListing: [
     { name: "slug", type: "string" },
+    { name: "listingType", type: "string" },
     { name: "inviteUrl", type: "string" },
+    { name: "appUrl", type: "string" },
+    { name: "accessCode", type: "string" },
     { name: "priceUsdc", type: "string" },
     { name: "sellerAddress", type: "address" },
     { name: "appName", type: "string" },
@@ -38,7 +46,10 @@ export const EIP712_DELETE_TYPES = {
 } as const;
 
 export interface ListingMessage {
-  inviteUrl: string;
+  listingType: ListingType;
+  inviteUrl: string; // Used for invite_link type
+  appUrl: string; // Used for access_code type
+  accessCode: string; // Used for access_code type
   priceUsdc: string;
   sellerAddress: `0x${string}`;
   appId: string;
@@ -48,7 +59,10 @@ export interface ListingMessage {
 
 export interface UpdateListingMessage {
   slug: string;
-  inviteUrl: string;
+  listingType: ListingType;
+  inviteUrl: string; // Used for invite_link type
+  appUrl: string; // Used for access_code type
+  accessCode: string; // Used for access_code type
   priceUsdc: string;
   sellerAddress: `0x${string}`;
   appName: string;

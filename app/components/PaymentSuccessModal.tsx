@@ -2,32 +2,50 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, Copy, Check, X, AlertTriangle } from "lucide-react";
+import { CheckCircle, Copy, Check, X, AlertTriangle, ExternalLink } from "lucide-react";
 import { EthosRateButton } from "./EthosRateButton";
+import { type PurchaseResult } from "@/hooks/usePurchase";
 
 interface PaymentSuccessModalProps {
   isOpen: boolean;
-  inviteUrl: string;
+  purchaseData: PurchaseResult | null;
   sellerAddress: string | null;
   onClose: () => void;
 }
 
 export function PaymentSuccessModal({
   isOpen,
-  inviteUrl,
+  purchaseData,
   sellerAddress,
   onClose,
 }: PaymentSuccessModalProps) {
-  const [copied, setCopied] = useState(false);
+  const [copiedInvite, setCopiedInvite] = useState(false);
+  const [copiedAccessCode, setCopiedAccessCode] = useState(false);
   const [hasCopied, setHasCopied] = useState(false);
   const [showConfirmClose, setShowConfirmClose] = useState(false);
 
-  const handleCopy = async () => {
+  const isAccessCode = purchaseData?.listingType === "access_code";
+  const secretToCopy = isAccessCode ? purchaseData?.accessCode : purchaseData?.inviteUrl;
+
+  const handleCopyInvite = async () => {
+    if (!purchaseData?.inviteUrl) return;
     try {
-      await navigator.clipboard.writeText(inviteUrl);
-      setCopied(true);
+      await navigator.clipboard.writeText(purchaseData.inviteUrl);
+      setCopiedInvite(true);
       setHasCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopiedInvite(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  const handleCopyAccessCode = async () => {
+    if (!purchaseData?.accessCode) return;
+    try {
+      await navigator.clipboard.writeText(purchaseData.accessCode);
+      setCopiedAccessCode(true);
+      setHasCopied(true);
+      setTimeout(() => setCopiedAccessCode(false), 2000);
     } catch (err) {
       console.error("Failed to copy:", err);
     }
@@ -102,10 +120,10 @@ export function PaymentSuccessModal({
 
                       {/* Description */}
                       <p className="text-sm text-center text-zinc-400 mb-6 leading-relaxed">
-                        You haven&apos;t copied your invite link yet.
+                        You haven&apos;t copied your {isAccessCode ? "access code" : "invite link"} yet.
                         <br />
                         <span className="text-yellow-400 font-semibold">
-                          This link will be lost forever.
+                          This {isAccessCode ? "code" : "link"} will be lost forever.
                         </span>
                       </p>
 
@@ -115,7 +133,7 @@ export function PaymentSuccessModal({
                           onClick={() => setShowConfirmClose(false)}
                           className="w-full px-4 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 hover:border-emerald-400 rounded-xl font-semibold text-emerald-400 transition-all cursor-pointer"
                         >
-                          Go Back & Copy Link
+                          Go Back & Copy {isAccessCode ? "Code" : "Link"}
                         </button>
                         <button
                           onClick={handleConfirmClose}
@@ -166,7 +184,7 @@ export function PaymentSuccessModal({
                 {/* Warning */}
                 <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
                   <p className="text-sm font-semibold text-yellow-400 mb-1">
-                    ⚠️ Important: This link will only be displayed once
+                    ⚠️ Important: This {isAccessCode ? "code" : "link"} will only be displayed once
                   </p>
                   <p className="text-xs text-yellow-300/80">
                     Please copy and save it now. You won&apos;t be able to
@@ -174,44 +192,107 @@ export function PaymentSuccessModal({
                   </p>
                 </div>
 
-                {/* Invite URL */}
-                <div>
-                  <label className="text-sm font-medium text-zinc-400 mb-2 block">
-                    Your Invite Link:
-                  </label>
-                  <div className="flex gap-2 items-stretch">
-                    {/* Static gradient border - no animation for mobile performance */}
-                    <div className="relative flex-1 p-[2px] rounded-lg bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500">
-                      {/* Input */}
-                      <input
-                        type="text"
-                        value={inviteUrl}
-                        readOnly
-                        className="relative w-full h-full px-3 py-2.5 bg-zinc-900 rounded-[6px] text-sm font-mono text-zinc-100 focus:outline-none"
-                      />
+                {isAccessCode ? (
+                  <>
+                    {/* App URL - for access code type */}
+                    {purchaseData?.appUrl && (
+                      <div>
+                        <label className="text-sm font-medium text-zinc-400 mb-2 block">
+                          App Link:
+                        </label>
+                        <a
+                          href={purchaseData.appUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-cyan-400 hover:text-cyan-300 hover:border-cyan-500/50 transition-all group"
+                        >
+                          <span className="text-sm font-medium truncate flex-1">
+                            {purchaseData.appUrl}
+                          </span>
+                          <ExternalLink className="h-4 w-4 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Access Code */}
+                    <div>
+                      <label className="text-sm font-medium text-zinc-400 mb-2 block">
+                        Your Access Code:
+                      </label>
+                      <div className="flex gap-2 items-stretch">
+                        {/* Static gradient border - no animation for mobile performance */}
+                        <div className="relative flex-1 p-[2px] rounded-lg bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500">
+                          {/* Input */}
+                          <input
+                            type="text"
+                            value={purchaseData?.accessCode || ""}
+                            readOnly
+                            className="relative w-full h-full px-3 py-2.5 bg-zinc-900 rounded-[6px] text-sm font-mono text-zinc-100 focus:outline-none"
+                          />
+                        </div>
+                        <button
+                          onClick={handleCopyAccessCode}
+                          className={`hover-scale px-4 py-2 border rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer active:scale-95 ${
+                            copiedAccessCode
+                              ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                              : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-100"
+                          }`}
+                        >
+                          {copiedAccessCode ? (
+                            <>
+                              <Check className="h-4 w-4 text-emerald-400" />
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-4 w-4" />
+                              Copy
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      onClick={handleCopy}
-                      className={`hover-scale px-4 py-2 border rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer active:scale-95 ${
-                        copied
-                          ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
-                          : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-100"
-                      }`}
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="h-4 w-4 text-emerald-400" />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-4 w-4" />
-                          Copy
-                        </>
-                      )}
-                    </button>
+                  </>
+                ) : (
+                  /* Invite URL - for invite link type */
+                  <div>
+                    <label className="text-sm font-medium text-zinc-400 mb-2 block">
+                      Your Invite Link:
+                    </label>
+                    <div className="flex gap-2 items-stretch">
+                      {/* Static gradient border - no animation for mobile performance */}
+                      <div className="relative flex-1 p-[2px] rounded-lg bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500">
+                        {/* Input */}
+                        <input
+                          type="text"
+                          value={purchaseData?.inviteUrl || ""}
+                          readOnly
+                          className="relative w-full h-full px-3 py-2.5 bg-zinc-900 rounded-[6px] text-sm font-mono text-zinc-100 focus:outline-none"
+                        />
+                      </div>
+                      <button
+                        onClick={handleCopyInvite}
+                        className={`hover-scale px-4 py-2 border rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer active:scale-95 ${
+                          copiedInvite
+                            ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                            : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-100"
+                        }`}
+                      >
+                        {copiedInvite ? (
+                          <>
+                            <Check className="h-4 w-4 text-emerald-400" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-4 w-4" />
+                            Copy
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Rate Seller on Ethos */}
                 {sellerAddress && (

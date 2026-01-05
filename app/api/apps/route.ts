@@ -11,7 +11,8 @@ interface AppAggregation {
   totalListings: number;
   activeListings: number;
   lowestPrice: number | null;
-  sampleInviteUrl: string;
+  sampleInviteUrl: string | null;
+  sampleAppUrl: string | null;
 }
 
 interface AppData {
@@ -56,6 +57,7 @@ export async function GET() {
             },
           },
           sampleInviteUrl: { $first: "$inviteUrl" },
+          sampleAppUrl: { $first: "$appUrl" },
         },
       },
       {
@@ -66,6 +68,7 @@ export async function GET() {
           activeListings: 1,
           lowestPrice: "$lowestActivePrice",
           sampleInviteUrl: 1,
+          sampleAppUrl: 1,
         },
       },
     ]);
@@ -105,8 +108,18 @@ export async function GET() {
       } else {
         // This is a custom app
         const appName = agg.appName || appKey;
-        const domain = getDomain(agg.sampleInviteUrl);
-        const iconUrl = getFaviconUrl(domain);
+        // Use inviteUrl or appUrl (for access_code type listings)
+        const sampleUrl = agg.sampleInviteUrl || agg.sampleAppUrl;
+        let iconUrl = getFaviconUrl(""); // Default fallback
+        
+        if (sampleUrl) {
+          try {
+            const domain = getDomain(sampleUrl);
+            iconUrl = getFaviconUrl(domain);
+          } catch {
+            // URL parsing failed, use default favicon
+          }
+        }
 
         appsMap.set(appKey, {
           id: appKey,

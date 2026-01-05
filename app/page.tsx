@@ -139,7 +139,7 @@ export default function Home() {
   const {
     purchase,
     isPending,
-    inviteUrl,
+    purchaseData,
     purchasedSellerAddress,
     showSuccessModal,
     closeSuccessModal,
@@ -761,7 +761,7 @@ export default function Home() {
       {/* Payment Success Modal */}
       <PaymentSuccessModal
         isOpen={showSuccessModal}
-        inviteUrl={inviteUrl || ""}
+        purchaseData={purchaseData}
         sellerAddress={purchasedSellerAddress}
         onClose={closeSuccessModal}
       />

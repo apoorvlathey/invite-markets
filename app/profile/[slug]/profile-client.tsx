@@ -21,6 +21,7 @@ import {
   EIP712_DELETE_TYPES,
   type UpdateListingMessage,
   type DeleteListingMessage,
+  type ListingType,
 } from "@/lib/signature";
 import { EthosRateButton } from "@/app/components/EthosRateButton";
 
@@ -58,8 +59,13 @@ interface Purchase {
 interface Listing {
   _id: string;
   slug: string;
-  // inviteUrl is only returned when authenticated as the seller
+  listingType?: ListingType;
+  // inviteUrl is only returned when authenticated as the seller (invite_link type)
   inviteUrl?: string;
+  // appUrl is public for access_code type
+  appUrl?: string;
+  // accessCode is only returned when authenticated as the seller (access_code type)
+  accessCode?: string;
   priceUsdc: number;
   sellerAddress: string;
   status: "active" | "sold" | "cancelled";
@@ -210,15 +216,22 @@ function EditListingModal({
   account: ReturnType<typeof useActiveAccount>;
   chainId: number;
 }) {
+  const listingType: ListingType = listing.listingType || "invite_link";
+  const isAccessCode = listingType === "access_code";
+
   const [price, setPrice] = useState(listing.priceUsdc.toString());
-  // inviteUrl is available when authenticated as the seller
+  // inviteUrl is available when authenticated as the seller (invite_link type)
   const [inviteUrl, setInviteUrl] = useState(listing.inviteUrl || "");
+  // appUrl is public for access_code type
+  const [appUrl, setAppUrl] = useState(listing.appUrl || "");
+  // accessCode is available when authenticated as the seller (access_code type)
+  const [accessCode, setAccessCode] = useState(listing.accessCode || "");
   const [appName, setAppName] = useState(listing.appName || "");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isUrlFocused, setIsUrlFocused] = useState(false);
-  // Track if we have the original URL (for display purposes)
-  const hasExistingUrl = !!listing.inviteUrl;
+  const [isSecretFocused, setIsSecretFocused] = useState(false);
+  // Track if we have the original secret (for display purposes)
+  const hasExistingSecret = isAccessCode ? !!listing.accessCode : !!listing.inviteUrl;
 
   // Disable background scrolling when modal is open
   useEffect(() => {
@@ -245,7 +258,10 @@ function EditListingModal({
 
       const message: UpdateListingMessage = {
         slug: listing.slug,
-        inviteUrl,
+        listingType,
+        inviteUrl: isAccessCode ? "" : inviteUrl,
+        appUrl: isAccessCode ? appUrl : "",
+        accessCode: isAccessCode ? accessCode : "",
         priceUsdc: price,
         sellerAddress: account.address as `0x${string}`,
         appName: appNameValue,
@@ -267,7 +283,9 @@ function EditListingModal({
           slug: listing.slug,
           sellerAddress: account.address,
           priceUsdc: parseFloat(price),
-          inviteUrl,
+          ...(isAccessCode
+            ? { appUrl, accessCode }
+            : { inviteUrl }),
           appName: listing.appId ? undefined : appName,
           nonce: nonce.toString(),
           chainId,
@@ -308,10 +326,15 @@ function EditListingModal({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 max-w-md w-full"
+        className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-white">Edit Listing</h3>
+          <div>
+            <h3 className="text-xl font-bold text-white">Edit Listing</h3>
+            <span className="text-xs text-zinc-500">
+              {isAccessCode ? "Access Code" : "Invite Link"}
+            </span>
+          </div>
           <button
             onClick={onClose}
             className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
@@ -349,27 +372,71 @@ function EditListingModal({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">
-              Invite URL
-            </label>
-            <input
-              type={isUrlFocused ? "text" : "password"}
-              value={inviteUrl}
-              onChange={(e) => setInviteUrl(e.target.value)}
-              onFocus={() => setIsUrlFocused(true)}
-              onBlur={() => setIsUrlFocused(false)}
-              placeholder={
-                hasExistingUrl ? undefined : "Leave empty to keep existing URL"
-              }
-              className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none"
-            />
-            {!hasExistingUrl && (
-              <p className="mt-1.5 text-xs text-zinc-500">
-                Leave empty to keep the existing URL unchanged.
-              </p>
-            )}
-          </div>
+          {isAccessCode ? (
+            <>
+              {/* App URL - public */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  App URL
+                </label>
+                <input
+                  type="url"
+                  value={appUrl}
+                  onChange={(e) => setAppUrl(e.target.value)}
+                  placeholder="https://app.example.com"
+                  className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none"
+                />
+                <p className="mt-1.5 text-xs text-yellow-400">
+                  This URL is publicly visible
+                </p>
+              </div>
+
+              {/* Access Code - secret */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Access Code
+                </label>
+                <input
+                  type={isSecretFocused ? "text" : "password"}
+                  value={accessCode}
+                  onChange={(e) => setAccessCode(e.target.value)}
+                  onFocus={() => setIsSecretFocused(true)}
+                  onBlur={() => setIsSecretFocused(false)}
+                  placeholder={
+                    hasExistingSecret ? undefined : "Leave empty to keep existing code"
+                  }
+                  className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none font-mono"
+                />
+                {!hasExistingSecret && (
+                  <p className="mt-1.5 text-xs text-zinc-500">
+                    Leave empty to keep the existing code unchanged.
+                  </p>
+                )}
+              </div>
+            </>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                Invite URL
+              </label>
+              <input
+                type={isSecretFocused ? "text" : "password"}
+                value={inviteUrl}
+                onChange={(e) => setInviteUrl(e.target.value)}
+                onFocus={() => setIsSecretFocused(true)}
+                onBlur={() => setIsSecretFocused(false)}
+                placeholder={
+                  hasExistingSecret ? undefined : "Leave empty to keep existing URL"
+                }
+                className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none"
+              />
+              {!hasExistingSecret && (
+                <p className="mt-1.5 text-xs text-zinc-500">
+                  Leave empty to keep the existing URL unchanged.
+                </p>
+              )}
+            </div>
+          )}
 
           {!listing.appId && (
             <div>

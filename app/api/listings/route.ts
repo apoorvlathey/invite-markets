@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
-import { Listing } from "@/models/listing";
+import { Listing, type ListingType } from "@/models/listing";
 import { customAlphabet } from "nanoid";
 import { verifyTypedData } from "viem";
 import {
@@ -18,10 +18,14 @@ const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 8);
 /**
  * Gets the app icon URL for a listing.
  * For featured apps, uses the configured icon.
- * For non-featured apps, extracts the domain from the invite URL (without the invite code)
- * and generates a favicon URL.
+ * For non-featured apps, extracts the domain from the URL and generates a favicon URL.
  */
-function getAppIconUrl(listing: { appId?: string; inviteUrl: string }): string {
+function getAppIconUrl(listing: {
+  appId?: string;
+  inviteUrl?: string;
+  appUrl?: string;
+  listingType?: ListingType;
+}): string {
   // Check if this is a featured app
   if (listing.appId) {
     const featuredApp = featuredApps.find((app) => app.id === listing.appId);
@@ -30,8 +34,16 @@ function getAppIconUrl(listing: { appId?: string; inviteUrl: string }): string {
     }
   }
 
-  // For non-featured apps, get favicon from the domain (strips invite code)
-  const domain = getDomain(listing.inviteUrl);
+  // For non-featured apps, get favicon from the domain
+  // Use appUrl for access_code type, inviteUrl for invite_link type
+  const url =
+    listing.listingType === "access_code" ? listing.appUrl : listing.inviteUrl;
+
+  if (!url) {
+    return getFaviconUrl(""); // Return default favicon
+  }
+
+  const domain = getDomain(url);
   return getFaviconUrl(domain);
 }
 
@@ -47,11 +59,15 @@ export async function GET() {
       success: true,
       listings: listings.map((listing) => ({
         slug: listing.slug,
+        listingType: listing.listingType || "invite_link",
         priceUsdc: listing.priceUsdc,
         sellerAddress: listing.sellerAddress,
         status: listing.status,
         appId: listing.appId,
         appName: listing.appName,
+        // appUrl is public for access_code type
+        appUrl:
+          listing.listingType === "access_code" ? listing.appUrl : undefined,
         appIconUrl: getAppIconUrl(listing),
         createdAt: listing.createdAt,
         updatedAt: listing.updatedAt,
@@ -72,7 +88,10 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const {
+      listingType = "invite_link",
       inviteUrl,
+      appUrl,
+      accessCode,
       priceUsdc,
       sellerAddress,
       nonce,
@@ -83,37 +102,47 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Debug logging
-    console.log("Received data:", { appId, appName });
-    console.log(
-      "appId type:",
-      typeof appId,
-      "value:",
-      appId,
-      "trimmed:",
-      appId?.trim()
-    );
-    console.log(
-      "appName type:",
-      typeof appName,
-      "value:",
-      appName,
-      "trimmed:",
-      appName?.trim()
-    );
+    console.log("Received data:", { listingType, appId, appName });
 
-    // Validate required fields
-    if (
-      !inviteUrl ||
-      !priceUsdc ||
-      !sellerAddress ||
-      !nonce ||
-      !chainId ||
-      !signature
-    ) {
+    // Validate listing type
+    if (listingType !== "invite_link" && listingType !== "access_code") {
+      return NextResponse.json(
+        {
+          error: "Invalid listing type. Must be 'invite_link' or 'access_code'",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate required fields based on listing type
+    if (listingType === "invite_link") {
+      if (!inviteUrl) {
+        return NextResponse.json(
+          { error: "Invite URL is required for invite link listings" },
+          { status: 400 }
+        );
+      }
+    } else if (listingType === "access_code") {
+      if (!appUrl) {
+        return NextResponse.json(
+          { error: "App URL is required for access code listings" },
+          { status: 400 }
+        );
+      }
+      if (!accessCode) {
+        return NextResponse.json(
+          { error: "Access code is required for access code listings" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate common required fields
+    if (!priceUsdc || !sellerAddress || !nonce || !chainId || !signature) {
       return NextResponse.json(
         {
           error:
-            "Missing required fields: inviteUrl, priceUsdc, sellerAddress, nonce, chainId, signature",
+            "Missing required fields: priceUsdc, sellerAddress, nonce, chainId, signature",
         },
         { status: 400 }
       );
@@ -145,7 +174,10 @@ export async function POST(request: NextRequest) {
 
     // Verify EIP-712 signature
     const message: ListingMessage = {
-      inviteUrl,
+      listingType,
+      inviteUrl: inviteUrl || "",
+      appUrl: appUrl || "",
+      accessCode: accessCode || "",
       priceUsdc: priceUsdc.toString(),
       sellerAddress: sellerAddress as `0x${string}`,
       appId: appId || "",
@@ -209,11 +241,13 @@ export async function POST(request: NextRequest) {
     // Create listing
     const listingData = {
       slug,
-      inviteUrl,
+      listingType,
       priceUsdc,
       sellerAddress: sellerAddress.toLowerCase(),
       status: "active" as const,
       chainId,
+      ...(listingType === "invite_link" ? { inviteUrl } : {}),
+      ...(listingType === "access_code" ? { appUrl, accessCode } : {}),
       ...(appId && appId.trim() ? { appId: appId.trim() } : {}),
       ...(appName && appName.trim() ? { appName: appName.trim() } : {}),
     };
@@ -225,12 +259,22 @@ export async function POST(request: NextRequest) {
         success: true,
         listing: {
           slug: listing.slug,
-          // inviteUrl intentionally omitted for security
+          listingType: listing.listingType,
+          // inviteUrl and accessCode intentionally omitted for security
+          // appUrl is public for access_code type
+          appUrl:
+            listing.listingType === "access_code" ? listing.appUrl : undefined,
           priceUsdc: listing.priceUsdc,
           sellerAddress: listing.sellerAddress,
           status: listing.status,
           appId: listing.appId,
           appName: listing.appName,
+          appIconUrl: getAppIconUrl({
+            appId: listing.appId,
+            inviteUrl: listing.inviteUrl,
+            appUrl: listing.appUrl,
+            listingType: listing.listingType,
+          }),
           createdAt: listing.createdAt,
         },
       },

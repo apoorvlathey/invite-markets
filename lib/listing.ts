@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/mongoose";
-import { Listing } from "@/models/listing";
+import { Listing, type ListingType } from "@/models/listing";
 import { getDomain, getFaviconUrl } from "@/lib/url";
 import { featuredApps } from "@/data/featuredApps";
 import { chainId } from "@/lib/chain";
@@ -7,10 +7,14 @@ import { chainId } from "@/lib/chain";
 /**
  * Gets the app icon URL for a listing.
  * For featured apps, uses the configured icon.
- * For non-featured apps, extracts the domain from the invite URL (without the invite code)
- * and generates a favicon URL.
+ * For non-featured apps, extracts the domain from the URL and generates a favicon URL.
  */
-function getAppIconUrl(listing: { appId?: string; inviteUrl: string }): string {
+function getAppIconUrl(listing: {
+  appId?: string;
+  inviteUrl?: string;
+  appUrl?: string;
+  listingType?: ListingType;
+}): string {
   // Check if this is a featured app
   if (listing.appId) {
     const featuredApp = featuredApps.find((app) => app.id === listing.appId);
@@ -19,30 +23,48 @@ function getAppIconUrl(listing: { appId?: string; inviteUrl: string }): string {
     }
   }
 
-  // For non-featured apps, get favicon from the domain (strips invite code)
-  const domain = getDomain(listing.inviteUrl);
+  // For non-featured apps, get favicon from the domain
+  // Use appUrl for access_code type, inviteUrl for invite_link type
+  const url =
+    listing.listingType === "access_code" ? listing.appUrl : listing.inviteUrl;
+
+  if (!url) {
+    return getFaviconUrl(""); // Return default favicon
+  }
+
+  const domain = getDomain(url);
   return getFaviconUrl(domain);
 }
 
-export async function getListingBySlug(slug: string, getInvite: boolean) {
+export async function getListingBySlug(slug: string, includeSecrets: boolean) {
   await connectDB();
 
   const listing = await Listing.findOne({ slug, chainId });
 
   if (!listing) return null;
 
-  return {
+  const listingType: ListingType = listing.listingType || "invite_link";
+
+  // Base response - public data only
+  const response = {
     slug: listing.slug,
+    listingType,
     priceUsdc: listing.priceUsdc,
     sellerAddress: listing.sellerAddress,
     status: listing.status,
     appId: listing.appId,
     appName: listing.appName,
     appIconUrl: getAppIconUrl(listing),
+    // appUrl is public for access_code type
+    appUrl: listingType === "access_code" ? listing.appUrl : undefined,
     createdAt: listing.createdAt,
     updatedAt: listing.updatedAt,
-    inviteUrl: getInvite ? listing.inviteUrl : "",
+    // Private fields - only included when includeSecrets is true
+    inviteUrl: includeSecrets && listingType === "invite_link" ? listing.inviteUrl : undefined,
+    accessCode: includeSecrets && listingType === "access_code" ? listing.accessCode : undefined,
   };
+
+  return response;
 }
 
 export async function getSoldListingsBySlug(slug: string) {
