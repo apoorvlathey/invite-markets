@@ -21,6 +21,7 @@ import {
   type UpdateListingMessage,
   type DeleteListingMessage,
 } from "@/lib/signature";
+import { EthosRateButton } from "@/app/components/EthosRateButton";
 
 // Helper to resolve appId to proper app name
 function getAppDisplayName(
@@ -961,6 +962,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                 <div className="h-8 w-48 bg-zinc-800 rounded-lg animate-pulse mb-2" />
               ) : (
                 <h1 className="text-2xl font-bold text-white mb-1">
+                  {displayInfo.resolvedType === "farcaster" && "@"}
                   {displayInfo.displayName}
                 </h1>
               )}
@@ -1010,13 +1012,14 @@ export default function ProfileClient({ address }: ProfileClientProps) {
               </div>
             </motion.div>
 
-            {ethosData && trustLevelConfig && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35 }}
-                className="mt-6"
-              >
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="mt-6 flex flex-wrap items-stretch gap-3"
+            >
+              {/* Ethos Score */}
+              {ethosData && trustLevelConfig && (
                 <a
                   href={`https://app.ethos.network/profile/${address}`}
                   target="_blank"
@@ -1062,8 +1065,15 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                     />
                   </svg>
                 </a>
-              </motion.div>
-            )}
+              )}
+
+              {/* Rate on Ethos button */}
+              <EthosRateButton
+                address={address}
+                label="Rate on Ethos"
+                className="rounded-xl"
+              />
+            </motion.div>
 
             {sellerStats &&
               (sellerStats.salesCount > 0 || sellerStats.totalRevenue > 0) && (

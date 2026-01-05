@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { featuredApps } from "@/data/featuredApps";
 import { PaymentSuccessModal } from "@/app/components/PaymentSuccessModal";
+import { EthosRateButton } from "@/app/components/EthosRateButton";
 import { usePurchase, LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
 import {
   useResolveAddresses,
@@ -739,6 +740,84 @@ export default function ListingClient() {
                 </Link>
               </motion.div>
             )}
+
+            {/* Payment Info Card */}
+            <div className="mt-4 rounded-xl bg-zinc-950 border border-zinc-800 p-6">
+              <h3 className="text-sm font-medium text-zinc-400 mb-4">
+                Payment Details
+              </h3>
+
+              <div className="space-y-4">
+                {/* x402 Info */}
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shrink-0">
+                    <svg
+                      className="w-5 h-5 text-cyan-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">Powered by x402</p>
+                    <p className="text-sm text-zinc-500">
+                      Instant, gasless payments. No transaction fees for buyers.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Chain Info */}
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
+                    <Image
+                      src="/images/base.svg"
+                      alt="Base"
+                      width={20}
+                      height={20}
+                      className="rounded"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">Base Network</p>
+                    <p className="text-sm text-zinc-500">
+                      USDC transfers happen securely on Base L2.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Security Info */}
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                    <svg
+                      className="w-5 h-5 text-emerald-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">Secure & Instant</p>
+                    <p className="text-sm text-zinc-500">
+                      Receive your invite link immediately after payment.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
 
           {/* Right Column - Details */}
@@ -1008,84 +1087,13 @@ export default function ListingClient() {
                   </div>
                 )}
               </div>
-            </div>
-            
-            {/* Payment Info Card */}
-            <div className="rounded-xl bg-zinc-950 border border-zinc-800 p-6">
-              <h3 className="text-sm font-medium text-zinc-400 mb-4">
-                Payment Details
-              </h3>
 
-              <div className="space-y-4">
-                {/* x402 Info */}
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shrink-0">
-                    <svg
-                      className="w-5 h-5 text-cyan-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 10V3L4 14h7v7l9-11h-7z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">Powered by x402</p>
-                    <p className="text-sm text-zinc-500">
-                      Instant, gasless payments. No transaction fees for buyers.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Chain Info */}
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
-                    <Image
-                      src="/images/base.svg"
-                      alt="Base"
-                      width={20}
-                      height={20}
-                      className="rounded"
-                    />
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">Base Network</p>
-                    <p className="text-sm text-zinc-500">
-                      USDC transfers happen securely on Base L2.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Security Info */}
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                    <svg
-                      className="w-5 h-5 text-emerald-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">Secure & Instant</p>
-                    <p className="text-sm text-zinc-500">
-                      Receive your invite link immediately after payment.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              {/* Rate Seller on Ethos */}
+              <EthosRateButton
+                address={listing.sellerAddress}
+                label="Rate Seller on Ethos"
+                className="mt-4"
+              />
             </div>
           </motion.div>
         </div>
