@@ -463,369 +463,13 @@ export default function ListingClient() {
           </button>
         </motion.div>
 
-        <div className="grid lg:grid-cols-5 gap-8">
-          {/* Left Column - Product Visual */}
+        <div className="flex flex-col lg:grid lg:grid-cols-5 gap-6 lg:gap-8">
+          {/* Purchase & Seller Section - First on mobile, Right column on desktop */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="lg:col-span-2"
-          >
-            {/* App Icon Card */}
-            <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
-              {/* Gradient Header Bar */}
-              <div
-                className="h-1.5"
-                style={{
-                  background: `linear-gradient(90deg, ${gradient.from}, ${gradient.to})`,
-                }}
-              />
-
-              {/* Icon Display */}
-              <div className="aspect-square relative flex items-center justify-center bg-zinc-950 overflow-hidden">
-                {/* Tiled Pattern Background */}
-                <div
-                  className="absolute grid grid-cols-7 gap-6 opacity-[0.15]"
-                  style={{
-                    transform: "rotate(-20deg) scale(1.8)",
-                  }}
-                >
-                  {[...Array(49)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-12 h-12 flex items-center justify-center"
-                    >
-                      {appIconUrl ? (
-                        <div className="w-full h-full bg-white rounded-lg p-1.5 flex items-center justify-center">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={appIconUrl}
-                            alt=""
-                            width={48}
-                            height={48}
-                            className="object-contain w-full h-full"
-                          />
-                        </div>
-                      ) : (
-                        <span
-                          className="text-3xl font-bold"
-                          style={{ color: gradient.from }}
-                        >
-                          {appName.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Gradient Overlay */}
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: `radial-gradient(circle at center, transparent 0%, ${gradient.from}15 60%, ${gradient.to}25 100%)`,
-                  }}
-                />
-
-                {/* Vignette Effect */}
-                <div className="absolute inset-0 bg-linear-to-b from-zinc-950/80 via-transparent to-zinc-950/80" />
-                <div className="absolute inset-0 bg-linear-to-r from-zinc-950/80 via-transparent to-zinc-950/80" />
-
-                {/* Main Icon */}
-                <div className="relative z-10">
-                  {appIconUrl ? (
-                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-2 border-zinc-600 shadow-2xl bg-white p-2 ring-4 ring-black/50">
-                      <Image
-                        src={appIconUrl}
-                        alt={`${appName} icon`}
-                        width={80}
-                        height={80}
-                        className="object-contain w-full h-full rounded-lg"
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className="w-20 h-20 md:w-24 md:h-24 rounded-2xl flex items-center justify-center text-4xl font-bold text-white shadow-2xl ring-4 ring-black/50"
-                      style={{
-                        background: `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`,
-                      }}
-                    >
-                      {appName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Footer - Chain & App Link */}
-              <div className="p-4 border-t border-zinc-800 bg-zinc-900/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Image
-                      src="/images/base.svg"
-                      alt="Base"
-                      width={20}
-                      height={20}
-                      className="rounded-full"
-                    />
-                    <span className="text-sm text-zinc-400">Base Network</span>
-                  </div>
-                  {appSlug && (
-                    <Link
-                      href={`/app/${appSlug}`}
-                      className="group flex items-center gap-1.5 text-xs text-zinc-400 hover:text-cyan-400 transition-colors"
-                    >
-                      <span>View all {appName} listings</span>
-                      <svg
-                        className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </Link>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Cheaper Listing Banner */}
-            {cheaperListing && listing.status === "active" && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="mt-4"
-              >
-                <Link href={`/listing/${cheaperListing.slug}`}>
-                  <div className="group relative rounded-xl overflow-hidden bg-linear-to-r from-emerald-500/10 via-cyan-500/10 to-emerald-500/10 border border-emerald-500/30 hover:border-emerald-400/50 transition-all cursor-pointer">
-                    {/* Animated gradient border effect */}
-                    <div className="absolute inset-0 bg-linear-to-r from-emerald-500/0 via-emerald-500/10 to-emerald-500/0 animate-pulse" />
-
-                    <div className="relative p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          {/* Price drop icon */}
-                          <div className="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                            <svg
-                              className="w-5 h-5 text-emerald-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-                              />
-                            </svg>
-                          </div>
-
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-emerald-300">
-                                Cheaper listing available!
-                              </span>
-                              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-xs font-bold text-emerald-400">
-                                {Math.round(
-                                  ((listing.priceUsdc -
-                                    cheaperListing.priceUsdc) /
-                                    listing.priceUsdc) *
-                                    100
-                                )}
-                                % less
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              <span className="text-xs text-zinc-400">
-                                Only{" "}
-                                <span className="font-semibold text-cyan-400">
-                                  ${cheaperListing.priceUsdc}
-                                </span>
-                              </span>
-                              {cheaperListingEthosData && (
-                                <>
-                                  <span className="text-xs text-zinc-500">
-                                    •
-                                  </span>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-xs text-zinc-500">
-                                      Score:
-                                    </span>
-                                    <span
-                                      className={`text-xs font-medium ${
-                                        ethosData &&
-                                        cheaperListingEthosData.score >
-                                          ethosData.score
-                                          ? "text-emerald-400"
-                                          : ethosData &&
-                                            cheaperListingEthosData.score <
-                                              ethosData.score
-                                          ? "text-red-400"
-                                          : "text-zinc-400"
-                                      }`}
-                                    >
-                                      {cheaperListingEthosData.score}
-                                    </span>
-                                    {ethosData &&
-                                    cheaperListingEthosData.score >
-                                      ethosData.score ? (
-                                      <svg
-                                        className="w-3 h-3 text-emerald-400"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                    ) : ethosData &&
-                                      cheaperListingEthosData.score <
-                                        ethosData.score ? (
-                                      <svg
-                                        className="w-3 h-3 text-red-400"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                    ) : null}
-                                  </div>
-                                  {cheaperTrustLevelConfig && (
-                                    <>
-                                      <span className="text-xs text-zinc-500">
-                                        •
-                                      </span>
-                                      <span
-                                        className={`text-xs font-medium ${cheaperTrustLevelConfig.text}`}
-                                      >
-                                        {cheaperTrustLevelConfig.label}
-                                      </span>
-                                    </>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Arrow */}
-                        <svg
-                          className="w-5 h-5 text-emerald-400 group-hover:translate-x-1 transition-transform shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            )}
-
-            {/* Payment Info Card */}
-            <div className="mt-4 rounded-xl bg-zinc-950 border border-zinc-800 p-6">
-              <h3 className="text-sm font-medium text-zinc-400 mb-4">
-                Payment Details
-              </h3>
-
-              <div className="space-y-4">
-                {/* x402 Info */}
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shrink-0">
-                    <svg
-                      className="w-5 h-5 text-cyan-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 10V3L4 14h7v7l9-11h-7z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">Powered by x402</p>
-                    <p className="text-sm text-zinc-500">
-                      Instant, gasless payments. No transaction fees for buyers.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Chain Info */}
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
-                    <Image
-                      src="/images/base.svg"
-                      alt="Base"
-                      width={20}
-                      height={20}
-                      className="rounded"
-                    />
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">Base Network</p>
-                    <p className="text-sm text-zinc-500">
-                      USDC transfers happen securely on Base L2.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Security Info */}
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                    <svg
-                      className="w-5 h-5 text-emerald-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">Secure & Instant</p>
-                    <p className="text-sm text-zinc-500">
-                      Receive your invite link immediately after payment.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Right Column - Details */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="lg:col-span-3 space-y-6"
+            className="order-1 lg:order-2 lg:col-span-3 space-y-4 lg:space-y-6"
           >
             {/* Header Section */}
             <div className="rounded-xl bg-zinc-950 border border-zinc-800 p-6">
@@ -966,125 +610,132 @@ export default function ListingClient() {
             </div>
 
             {/* Seller Card */}
-            <div className="rounded-xl bg-zinc-950 border border-zinc-800 p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <h3 className="text-sm font-medium text-zinc-400 mb-4">
-                    Seller
+            <div className="rounded-xl bg-zinc-950 border border-zinc-800 p-4 sm:p-6">
+              {/* Header row with labels */}
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h3 className="text-sm font-medium text-zinc-400">Seller</h3>
+                {ethosData && trustLevelConfig && (
+                  <h3 className="text-sm font-medium text-zinc-400">
+                    Ethos Score
                   </h3>
-                  <div className="flex items-center gap-3">
-                    {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-zinc-700">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={
-                          sellerInfo?.avatarUrl ||
-                          blo(listing.sellerAddress as `0x${string}`)
-                        }
-                        alt="Seller avatar"
-                        width={48}
-                        height={48}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                )}
+              </div>
 
-                    {/* Name & Address */}
-                    <div className="min-w-0">
-                      {sellerInfo?.resolvedType ? (
-                        <>
-                          <Link
-                            href={`/profile/${listing.sellerAddress}`}
-                            className="font-semibold text-base text-white flex items-center gap-1.5 hover:text-cyan-400 transition-colors"
-                          >
-                            {sellerInfo.resolvedType === "farcaster" && "@"}
-                            {sellerInfo.displayName}
-                            {sellerInfo.resolvedType === "farcaster" && (
-                              <Image
-                                src="/farcaster-logo.svg"
-                                alt="Farcaster"
-                                width={14}
-                                height={14}
-                                className="inline-block opacity-70"
-                              />
-                            )}
-                          </Link>
-                          <Link
-                            href={`/profile/${listing.sellerAddress}`}
-                            className="text-sm text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
-                          >
-                            {sellerInfo.shortAddress}
-                          </Link>
-                        </>
-                      ) : (
+              {/* Content row */}
+              <div className="flex items-center justify-between gap-3 sm:gap-4">
+                {/* Seller info */}
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  {/* Avatar */}
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden shrink-0 border-2 border-zinc-700">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={
+                        sellerInfo?.avatarUrl ||
+                        blo(listing.sellerAddress as `0x${string}`)
+                      }
+                      alt="Seller avatar"
+                      width={48}
+                      height={48}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  {/* Name & Address */}
+                  <div className="min-w-0">
+                    {sellerInfo?.resolvedType ? (
+                      <>
                         <Link
                           href={`/profile/${listing.sellerAddress}`}
-                          className="font-mono text-sm text-zinc-300 hover:text-cyan-400 transition-colors"
+                          className="font-semibold text-sm sm:text-base text-white flex items-center gap-1.5 hover:text-cyan-400 transition-colors"
                         >
-                          {listing.sellerAddress}
+                          {sellerInfo.resolvedType === "farcaster" && "@"}
+                          <span className="truncate">
+                            {sellerInfo.displayName}
+                          </span>
+                          {sellerInfo.resolvedType === "farcaster" && (
+                            <Image
+                              src="/farcaster-logo.svg"
+                              alt="Farcaster"
+                              width={14}
+                              height={14}
+                              className="inline-block opacity-70 shrink-0"
+                            />
+                          )}
                         </Link>
-                      )}
-                      
-                      {/* Sales Count Badge */}
-                      {sellerStats && sellerStats.salesCount > 0 && (
-                        <div className="flex items-center gap-1.5 mt-1.5">
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30">
-                            <svg
-                              className="w-3 h-3 text-emerald-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            <span className="text-xs font-medium text-emerald-400">
-                              {sellerStats.salesCount} {sellerStats.salesCount === 1 ? 'sale' : 'sales'}
-                            </span>
-                          </div>
+                        <Link
+                          href={`/profile/${listing.sellerAddress}`}
+                          className="text-xs sm:text-sm text-zinc-500 font-mono hover:text-zinc-400 transition-colors"
+                        >
+                          {sellerInfo.shortAddress}
+                        </Link>
+                      </>
+                    ) : (
+                      <Link
+                        href={`/profile/${listing.sellerAddress}`}
+                        className="font-mono text-xs sm:text-sm text-zinc-300 hover:text-cyan-400 transition-colors truncate block"
+                      >
+                        {sellerInfo?.shortAddress ||
+                          listing.sellerAddress.slice(0, 6) +
+                            "..." +
+                            listing.sellerAddress.slice(-4)}
+                      </Link>
+                    )}
+
+                    {/* Sales Count Badge */}
+                    {sellerStats && sellerStats.salesCount > 0 && (
+                      <div className="flex items-center gap-1.5 mt-1 sm:mt-1.5">
+                        <div className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30">
+                          <svg
+                            className="w-3 h-3 text-emerald-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <span className="text-xs font-medium text-emerald-400">
+                            {sellerStats.salesCount}{" "}
+                            {sellerStats.salesCount === 1 ? "sale" : "sales"}
+                          </span>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Ethos Score & Trust Level */}
                 {ethosData && trustLevelConfig && (
-                  <div className="shrink-0">
-                    <h3 className="text-sm font-medium text-zinc-400 mb-4 text-right">
-                      Ethos Score
-                    </h3>
-
-                    <a
-                      href={`https://app.ethos.network/profile/${listing.sellerAddress}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group block"
+                  <a
+                    href={`https://app.ethos.network/profile/${listing.sellerAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group shrink-0"
+                  >
+                    <div
+                      className={`flex flex-col items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl ${trustLevelConfig.bg} border ${trustLevelConfig.border} group-hover:border-opacity-70 transition-colors cursor-pointer`}
                     >
-                      <div
-                        className={`flex flex-col items-center gap-1.5 px-4 py-2.5 rounded-xl ${trustLevelConfig.bg} border ${trustLevelConfig.border} group-hover:border-opacity-70 transition-colors cursor-pointer`}
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className={`w-2 h-2 rounded-full ${trustLevelConfig.dot}`}
-                          />
-                          <span
-                            className={`text-xl font-bold ${trustLevelConfig.text}`}
-                          >
-                            {ethosData.score}
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-1 sm:gap-1.5">
                         <span
-                          className={`text-xs ${trustLevelConfig.text} opacity-70`}
+                          className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${trustLevelConfig.dot}`}
+                        />
+                        <span
+                          className={`text-lg sm:text-xl font-bold ${trustLevelConfig.text}`}
                         >
-                          {trustLevelConfig.label}
+                          {ethosData.score}
                         </span>
                       </div>
-                    </a>
-                  </div>
+                      <span
+                        className={`text-xs ${trustLevelConfig.text} opacity-70`}
+                      >
+                        {trustLevelConfig.label}
+                      </span>
+                    </div>
+                  </a>
                 )}
               </div>
 
@@ -1094,6 +745,325 @@ export default function ListingClient() {
                 label="Rate Seller on Ethos"
                 className="mt-4"
               />
+            </div>
+          </motion.div>
+
+          {/* App Banner Section - Second on mobile, Left column on desktop */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="order-2 lg:order-1 lg:col-span-2"
+          >
+            {/* App Icon Card - Horizontal banner on mobile, square on desktop */}
+            <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
+              {/* Gradient Header Bar */}
+              <div
+                className="h-1.5"
+                style={{
+                  background: `linear-gradient(90deg, ${gradient.from}, ${gradient.to})`,
+                }}
+              />
+
+              {/* Icon Display - Horizontal on mobile, square on desktop */}
+              <div className="relative flex items-center justify-center bg-zinc-950 overflow-hidden h-32 sm:h-40 lg:aspect-square lg:h-auto">
+                {/* Tiled Pattern Background */}
+                <div
+                  className="absolute grid grid-cols-5 sm:grid-cols-7 gap-3 sm:gap-6 opacity-[0.15]"
+                  style={{
+                    transform: "rotate(-20deg) scale(1.8)",
+                  }}
+                >
+                  {[...Array(35)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center"
+                    >
+                      {appIconUrl ? (
+                        <div className="w-full h-full bg-white rounded-lg p-1 sm:p-1.5 flex items-center justify-center">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={appIconUrl}
+                            alt=""
+                            width={48}
+                            height={48}
+                            className="object-contain w-full h-full"
+                          />
+                        </div>
+                      ) : (
+                        <span
+                          className="text-xl sm:text-3xl font-bold"
+                          style={{ color: gradient.from }}
+                        >
+                          {appName.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Gradient Overlay */}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `radial-gradient(circle at center, transparent 0%, ${gradient.from}15 60%, ${gradient.to}25 100%)`,
+                  }}
+                />
+
+                {/* Vignette Effect */}
+                <div className="absolute inset-0 bg-linear-to-b from-zinc-950/80 via-transparent to-zinc-950/80" />
+                <div className="absolute inset-0 bg-linear-to-r from-zinc-950/80 via-transparent to-zinc-950/80" />
+
+                {/* Main Icon */}
+                <div className="relative z-10">
+                  {appIconUrl ? (
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl overflow-hidden border-2 border-zinc-600 shadow-2xl bg-white p-1.5 sm:p-2 ring-4 ring-black/50">
+                      <Image
+                        src={appIconUrl}
+                        alt={`${appName} icon`}
+                        width={80}
+                        height={80}
+                        className="object-contain w-full h-full rounded-lg"
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl font-bold text-white shadow-2xl ring-4 ring-black/50"
+                      style={{
+                        background: `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`,
+                      }}
+                    >
+                      {appName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer - Chain & App Link */}
+              <div className="p-3 sm:p-4 border-t border-zinc-800 bg-zinc-900/50">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src="/images/base.svg"
+                      alt="Base"
+                      width={20}
+                      height={20}
+                      className="rounded-full"
+                    />
+                    <span className="text-xs sm:text-sm text-zinc-400">
+                      Base Network
+                    </span>
+                  </div>
+                  {appSlug && (
+                    <Link
+                      href={`/app/${appSlug}`}
+                      className="group flex items-center gap-1.5 text-xs text-zinc-400 hover:text-cyan-400 transition-colors"
+                    >
+                      <span className="hidden sm:inline">
+                        View all {appName} listings
+                      </span>
+                      <span className="sm:hidden">View all</span>
+                      <svg
+                        className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Cheaper Listing Banner */}
+            {cheaperListing && listing.status === "active" && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-4"
+              >
+                <Link href={`/listing/${cheaperListing.slug}`}>
+                  <div className="group relative rounded-xl overflow-hidden bg-linear-to-r from-emerald-500/10 via-cyan-500/10 to-emerald-500/10 border border-emerald-500/30 hover:border-emerald-400/50 transition-all cursor-pointer">
+                    {/* Animated gradient border effect */}
+                    <div className="absolute inset-0 bg-linear-to-r from-emerald-500/0 via-emerald-500/10 to-emerald-500/0 animate-pulse" />
+
+                    <div className="relative p-3 sm:p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                          {/* Price drop icon */}
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                            <svg
+                              className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                              />
+                            </svg>
+                          </div>
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs sm:text-sm font-semibold text-emerald-300">
+                                Cheaper available!
+                              </span>
+                              <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-xs font-bold text-emerald-400">
+                                {Math.round(
+                                  ((listing.priceUsdc -
+                                    cheaperListing.priceUsdc) /
+                                    listing.priceUsdc) *
+                                    100
+                                )}
+                                % less
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              <span className="text-xs text-zinc-400">
+                                Only{" "}
+                                <span className="font-semibold text-cyan-400">
+                                  ${cheaperListing.priceUsdc}
+                                </span>
+                              </span>
+                              {cheaperListingEthosData &&
+                                cheaperTrustLevelConfig && (
+                                  <>
+                                    <span className="text-xs text-zinc-500 hidden sm:inline">
+                                      •
+                                    </span>
+                                    <span
+                                      className={`text-xs font-medium ${cheaperTrustLevelConfig.text} hidden sm:inline`}
+                                    >
+                                      {cheaperTrustLevelConfig.label}
+                                    </span>
+                                  </>
+                                )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Arrow */}
+                        <svg
+                          className="w-5 h-5 text-emerald-400 group-hover:translate-x-1 transition-transform shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            )}
+          </motion.div>
+
+          {/* Payment Details Section - Last on mobile, stays in left column on desktop */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="order-3 lg:order-3 lg:col-span-2"
+          >
+            <div className="rounded-xl bg-zinc-950 border border-zinc-800 p-4 sm:p-6">
+              <h3 className="text-sm font-medium text-zinc-400 mb-4">
+                Payment Details
+              </h3>
+
+              <div className="space-y-3 sm:space-y-4">
+                {/* x402 Info */}
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shrink-0">
+                    <svg
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium text-white text-sm sm:text-base">
+                      Powered by x402
+                    </p>
+                    <p className="text-xs sm:text-sm text-zinc-500">
+                      Instant, gasless payments. No transaction fees for buyers.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Chain Info */}
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
+                    <Image
+                      src="/images/base.svg"
+                      alt="Base"
+                      width={20}
+                      height={20}
+                      className="rounded"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-medium text-white text-sm sm:text-base">
+                      Base Network
+                    </p>
+                    <p className="text-xs sm:text-sm text-zinc-500">
+                      USDC transfers happen securely on Base L2.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Security Info */}
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                    <svg
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium text-white text-sm sm:text-base">
+                      Secure & Instant
+                    </p>
+                    <p className="text-xs sm:text-sm text-zinc-500">
+                      Receive your invite link immediately after payment.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>
