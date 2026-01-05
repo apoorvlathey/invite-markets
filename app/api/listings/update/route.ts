@@ -12,10 +12,10 @@ import { chainId } from "@/lib/chain";
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
-      slug, 
-      sellerAddress, 
-      priceUsdc, 
+    const {
+      slug,
+      sellerAddress,
+      priceUsdc,
       inviteUrl,
       appId,
       appName,
@@ -27,7 +27,11 @@ export async function PATCH(request: NextRequest) {
     // Validate required fields including signature
     if (!slug || !sellerAddress || !nonce || !chainId || !signature) {
       return NextResponse.json(
-        { success: false, error: "Missing required fields: slug, sellerAddress, nonce, chainId, signature" },
+        {
+          success: false,
+          error:
+            "Missing required fields: slug, sellerAddress, nonce, chainId, signature",
+        },
         { status: 400 }
       );
     }
@@ -61,7 +65,10 @@ export async function PATCH(request: NextRequest) {
 
     if (!isValid) {
       return NextResponse.json(
-        { success: false, error: "Invalid signature. Please sign the message with your wallet." },
+        {
+          success: false,
+          error: "Invalid signature. Please sign the message with your wallet.",
+        },
         { status: 401 }
       );
     }
@@ -106,8 +113,10 @@ export async function PATCH(request: NextRequest) {
       listing.priceUsdc = priceUsdc;
     }
 
-    if (inviteUrl !== undefined) {
-      if (!inviteUrl || typeof inviteUrl !== "string") {
+    // Only update inviteUrl if a non-empty value is provided
+    // Empty string means "keep existing URL" for security (URL not exposed in API)
+    if (inviteUrl !== undefined && inviteUrl !== "") {
+      if (typeof inviteUrl !== "string") {
         return NextResponse.json(
           { success: false, error: "Invalid invite URL" },
           { status: 400 }
@@ -140,7 +149,7 @@ export async function PATCH(request: NextRequest) {
         id: listing._id.toString(),
         slug: listing.slug,
         priceUsdc: listing.priceUsdc,
-        inviteUrl: listing.inviteUrl,
+        // inviteUrl intentionally omitted for security
         appId: listing.appId,
         appName: listing.appName,
         status: listing.status,

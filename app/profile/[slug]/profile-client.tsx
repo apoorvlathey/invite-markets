@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ import { getExplorerAddressUrl, chainId as defaultChainId } from "@/lib/chain";
 import { fetchEthosData, type EthosData } from "@/lib/ethos-scores";
 import { featuredApps } from "@/data/featuredApps";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
+import { signMessage } from "thirdweb/utils";
 import {
   getEIP712Domain,
   EIP712_UPDATE_TYPES,
@@ -57,7 +58,8 @@ interface Purchase {
 interface Listing {
   _id: string;
   slug: string;
-  inviteUrl: string;
+  // inviteUrl is only returned when authenticated as the seller
+  inviteUrl?: string;
   priceUsdc: number;
   sellerAddress: string;
   status: "active" | "sold" | "cancelled";
@@ -209,11 +211,14 @@ function EditListingModal({
   chainId: number;
 }) {
   const [price, setPrice] = useState(listing.priceUsdc.toString());
-  const [inviteUrl, setInviteUrl] = useState(listing.inviteUrl);
+  // inviteUrl is available when authenticated as the seller
+  const [inviteUrl, setInviteUrl] = useState(listing.inviteUrl || "");
   const [appName, setAppName] = useState(listing.appName || "");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isUrlFocused, setIsUrlFocused] = useState(false);
+  // Track if we have the original URL (for display purposes)
+  const hasExistingUrl = !!listing.inviteUrl;
 
   // Disable background scrolling when modal is open
   useEffect(() => {
@@ -354,9 +359,16 @@ function EditListingModal({
               onChange={(e) => setInviteUrl(e.target.value)}
               onFocus={() => setIsUrlFocused(true)}
               onBlur={() => setIsUrlFocused(false)}
-              className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white focus:border-cyan-500 focus:outline-none"
-              required
+              placeholder={
+                hasExistingUrl ? undefined : "Leave empty to keep existing URL"
+              }
+              className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none"
             />
+            {!hasExistingUrl && (
+              <p className="mt-1.5 text-xs text-zinc-500">
+                Leave empty to keep the existing URL unchanged.
+              </p>
+            )}
           </div>
 
           {!listing.appId && (
@@ -409,6 +421,7 @@ function ListingCard({
   onDelete,
   account,
   chainId,
+  isAuthenticating = false,
 }: {
   listing: Listing;
   isOwner: boolean;
@@ -416,6 +429,7 @@ function ListingCard({
   onDelete: () => void;
   account: ReturnType<typeof useActiveAccount>;
   chainId: number;
+  isAuthenticating?: boolean;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -536,22 +550,45 @@ function ListingCard({
           <div className="flex gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={onEdit}
-              className="p-1.5 sm:p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all group cursor-pointer"
-              title="Edit listing"
+              disabled={isAuthenticating}
+              className="p-1.5 sm:p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              title={isAuthenticating ? "Signing..." : "Edit listing"}
             >
-              <svg
-                className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 group-hover:text-cyan-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
+              {isAuthenticating ? (
+                <svg
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 group-hover:text-cyan-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              )}
             </button>
             <button
               onClick={() => setShowConfirmDelete(true)}
@@ -790,34 +827,150 @@ export default function ProfileClient({ address }: ProfileClientProps) {
     fetchPurchases();
   }, [address]);
 
+  // Store auth data for authenticated seller requests with caching
+  // Includes wallet address and timestamp to validate cache
+  const authDataRef = useRef<{
+    signature: string;
+    message: string;
+    walletAddress: string;
+    createdAt: number;
+  } | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  // Check if cached auth is still valid
+  const isAuthCacheValid = useCallback(() => {
+    // Cache validity duration (5 minutes in milliseconds)
+    const AUTH_CACHE_DURATION = 5 * 60 * 1000;
+
+    if (!authDataRef.current || !account) return false;
+
+    const { walletAddress, createdAt } = authDataRef.current;
+    const now = Date.now();
+
+    // Validate: same wallet and within cache duration
+    const isSameWallet =
+      walletAddress.toLowerCase() === account.address.toLowerCase();
+    const isNotExpired = now - createdAt < AUTH_CACHE_DURATION;
+
+    return isSameWallet && isNotExpired;
+  }, [account]);
+
+  // Clear auth cache when wallet changes
   useEffect(() => {
-    const fetchSellerData = async () => {
+    if (authDataRef.current && account) {
+      const cachedWallet = authDataRef.current.walletAddress.toLowerCase();
+      const currentWallet = account.address.toLowerCase();
+
+      if (cachedWallet !== currentWallet) {
+        // Wallet changed, clear the cache
+        authDataRef.current = null;
+      }
+    }
+  }, [account]);
+
+  // Function to fetch seller data with optional authentication
+  const fetchSellerData = useCallback(
+    async (authenticate: boolean = false): Promise<Listing[] | null> => {
       try {
-        const response = await fetch(`/api/seller/${address}`);
+        const headers: HeadersInit = {};
+
+        // If authenticated and we have valid auth data, include it
+        if (authenticate && authDataRef.current) {
+          headers["x-seller-signature"] = authDataRef.current.signature;
+          headers["x-seller-message"] = btoa(authDataRef.current.message);
+        }
+
+        const response = await fetch(`/api/seller/${address}`, { headers });
         const data = await response.json();
         if (data.success) {
           setListings(data.listings || []);
           setSellerStats(data.stats);
+          return data.listings || [];
         }
+        return null;
       } catch (error) {
         console.error("Failed to fetch seller data:", error);
+        return null;
       } finally {
         setListingsLoading(false);
       }
-    };
-    fetchSellerData();
-  }, [address]);
+    },
+    [address]
+  );
 
-  const handleListingUpdate = () => {
-    fetch(`/api/seller/${address}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setListings(data.listings || []);
-          setSellerStats(data.stats);
+  // Fetch seller data on page load (without authentication)
+  useEffect(() => {
+    fetchSellerData(false);
+  }, [address, fetchSellerData]);
+
+  // Handle edit button click - use cached auth or request new signature
+  const handleEditClick = useCallback(
+    async (listing: Listing) => {
+      if (!account) return;
+
+      setIsAuthenticating(true);
+
+      try {
+        // Check if we have valid cached auth
+        if (isAuthCacheValid()) {
+          // Use cached auth - just fetch and open modal
+          const authenticatedListings = await fetchSellerData(true);
+
+          if (authenticatedListings) {
+            const authenticatedListing = authenticatedListings.find(
+              (l) => l._id === listing._id
+            );
+            if (authenticatedListing) {
+              setEditingListing(authenticatedListing);
+            }
+          }
+          setIsAuthenticating(false);
+          return;
         }
-      });
-  };
+
+        // No valid cache - request new signature
+        const timestamp = Date.now();
+        const message = `Edit my listing on invite.markets\nTimestamp: ${timestamp}\nAddress: ${account.address}`;
+
+        const signature = await signMessage({
+          account,
+          message,
+        });
+
+        // Store with wallet address and timestamp for cache validation
+        authDataRef.current = {
+          signature,
+          message,
+          walletAddress: account.address,
+          createdAt: timestamp,
+        };
+
+        // Fetch authenticated data to get inviteUrl
+        const authenticatedListings = await fetchSellerData(true);
+
+        if (authenticatedListings) {
+          // Find the listing with inviteUrl included
+          const authenticatedListing = authenticatedListings.find(
+            (l) => l._id === listing._id
+          );
+          if (authenticatedListing) {
+            setEditingListing(authenticatedListing);
+          }
+        }
+      } catch (error) {
+        // User rejected signature - don't open modal
+        console.log("Edit authentication cancelled:", error);
+      } finally {
+        setIsAuthenticating(false);
+      }
+    },
+    [account, fetchSellerData, isAuthCacheValid]
+  );
+
+  const handleListingUpdate = useCallback(() => {
+    // Re-fetch with auth if cache is still valid
+    fetchSellerData(isAuthCacheValid());
+  }, [fetchSellerData, isAuthCacheValid]);
 
   const trustLevelConfig = ethosData
     ? getTrustLevelConfig(ethosData.level)
@@ -967,7 +1120,9 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                 </h1>
               )}
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-xs text-zinc-500 font-mono truncate max-w-[200px] sm:max-w-none">{address}</p>
+                <p className="text-xs text-zinc-500 font-mono truncate max-w-[200px] sm:max-w-none">
+                  {address}
+                </p>
                 <div className="flex items-center gap-1 shrink-0">
                   <CopyButton text={address} label="" small />
                   <a
@@ -1084,13 +1239,17 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                   className="mt-4 sm:mt-6 grid grid-cols-2 gap-2 sm:gap-3"
                 >
                   <div className="p-3 sm:p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-                    <p className="text-[10px] sm:text-xs text-zinc-500 mb-1">Total Sales</p>
+                    <p className="text-[10px] sm:text-xs text-zinc-500 mb-1">
+                      Total Sales
+                    </p>
                     <p className="text-xl sm:text-2xl font-bold text-white">
                       {sellerStats.salesCount}
                     </p>
                   </div>
                   <div className="p-3 sm:p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-                    <p className="text-[10px] sm:text-xs text-zinc-500 mb-1">Revenue</p>
+                    <p className="text-[10px] sm:text-xs text-zinc-500 mb-1">
+                      Revenue
+                    </p>
                     <p className="text-xl sm:text-2xl font-bold text-emerald-400">
                       ${sellerStats.totalRevenue.toFixed(2)}
                     </p>
@@ -1194,10 +1353,11 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                         key={listing._id}
                         listing={listing}
                         isOwner={isOwnProfile}
-                        onEdit={() => setEditingListing(listing)}
+                        onEdit={() => handleEditClick(listing)}
                         onDelete={handleListingUpdate}
                         account={account}
                         chainId={chainId}
+                        isAuthenticating={isAuthenticating}
                       />
                     ))}
                   </div>

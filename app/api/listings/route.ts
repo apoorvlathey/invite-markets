@@ -39,7 +39,9 @@ export async function GET() {
   try {
     await connectDB();
 
-    const listings = await Listing.find({ chainId }).sort({ createdAt: -1 }).lean();
+    const listings = await Listing.find({ chainId })
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({
       success: true,
@@ -216,8 +218,6 @@ export async function POST(request: NextRequest) {
       ...(appName && appName.trim() ? { appName: appName.trim() } : {}),
     };
 
-    console.log("Creating listing with data:", listingData);
-
     const listing = await Listing.create(listingData);
 
     return NextResponse.json(
@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
         success: true,
         listing: {
           slug: listing.slug,
-          inviteUrl: listing.inviteUrl,
+          // inviteUrl intentionally omitted for security
           priceUsdc: listing.priceUsdc,
           sellerAddress: listing.sellerAddress,
           status: listing.status,
