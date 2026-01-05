@@ -245,12 +245,10 @@ export function AdminClient() {
           )}
 
           <div className="flex flex-col gap-3">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <button
               onClick={handleVerifyAdmin}
               disabled={isVerifying}
-              className="w-full py-3 rounded-xl font-semibold text-black bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="hover-scale w-full py-3 rounded-xl font-semibold text-black bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
             >
               {isVerifying ? (
                 <>
@@ -263,7 +261,7 @@ export function AdminClient() {
                   Sign to Verify
                 </>
               )}
-            </motion.button>
+            </button>
             <button
               onClick={handleDisconnect}
               className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer flex items-center justify-center gap-2"

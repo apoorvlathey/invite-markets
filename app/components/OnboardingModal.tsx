@@ -131,26 +131,26 @@ export function OnboardingModal({ forceShow, onClose }: OnboardingModalProps) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop - uses modal-backdrop for mobile optimization */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
+            className="fixed inset-0 modal-backdrop z-50"
           />
 
           {/* Modal */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 30 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
               className="relative max-w-lg w-full"
             >
-              {/* Outer glow effect */}
-              <div className="absolute -inset-1 bg-linear-to-r from-cyan-500/20 via-purple-500/20 to-cyan-500/20 rounded-2xl blur-xl opacity-70" />
+              {/* Outer glow effect - hidden on mobile for performance */}
+              <div className="hidden md:block absolute -inset-1 bg-linear-to-r from-cyan-500/20 via-purple-500/20 to-cyan-500/20 rounded-2xl blur-xl opacity-70" />
 
               {/* Main modal */}
               <div className="relative bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
@@ -166,38 +166,27 @@ export function OnboardingModal({ forceShow, onClose }: OnboardingModalProps) {
                 </button>
 
                 {/* Header */}
-                <div className="px-8 pt-10 pb-8 text-center">
-                  {/* Logo animation */}
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: "spring" }}
-                    className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-cyan-500/10 border border-cyan-500/30"
-                  >
+                <div className="px-6 sm:px-8 pt-8 sm:pt-10 pb-6 sm:pb-8 text-center">
+                  {/* Logo badge - simplified animation */}
+                  <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-cyan-500/10 border border-cyan-500/30">
                     <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
                     </span>
                     <span className="text-sm font-medium text-cyan-300">
                       Welcome to invite.markets
                     </span>
-                  </motion.div>
+                  </div>
 
-                  <motion.h2
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-2xl md:text-3xl font-bold tracking-tight mb-3"
-                  >
+                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
                     <span className="text-white">The marketplace for</span>
                     <br />
                     <span className="bg-linear-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">
                       early access to web3 apps
                     </span>
-                  </motion.h2>
+                  </h2>
 
                   {/* x402 badge */}
-                  <div className="flex items-center justify-center gap-2 text-xs text-zinc-500 mt-6">
+                  <div className="flex items-center justify-center gap-2 text-xs text-zinc-500 mt-6 flex-wrap">
                     <span>Powered by</span>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 font-medium">
                       <Zap className="w-3 h-3 text-cyan-400" />
@@ -216,17 +205,17 @@ export function OnboardingModal({ forceShow, onClose }: OnboardingModalProps) {
                   </div>
                 </div>
 
-                {/* Steps carousel */}
-                <div className="px-8 pb-8">
+                {/* Steps carousel - simplified for mobile */}
+                <div className="px-6 sm:px-8 pb-6 sm:pb-8">
                   {/* Fixed height container to prevent layout shift */}
                   <div className="relative min-h-[120px]">
-                    <AnimatePresence initial={false}>
+                    <AnimatePresence initial={false} mode="wait">
                       <motion.div
                         key={currentStep}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.15 }}
                         className="absolute inset-0"
                       >
                         {(() => {
@@ -236,11 +225,11 @@ export function OnboardingModal({ forceShow, onClose }: OnboardingModalProps) {
 
                           return (
                             <div
-                              className={`rounded-xl p-5 h-full ${colors.bg} border ${colors.border}`}
+                              className={`rounded-xl p-4 sm:p-5 h-full ${colors.bg} border ${colors.border}`}
                             >
-                              <div className="flex items-start gap-4 h-full">
+                              <div className="flex items-start gap-3 sm:gap-4 h-full">
                                 <div
-                                  className={`shrink-0 p-3 rounded-xl ${colors.bg} border ${colors.border} shadow-lg ${colors.glow} overflow-hidden`}
+                                  className={`shrink-0 p-2.5 sm:p-3 rounded-xl ${colors.bg} border ${colors.border} overflow-hidden`}
                                 >
                                   {step.iconImage ? (
                                     <Image
@@ -248,16 +237,16 @@ export function OnboardingModal({ forceShow, onClose }: OnboardingModalProps) {
                                       alt=""
                                       width={24}
                                       height={24}
-                                      className="w-6 h-6"
+                                      className="w-5 h-5 sm:w-6 sm:h-6"
                                     />
                                   ) : Icon ? (
                                     <Icon
-                                      className={`w-6 h-6 ${colors.text}`}
+                                      className={`w-5 h-5 sm:w-6 sm:h-6 ${colors.text}`}
                                     />
                                   ) : null}
                                 </div>
                                 <div>
-                                  <h3 className="font-bold text-white text-lg mb-1">
+                                  <h3 className="font-bold text-white text-base sm:text-lg mb-1">
                                     {step.title}
                                   </h3>
                                   <p className="text-zinc-400 text-sm leading-relaxed">
@@ -273,7 +262,7 @@ export function OnboardingModal({ forceShow, onClose }: OnboardingModalProps) {
                   </div>
 
                   {/* Step indicators */}
-                  <div className="flex justify-center gap-2 mt-8">
+                  <div className="flex justify-center gap-2 mt-6 sm:mt-8">
                     {steps.map((_, index) => (
                       <button
                         key={index}
@@ -288,45 +277,39 @@ export function OnboardingModal({ forceShow, onClose }: OnboardingModalProps) {
                   </div>
                 </div>
 
-                {/* Footer */}
-                <div className="px-8 pb-10">
-                  <div className="flex items-center justify-between gap-4">
+                {/* Footer - CSS hover instead of Framer Motion */}
+                <div className="px-6 sm:px-8 pb-8 sm:pb-10">
+                  <div className="flex items-center justify-between gap-3 sm:gap-4">
                     {/* Navigation arrows */}
                     <div className="flex items-center gap-2">
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                      <button
                         onClick={() => setCurrentStep((prev) => prev - 1)}
                         disabled={currentStep === 0}
-                        className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
+                        className={`hover-scale w-10 h-10 sm:w-12 sm:h-12 rounded-full border flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
                           currentStep === 0
                             ? "border-zinc-800 text-zinc-600 cursor-not-allowed"
                             : "border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-900"
                         }`}
                       >
-                        <ArrowLeft className="w-5 h-5" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
+                      <button
                         onClick={() => setCurrentStep((prev) => prev + 1)}
                         disabled={currentStep === steps.length - 1}
-                        className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all cursor-pointer ${
+                        className={`hover-scale w-10 h-10 sm:w-12 sm:h-12 rounded-full border flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
                           currentStep === steps.length - 1
                             ? "border-zinc-800 text-zinc-600 cursor-not-allowed"
                             : "border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-900"
                         }`}
                       >
-                        <ArrowRight className="w-5 h-5" />
-                      </motion.button>
+                        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
                     </div>
 
-                    {/* CTA Button */}
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    {/* CTA Button - CSS hover instead of Framer Motion */}
+                    <button
                       onClick={handleClose}
-                      className="px-8 py-3 rounded-full font-semibold text-black bg-linear-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-400/40 transition-all cursor-pointer flex items-center gap-2"
+                      className="hover-scale px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base text-black bg-linear-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-400/40 transition-all cursor-pointer flex items-center gap-2 active:scale-95"
                     >
                       {currentStep === steps.length - 1 ? (
                         <>
@@ -336,7 +319,7 @@ export function OnboardingModal({ forceShow, onClose }: OnboardingModalProps) {
                       ) : (
                         <>Explore Invites</>
                       )}
-                    </motion.button>
+                    </button>
                   </div>
                 </div>
               </div>

@@ -246,17 +246,15 @@ export default function Home() {
             — instantly.
           </p>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons - Use CSS hover for better mobile performance */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <button
               onClick={() => {
                 document
                   .getElementById("latest-listings")
                   ?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="px-8 py-3.5 rounded-xl font-semibold text-base text-black bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 hover:from-emerald-300 hover:via-cyan-300 hover:to-blue-400 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-400/50 transition-all cursor-pointer flex items-center gap-2"
+              className="hover-scale px-8 py-3.5 rounded-xl font-semibold text-base text-black bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 hover:from-emerald-300 hover:via-cyan-300 hover:to-blue-400 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-400/50 transition-all cursor-pointer flex items-center gap-2 active:scale-95"
             >
               Explore Invites
               <svg
@@ -272,16 +270,12 @@ export default function Home() {
                   d="M13 7l5 5m0 0l-5 5m5-5H6"
                 />
               </svg>
-            </motion.button>
+            </button>
 
             <Link href="/sell">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-8 py-3.5 rounded-xl font-semibold text-base bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 transition-all cursor-pointer"
-              >
+              <button className="hover-scale px-8 py-3.5 rounded-xl font-semibold text-base bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 transition-all cursor-pointer active:scale-95">
                 Sell Your Invite
-              </motion.button>
+              </button>
             </Link>
           </div>
         </motion.div>
@@ -327,11 +321,12 @@ export default function Home() {
                   key={app.id}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 + i * 0.1 }}
+                  transition={{ delay: 0.2 + i * 0.05 }}
                   className="snap-start shrink-0"
                 >
                   <Link href={`/app/${app.id}`}>
-                    <div className="group relative w-[260px] sm:w-[320px] md:w-[380px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 cursor-pointer hover:-translate-y-1">
+                    {/* Use CSS hover-lift for mobile performance */}
+                    <div className="hover-lift group relative w-[260px] sm:w-[320px] md:w-[380px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 cursor-pointer">
                       {/* Gradient accent bar */}
                       <div
                         className="h-1"
@@ -559,18 +554,18 @@ export default function Home() {
               return (
                 <motion.div
                   key={invite.slug}
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1, duration: 0.5 }}
-                  whileHover={{ y: -4 }}
+                  transition={{ delay: i * 0.05, duration: 0.3 }}
                   className="group"
                 >
+                  {/* Use CSS hover-lift for better mobile performance */}
                   <div
                     onClick={() => {
                       NProgress.start();
                       router.push(`/listing/${invite.slug}`);
                     }}
-                    className="relative rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 shadow-lg cursor-pointer"
+                    className="hover-lift relative rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 shadow-lg cursor-pointer"
                   >
                     {/* Top accent bar with gradient */}
                     <div

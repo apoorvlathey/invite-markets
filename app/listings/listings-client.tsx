@@ -837,8 +837,8 @@ export default function ListingsClient() {
                   <div className="col-span-2"></div>
                 </div>
 
-                {/* Table Rows */}
-                {sortedListings.map((listing, i) => {
+                {/* Table Rows - Simplified for mobile performance */}
+                {sortedListings.map((listing) => {
                   const sellerInfo = getSellerDisplayInfo(
                     listing.sellerAddress,
                     resolvedAddresses
@@ -850,11 +850,8 @@ export default function ListingsClient() {
                   const gradient = getGradientForApp(appName);
 
                   return (
-                    <motion.div
+                    <div
                       key={listing.slug}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.03 }}
                       onClick={() => {
                         NProgress.start();
                         router.push(`/listing/${listing.slug}`);
@@ -1039,7 +1036,7 @@ export default function ListingsClient() {
                           Details
                         </button>
                       </div>
-                    </motion.div>
+                    </div>
                   );
                 })}
               </div>

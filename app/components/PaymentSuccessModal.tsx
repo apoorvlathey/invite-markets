@@ -50,13 +50,13 @@ export function PaymentSuccessModal({
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop - uses modal-backdrop class for mobile optimization */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleCloseAttempt}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+            className="fixed inset-0 modal-backdrop z-50"
           />
 
           {/* Confirmation Modal */}
@@ -68,14 +68,14 @@ export function PaymentSuccessModal({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={() => setShowConfirmClose(false)}
-                  className="fixed inset-0 bg-black/70 backdrop-blur-sm z-60"
+                  className="fixed inset-0 modal-backdrop z-60"
                 />
                 <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
                     className="relative bg-zinc-900 rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
                   >
                     {/* Gradient border effect */}
@@ -85,57 +85,32 @@ export function PaymentSuccessModal({
 
                     {/* Content */}
                     <div className="relative p-6">
-                      {/* Warning icon with glow */}
+                      {/* Warning icon */}
                       <div className="flex justify-center mb-4">
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{
-                            type: "spring",
-                            damping: 15,
-                            stiffness: 300,
-                            delay: 0.1,
-                          }}
-                          className="relative"
-                        >
+                        <div className="relative">
                           <div className="absolute inset-0 bg-yellow-500/30 rounded-full blur-xl" />
                           <div className="relative p-4 bg-yellow-500/10 rounded-full border border-yellow-500/30">
                             <AlertTriangle className="h-8 w-8 text-yellow-400" />
                           </div>
-                        </motion.div>
+                        </div>
                       </div>
 
                       {/* Title */}
-                      <motion.h3
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 }}
-                        className="text-xl font-bold text-center text-zinc-100 mb-3"
-                      >
+                      <h3 className="text-xl font-bold text-center text-zinc-100 mb-3">
                         Wait! Are you sure?
-                      </motion.h3>
+                      </h3>
 
                       {/* Description */}
-                      <motion.p
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-sm text-center text-zinc-400 mb-6 leading-relaxed"
-                      >
+                      <p className="text-sm text-center text-zinc-400 mb-6 leading-relaxed">
                         You haven&apos;t copied your invite link yet.
                         <br />
                         <span className="text-yellow-400 font-semibold">
                           This link will be lost forever.
                         </span>
-                      </motion.p>
+                      </p>
 
                       {/* Buttons */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.25 }}
-                        className="flex flex-col gap-3"
-                      >
+                      <div className="flex flex-col gap-3">
                         <button
                           onClick={() => setShowConfirmClose(false)}
                           className="w-full px-4 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 hover:border-emerald-400 rounded-xl font-semibold text-emerald-400 transition-all cursor-pointer"
@@ -149,7 +124,7 @@ export function PaymentSuccessModal({
                           <AlertTriangle className="h-4 w-4" />
                           Close Anyway
                         </button>
-                      </motion.div>
+                      </div>
                     </div>
                   </motion.div>
                 </div>
@@ -160,9 +135,10 @@ export function PaymentSuccessModal({
           {/* Modal */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
               className="bg-zinc-950 border border-zinc-800 rounded-xl max-w-md w-full shadow-2xl"
             >
               {/* Header */}
@@ -204,48 +180,8 @@ export function PaymentSuccessModal({
                     Your Invite Link:
                   </label>
                   <div className="flex gap-2 items-stretch">
-                    {/* Animated border container */}
-                    <div className="relative flex-1 p-[2px]">
-                      {/* Rotating gradient - uses a larger square that rotates */}
-                      <div className="absolute inset-0 rounded-lg overflow-hidden">
-                        {/* Single rotating beam with layered glow */}
-                        <motion.div
-                          className="absolute top-1/2 left-1/2 w-[200%] aspect-square -translate-x-1/2 -translate-y-1/2"
-                          animate={{ rotate: 360 }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "linear",
-                          }}
-                        >
-                          {/* Core bright line - vivid colors */}
-                          <div
-                            className="absolute inset-0"
-                            style={{
-                              background:
-                                "conic-gradient(from 0deg, transparent 0deg, transparent 300deg, #00ffff 315deg, #00d4ff 325deg, #0099ff 335deg, #a855f7 345deg, #ff00ff 352deg, #ffffff 357deg, transparent 360deg)",
-                            }}
-                          />
-                          {/* Inner glow - saturated */}
-                          <div
-                            className="absolute inset-0 blur-xs"
-                            style={{
-                              background:
-                                "conic-gradient(from 0deg, transparent 0deg, transparent 300deg, #00ffff 315deg, #00d4ff 325deg, #0099ff 335deg, #a855f7 345deg, #ff00ff 352deg, #ffffff 357deg, transparent 360deg)",
-                            }}
-                          />
-                          {/* Outer glow - wide and bright */}
-                          <div
-                            className="absolute inset-0 blur-lg"
-                            style={{
-                              background:
-                                "conic-gradient(from 0deg, transparent 0deg, transparent 295deg, #00ffff 315deg, #0099ff 335deg, #a855f7 348deg, #ff00ff 355deg, transparent 360deg)",
-                            }}
-                          />
-                        </motion.div>
-                      </div>
-                      {/* Subtle base border */}
-                      <div className="absolute inset-[1px] rounded-[7px] bg-zinc-700/30" />
+                    {/* Static gradient border - no animation for mobile performance */}
+                    <div className="relative flex-1 p-[2px] rounded-lg bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500">
                       {/* Input */}
                       <input
                         type="text"
@@ -254,11 +190,9 @@ export function PaymentSuccessModal({
                         className="relative w-full h-full px-3 py-2.5 bg-zinc-900 rounded-[6px] text-sm font-mono text-zinc-100 focus:outline-none"
                       />
                     </div>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <button
                       onClick={handleCopy}
-                      className={`px-4 py-2 border rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer ${
+                      className={`hover-scale px-4 py-2 border rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer active:scale-95 ${
                         copied
                           ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
                           : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-100"
@@ -275,7 +209,7 @@ export function PaymentSuccessModal({
                           Copy
                         </>
                       )}
-                    </motion.button>
+                    </button>
                   </div>
                 </div>
 

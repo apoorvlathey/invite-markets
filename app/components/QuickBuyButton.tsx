@@ -1,7 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
-
 interface QuickBuyButtonProps {
   price: string;
   isPending: boolean;
@@ -12,6 +10,7 @@ interface QuickBuyButtonProps {
 /**
  * Quick buy button component for listing cards.
  * Shows price and handles the buy action.
+ * Uses CSS hover for better mobile performance.
  */
 export function QuickBuyButton({
   price,
@@ -20,16 +19,14 @@ export function QuickBuyButton({
   compact = false,
 }: QuickBuyButtonProps) {
   return (
-    <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+    <button
       disabled={isPending}
       onClick={(e) => {
         e.preventDefault(); // Prevent card link navigation
         e.stopPropagation(); // Stop event bubbling
         onBuy();
       }}
-      className={`rounded-lg font-semibold bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 hover:from-emerald-300 hover:via-cyan-300 hover:to-blue-400 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-400/40 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+      className={`hover-scale rounded-lg font-semibold bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 hover:from-emerald-300 hover:via-cyan-300 hover:to-blue-400 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-400/40 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 ${
         compact ? "py-2 px-3 text-sm min-w-[100px]" : "flex-1 py-3 px-4"
       }`}
     >
@@ -75,6 +72,6 @@ export function QuickBuyButton({
           </>
         )}
       </span>
-    </motion.button>
+    </button>
   );
 }

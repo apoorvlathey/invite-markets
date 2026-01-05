@@ -549,14 +549,12 @@ export default function ListingClient() {
                 </div>
               </div>
 
-              {/* Purchase Button */}
+              {/* Purchase Button - CSS hover for mobile performance */}
               {listing.status === "active" && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <button
                   disabled={isPending}
                   onClick={handlePurchase}
-                  className="w-full mt-5 py-4 rounded-xl font-bold text-lg text-black bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 hover:from-emerald-300 hover:via-cyan-300 hover:to-blue-400 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all shadow-lg shadow-cyan-500/25 hover:shadow-cyan-400/40"
+                  className="hover-scale w-full mt-5 py-4 rounded-xl font-bold text-lg text-black bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 hover:from-emerald-300 hover:via-cyan-300 hover:to-blue-400 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all shadow-lg shadow-cyan-500/25 hover:shadow-cyan-400/40 active:scale-95"
                 >
                   {isPending ? (
                     <span className="flex items-center justify-center gap-2">
@@ -599,7 +597,7 @@ export default function ListingClient() {
                       Purchase Now
                     </span>
                   )}
-                </motion.button>
+                </button>
               )}
 
               {listing.status === "sold" && (

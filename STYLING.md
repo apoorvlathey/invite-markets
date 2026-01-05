@@ -18,6 +18,7 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 ## Design anti-patterns to avoid
 
 **The "AI-generated" look:**
+
 - ❌ Gradients on everything (buttons, text, cards, backgrounds)
 - ❌ Everything rounded-3xl or rounded-2xl
 - ❌ Glassmorphism on every surface
@@ -28,6 +29,7 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 - ❌ Every card looks identical
 
 **Instead:**
+
 - ✅ Gradients used sparingly for emphasis (hero text, primary CTA only)
 - ✅ Mix of sharp edges (rounded-lg, rounded-xl) with occasional rounded corners
 - ✅ Mostly solid backgrounds with subtle borders
@@ -70,6 +72,7 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
    - Most cards should be solid with good shadows
 
 4. **Varied Border Radius**
+
    - Hero elements: `rounded-xl` to `rounded-2xl`
    - Cards: `rounded-xl` or `rounded-2xl` (not 3xl)
    - Buttons: `rounded-lg` to `rounded-xl`
@@ -138,7 +141,9 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 **Default card style (most cards):**
 
 ```html
-<div class="rounded-xl bg-zinc-950 border border-zinc-800 shadow-lg hover:border-zinc-700 transition-all">
+<div
+  class="rounded-xl bg-zinc-950 border border-zinc-800 shadow-lg hover:border-zinc-700 transition-all"
+>
   <!-- Solid background, subtle border, clean -->
 </div>
 ```
@@ -152,6 +157,7 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 ```
 
 **AVOID:**
+
 ```html
 <!-- Don't do this to every card -->
 <div class="rounded-3xl glass-strong">
@@ -237,7 +243,9 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 **Primary button (gradient - use for ONE main CTA only):**
 
 ```html
-<button class="group relative px-8 py-3 rounded-xl font-semibold text-black bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all cursor-pointer">
+<button
+  class="group relative px-8 py-3 rounded-xl font-semibold text-black bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all cursor-pointer"
+>
   Button Text
 </button>
 ```
@@ -245,7 +253,9 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 **Secondary button (solid, most buttons should be this):**
 
 ```html
-<button class="px-8 py-3 rounded-xl font-semibold bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 transition-all cursor-pointer">
+<button
+  class="px-8 py-3 rounded-xl font-semibold bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 transition-all cursor-pointer"
+>
   Button Text
 </button>
 ```
@@ -253,7 +263,9 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 **Ghost button:**
 
 ```html
-<button class="px-8 py-3 rounded-xl font-semibold border border-zinc-700 hover:bg-zinc-900 hover:border-zinc-600 transition-all cursor-pointer">
+<button
+  class="px-8 py-3 rounded-xl font-semibold border border-zinc-700 hover:bg-zinc-900 hover:border-zinc-600 transition-all cursor-pointer"
+>
   Button Text
 </button>
 ```
@@ -261,7 +273,9 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 **Icon button:**
 
 ```html
-<button class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer">
+<button
+  class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer"
+>
   <!-- Icon here -->
 </button>
 ```
@@ -271,7 +285,9 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 **Standard card:**
 
 ```html
-<div class="rounded-xl bg-zinc-950 border border-zinc-800 p-6 hover:border-zinc-700 transition-colors">
+<div
+  class="rounded-xl bg-zinc-950 border border-zinc-800 p-6 hover:border-zinc-700 transition-colors"
+>
   <!-- Content -->
 </div>
 ```
@@ -287,7 +303,9 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 **Featured card (use sparingly):**
 
 ```html
-<div class="rounded-xl bg-zinc-950 border border-cyan-500/30 p-6 shadow-lg shadow-cyan-500/10">
+<div
+  class="rounded-xl bg-zinc-950 border border-cyan-500/30 p-6 shadow-lg shadow-cyan-500/10"
+>
   <!-- Content -->
 </div>
 ```
@@ -307,11 +325,9 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 > ⚠️ **IMPORTANT:** All numeric inputs MUST prevent scroll-to-change behavior and hide the spin buttons (up/down arrows).
 
 ```html
-<input
-  type="number"
-  onWheel={(e) => e.currentTarget.blur()}
-  class="... [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-/>
+<input type="number" onWheel={(e) => e.currentTarget.blur()} class="...
+[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none
+[&::-webkit-inner-spin-button]:appearance-none" />
 ```
 
 - `onWheel={(e) => e.currentTarget.blur()}` - Prevents accidental value changes when scrolling over the input
@@ -323,7 +339,9 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 **Status badge (simple, no gradient):**
 
 ```html
-<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+<div
+  class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30"
+>
   <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" />
   <span class="text-sm font-medium text-emerald-300">Active</span>
 </div>
@@ -332,7 +350,9 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 **Info badge:**
 
 ```html
-<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30">
+<div
+  class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30"
+>
   <span class="text-sm font-medium text-cyan-300">Live</span>
 </div>
 ```
@@ -344,8 +364,10 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 ```html
 <nav class="sticky top-0 z-50 border-b border-white/10">
   <div class="absolute inset-0 bg-black/30 backdrop-blur-xl" />
-  <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-purple-500/10" />
-  
+  <div
+    class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-purple-500/10"
+  />
+
   <div class="relative max-w-7xl mx-auto px-6">
     <div class="flex items-center justify-between h-16">
       <!-- Content -->
@@ -518,6 +540,166 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 4. **Mobile:** Reduce orb sizes and blur amounts on mobile for performance
 5. **Progressive enhancement:** Core experience works without effects, effects enhance
 6. **Cursor pointer:** ALWAYS add `cursor-pointer` to ALL interactive elements (buttons, clickable divs, links styled as buttons, icon buttons, etc.)
+
+---
+
+## Mobile Performance Optimization
+
+> ⚠️ **CRITICAL:** Mobile performance is paramount. Most users are on mobile devices with limited processing power. A laggy experience causes users to leave.
+
+### Mobile Performance Killers to Avoid
+
+1. **`backdrop-filter: blur()`** - Extremely expensive on mobile GPUs
+2. **Continuous CSS animations** - `infinite` animations drain battery and cause jank
+3. **Large blurred elements** - Elements with `blur(60px+)` cause constant GPU compositing
+4. **Framer Motion `whileHover`** - Causes repaints during scroll on touch devices
+5. **Staggered animations with many items** - Delays like `delay: i * 0.1` with 50+ items kill performance
+
+### CSS Classes for Mobile-Safe Interactions
+
+**Use these instead of Framer Motion hover animations:**
+
+```html
+<!-- Hover lift effect (CSS-only, disabled on touch devices) -->
+<div class="hover-lift">...</div>
+
+<!-- Hover scale effect (CSS-only, disabled on touch devices) -->
+<button class="hover-scale active:scale-95">...</button>
+```
+
+These classes use `@media (hover: hover) and (pointer: fine)` to only apply on devices with actual hover capability (desktop).
+
+### Mobile-Optimized Backgrounds
+
+```html
+<!-- Desktop: animated orbs, Mobile: static gradient -->
+<div class="fixed inset-0 -z-10">
+  <!-- Static gradient for mobile (shown via CSS) -->
+  <div class="bg-mobile-gradient absolute inset-0" />
+
+  <!-- Animated orbs for desktop (hidden on mobile via CSS) -->
+  <div class="bg-orbs-container">
+    <!-- Orbs here -->
+  </div>
+</div>
+```
+
+### Mobile-Optimized Navbar
+
+```html
+<!-- Uses solid background on mobile instead of backdrop-blur -->
+<nav class="sticky top-0 z-50">
+  <div class="absolute inset-0 navbar-bg" />
+  <!-- Content -->
+</nav>
+```
+
+The `.navbar-bg` class automatically switches from `backdrop-blur` to solid `bg-black/95` on mobile.
+
+### Mobile-Optimized Modals
+
+```html
+<!-- Uses solid backdrop on mobile instead of backdrop-blur -->
+<div class="modal-backdrop">...</div>
+```
+
+### Rules for Animation Usage
+
+| Animation Type             | Desktop  | Mobile                 |
+| -------------------------- | -------- | ---------------------- |
+| `animate-gradient`         | ✅ Use   | ❌ Disabled via CSS    |
+| `animate-float`            | ✅ Use   | ❌ Disabled via CSS    |
+| `shimmer`                  | ✅ Use   | ❌ Disabled via CSS    |
+| `backdrop-blur`            | ✅ Use   | ❌ Falls back to solid |
+| Framer Motion entrance     | ✅ Use   | ✅ Use (simplified)    |
+| Framer Motion `whileHover` | ❌ Avoid | ❌ Avoid               |
+
+### Converting Framer Motion to CSS
+
+**Before (causes jank on mobile):**
+
+```jsx
+<motion.button
+  whileHover={{ scale: 1.02 }}
+  whileTap={{ scale: 0.98 }}
+>
+```
+
+**After (performant):**
+
+```jsx
+<button className="hover-scale active:scale-95">
+```
+
+**Before (staggered cards):**
+
+```jsx
+{
+  items.map((item, i) => (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: i * 0.1, duration: 0.5 }}
+      whileHover={{ y: -4 }}
+    />
+  ));
+}
+```
+
+**After (mobile-optimized):**
+
+```jsx
+{
+  items.map((item, i) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: i * 0.05, duration: 0.3 }}
+      className="hover-lift"
+    />
+  ));
+}
+```
+
+### Reduced Motion Support
+
+Always respect `prefers-reduced-motion`:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+### Glow Effects on Mobile
+
+Hide expensive glow/blur effects on mobile:
+
+```html
+<!-- Glow only shows on desktop -->
+<div
+  class="hidden md:block absolute -inset-1 blur-xl bg-cyan-500 opacity-0 group-hover:opacity-100"
+/>
+```
+
+### Performance Checklist
+
+Before deploying, verify:
+
+- [ ] No `whileHover` or `whileTap` in Framer Motion
+- [ ] Background orbs hidden on mobile (`bg-orbs-container`)
+- [ ] Navbar uses `navbar-bg` class
+- [ ] Modals use `modal-backdrop` class
+- [ ] Glow effects use `hidden md:block`
+- [ ] Stagger delays reduced (`i * 0.05` not `i * 0.1`)
+- [ ] `hover-lift` or `hover-scale` used instead of JS hover animations
+- [ ] No continuously rotating/animating elements on mobile
 
 ---
 

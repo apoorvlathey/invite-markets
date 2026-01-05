@@ -356,14 +356,12 @@ export default function SellClient() {
               Your invite is now live on the marketplace
             </p>
             <div className="space-y-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <button
                 onClick={() => router.push(`/listing/${createdSlug}`)}
-                className="group relative w-full rounded-xl py-3.5 px-6 font-semibold overflow-hidden cursor-pointer"
+                className="hover-scale group relative w-full rounded-xl py-3.5 px-6 font-semibold overflow-hidden cursor-pointer active:scale-95"
               >
                 {/* Dark background */}
-                <div className="absolute inset-0 bg-zinc-900/90 backdrop-blur-sm border border-white/10 pointer-events-none" />
+                <div className="absolute inset-0 bg-zinc-900/90 border border-white/10 pointer-events-none" />
                 {/* Gradient overlay that reveals as animation progresses */}
                 <motion.div
                   className="absolute inset-0 bg-linear-to-r from-cyan-500 to-blue-500 pointer-events-none"
@@ -388,20 +386,18 @@ export default function SellClient() {
                     />
                   </svg>
                 </span>
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              </button>
+              <button
                 onClick={() => {
                   setCreatedSlug("");
                   setFormData({ inviteUrl: "", priceUsdc: "", appInput: "" });
                   setSelectedApp(null);
                   setIsValueConfirmed(false);
                 }}
-                className="w-full rounded-xl py-4 px-6 font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all cursor-pointer"
+                className="hover-scale w-full rounded-xl py-4 px-6 font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-all cursor-pointer active:scale-95"
               >
                 Create Another Listing
-              </motion.button>
+              </button>
             </div>
           </div>
         </motion.div>
@@ -836,9 +832,7 @@ export default function SellClient() {
               </motion.div>
             )}
 
-            <motion.button
-              whileHover={{ scale: !isSubmitting ? 1.02 : 1 }}
-              whileTap={{ scale: !isSubmitting ? 0.98 : 1 }}
+            <button
               type={isConnected ? "submit" : "button"}
               disabled={isSubmitting}
               onClick={
@@ -847,11 +841,11 @@ export default function SellClient() {
                       connect({ client: thirdwebClient, chain: thirdwebChain })
                   : undefined
               }
-              className="group relative w-full rounded-xl py-4 px-6 font-bold text-lg overflow-hidden disabled:cursor-not-allowed cursor-pointer"
+              className={`group relative w-full rounded-xl py-4 px-6 font-bold text-lg overflow-hidden disabled:cursor-not-allowed cursor-pointer transition-transform ${!isSubmitting ? "hover-scale active:scale-95" : ""}`}
             >
               {isConnected && !isSubmitting ? (
                 <>
-                  <div className="absolute inset-0 bg-linear-to-r from-cyan-500 to-blue-500 transition-transform group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-linear-to-r from-cyan-500 to-blue-500" />
                   <span className="relative z-10 text-black flex items-center justify-center gap-2">
                     Create Listing
                     <svg
@@ -868,55 +862,35 @@ export default function SellClient() {
                       />
                     </svg>
                   </span>
-                  <div className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl bg-linear-to-r from-cyan-500 to-blue-500" />
+                  {/* Glow effect - hidden on mobile */}
+                  <div className="hidden md:block absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl bg-linear-to-r from-cyan-500 to-blue-500" />
                 </>
               ) : isSubmitting ? (
                 <>
                   <div className="absolute inset-0 bg-linear-to-r from-cyan-500 to-blue-500" />
                   <span className="relative z-10 text-black flex items-center justify-center gap-2">
-                    <div className="flex items-center gap-1">
-                      <motion.div
-                        className="w-1 bg-black rounded-full"
-                        animate={{
-                          height: ["12px", "24px", "12px"],
-                        }}
-                        transition={{
-                          duration: 0.6,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
                       />
-                      <motion.div
-                        className="w-1 bg-black rounded-full"
-                        animate={{
-                          height: ["12px", "24px", "12px"],
-                        }}
-                        transition={{
-                          duration: 0.6,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: 0.2,
-                        }}
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
-                      <motion.div
-                        className="w-1 bg-black rounded-full"
-                        animate={{
-                          height: ["12px", "24px", "12px"],
-                        }}
-                        transition={{
-                          duration: 0.6,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: 0.4,
-                        }}
-                      />
-                    </div>
+                    </svg>
                     Creating Listing...
                   </span>
                 </>
               ) : (
                 <>
-                  <div className="absolute inset-0 bg-linear-to-r from-cyan-500 to-blue-500 transition-transform group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-linear-to-r from-cyan-500 to-blue-500" />
                   <span className="relative z-10 text-black flex items-center justify-center gap-2">
                     Connect Wallet
                     <svg
@@ -933,10 +907,11 @@ export default function SellClient() {
                       />
                     </svg>
                   </span>
-                  <div className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl bg-linear-to-r from-cyan-500 to-blue-500" />
+                  {/* Glow effect - hidden on mobile */}
+                  <div className="hidden md:block absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl bg-linear-to-r from-cyan-500 to-blue-500" />
                 </>
               )}
-            </motion.button>
+            </button>
           </form>
 
           {/* Info section */}

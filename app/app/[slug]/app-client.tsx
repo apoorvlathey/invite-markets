@@ -646,11 +646,7 @@ export default function AppPageClient() {
 
                 {/* CTA */}
                 <Link href="/sell" className="mt-auto">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-3 rounded-xl font-semibold text-black bg-linear-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all cursor-pointer flex items-center justify-center gap-2"
-                  >
+                  <button className="hover-scale w-full py-3 rounded-xl font-semibold text-black bg-linear-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95">
                     <svg
                       className="w-4 h-4"
                       fill="none"
@@ -665,7 +661,7 @@ export default function AppPageClient() {
                       />
                     </svg>
                     Sell Your Invite
-                  </motion.button>
+                  </button>
                 </Link>
               </div>
             </div>
