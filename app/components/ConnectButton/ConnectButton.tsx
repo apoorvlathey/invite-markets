@@ -15,7 +15,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { blo } from "blo";
-import { useResolveAddresses, getSellerDisplayInfo } from "@/lib/resolve-addresses";
+import {
+  useResolveAddresses,
+  getSellerDisplayInfo,
+} from "@/lib/resolve-addresses";
 import { getExplorerAddressUrl } from "@/lib/chain";
 
 const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET === "true";
@@ -144,7 +147,8 @@ function AccountMenu({
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isOpen, onClose, triggerRef]);
 
@@ -260,7 +264,7 @@ function AccountMenu({
 }
 
 // Main ConnectButton component
-export function ConnectButton() {
+export function ConnectButton({ compact = false }: { compact?: boolean }) {
   const activeAccount = useActiveAccount();
   const activeWallet = useActiveWallet();
   const activeChain = useActiveWalletChain();
@@ -292,17 +296,32 @@ export function ConnectButton() {
         theme={customTheme}
         connectButton={{
           label: "Connect",
-          style: {
-            padding: "12px 24px",
-            fontSize: "14px",
-            fontWeight: "600",
-            borderRadius: "12px",
-            border: "1px solid #3f3f46",
-            background: "#27272a",
-            color: "#fafafa",
-            cursor: "pointer",
-            transition: "all 150ms ease",
-          },
+          style: compact
+            ? {
+                padding: "0 12px",
+                fontSize: "12px",
+                fontWeight: "500",
+                borderRadius: "8px",
+                border: "1px solid rgba(6, 182, 212, 0.3)",
+                background: "rgba(6, 182, 212, 0.1)",
+                color: "#22d3ee",
+                cursor: "pointer",
+                transition: "all 150ms ease",
+                height: "30px",
+                minWidth: "auto",
+                lineHeight: "30px",
+              }
+            : {
+                padding: "12px 24px",
+                fontSize: "14px",
+                fontWeight: "600",
+                borderRadius: "12px",
+                border: "1px solid #3f3f46",
+                background: "#27272a",
+                color: "#fafafa",
+                cursor: "pointer",
+                transition: "all 150ms ease",
+              },
         }}
       />
     );
@@ -371,4 +390,3 @@ export function ConnectButton() {
     </div>
   );
 }
-

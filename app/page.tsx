@@ -280,7 +280,7 @@ export default function Home() {
                 whileTap={{ scale: 0.98 }}
                 className="px-8 py-3.5 rounded-xl font-semibold text-base bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 transition-all cursor-pointer"
               >
-                Become a Seller
+                Sell Your Invite
               </motion.button>
             </Link>
           </div>
@@ -294,17 +294,17 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="flex items-center gap-4 mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+          <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">
               Featured Apps
             </h2>
             <Link
               href="/apps"
-              className="flex items-center gap-1 text-sm font-medium text-zinc-400 hover:text-cyan-400 transition-colors translate-y-0.5"
+              className="flex items-center gap-1 text-xs sm:text-sm font-medium text-zinc-400 hover:text-cyan-400 transition-colors translate-y-0.5"
             >
               View All
               <svg
-                className="w-4 h-4"
+                className="w-3 h-3 sm:w-4 sm:h-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -321,7 +321,7 @@ export default function Home() {
 
           {/* Scrollable carousel */}
           <div className="relative -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8">
-            <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+            <div className="flex gap-3 sm:gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
               {featuredAppsWithCounts.map((app, i) => (
                 <motion.div
                   key={app.id}
@@ -331,7 +331,7 @@ export default function Home() {
                   className="snap-start shrink-0"
                 >
                   <Link href={`/app/${app.id}`}>
-                    <div className="group relative w-[320px] md:w-[380px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 cursor-pointer hover:-translate-y-1">
+                    <div className="group relative w-[260px] sm:w-[320px] md:w-[380px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 cursor-pointer hover:-translate-y-1">
                       {/* Gradient accent bar */}
                       <div
                         className="h-1"
@@ -341,20 +341,20 @@ export default function Home() {
                       />
 
                       {/* Tiled background header */}
-                      <div className="relative h-24 md:h-28 overflow-hidden bg-zinc-900/50">
+                      <div className="relative h-20 sm:h-24 md:h-28 overflow-hidden bg-zinc-900/50">
                         {/* Tiled pattern */}
                         <div
-                          className="absolute inset-0 grid grid-cols-8 gap-3 opacity-[0.12] p-2"
+                          className="absolute inset-0 grid grid-cols-5 sm:grid-cols-8 gap-2 sm:gap-3 opacity-[0.12] p-2"
                           style={{
-                            transform: "rotate(-12deg) scale(1.4)",
+                            transform: "rotate(-12deg) scale(1.3)",
                           }}
                         >
                           {[...Array(24)].map((_, j) => (
                             <div
                               key={j}
-                              className="w-8 h-8 flex items-center justify-center"
+                              className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center"
                             >
-                              <div className="w-full h-full bg-white rounded-md p-1 flex items-center justify-center">
+                              <div className="w-full h-full bg-white rounded-md p-0.5 sm:p-1 flex items-center justify-center">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                   src={app.appIconUrl}
@@ -380,9 +380,9 @@ export default function Home() {
                       </div>
 
                       {/* Card content */}
-                      <div className="p-5 flex items-center gap-4">
+                      <div className="p-3 sm:p-5 flex items-center gap-3 sm:gap-4">
                         {/* App icon */}
-                        <div className="w-14 h-14 rounded-xl overflow-hidden border border-zinc-700 bg-white p-1.5 shrink-0 shadow-lg">
+                        <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl overflow-hidden border border-zinc-700 bg-white p-1 sm:p-1.5 shrink-0 shadow-lg">
                           <Image
                             src={app.appIconUrl}
                             alt={`${app.appName} icon`}
@@ -394,20 +394,20 @@ export default function Home() {
 
                         {/* App info */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-bold text-white truncate group-hover:text-cyan-400 transition-colors">
+                          <h3 className="text-base sm:text-lg font-bold text-white truncate group-hover:text-cyan-400 transition-colors">
                             {app.appName}
                           </h3>
                           <div className="flex items-center gap-2 mt-1">
                             {app.activeListings > 0 ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-medium text-emerald-400">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                              <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] sm:text-xs font-medium text-emerald-400 whitespace-nowrap">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
                                 {app.activeListings} active{" "}
                                 {app.activeListings === 1
                                   ? "listing"
                                   : "listings"}
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-xs font-medium text-zinc-400">
+                              <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-zinc-800 border border-zinc-700 text-[10px] sm:text-xs font-medium text-zinc-400 whitespace-nowrap">
                                 Sold out
                               </span>
                             )}
@@ -445,18 +445,18 @@ export default function Home() {
         id="latest-listings"
         className="relative px-4 md:px-6 lg:px-8 pb-24 md:pb-32 max-w-7xl mx-auto scroll-mt-24"
       >
-        <div className="flex items-center justify-between mb-12">
-          <div className="flex items-center gap-4">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+        <div className="flex items-center justify-between gap-2 mb-8 md:mb-12">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            <h2 className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight">
               Latest Listings
             </h2>
             <Link
               href="/listings"
-              className="flex items-center gap-1 text-sm font-medium text-zinc-400 hover:text-cyan-400 transition-colors translate-y-0.5"
+              className="flex items-center gap-1 text-xs sm:text-sm font-medium text-zinc-400 hover:text-cyan-400 transition-colors translate-y-0.5"
             >
               View All
               <svg
-                className="w-4 h-4"
+                className="w-3 h-3 sm:w-4 sm:h-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -480,7 +480,7 @@ export default function Home() {
         </div>
 
         {loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
@@ -489,30 +489,30 @@ export default function Home() {
                 {/* Top accent bar skeleton */}
                 <div className="h-1 bg-zinc-800" />
 
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   {/* Header skeleton */}
                   <div className="flex items-start justify-between mb-4">
                     {/* App icon skeleton */}
-                    <div className="w-12 h-12 rounded-lg bg-zinc-900 border border-zinc-800" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-zinc-900 border border-zinc-800" />
 
                     {/* Price skeleton */}
                     <div className="text-right space-y-1">
-                      <div className="h-7 w-16 bg-zinc-800 rounded" />
+                      <div className="h-6 sm:h-7 w-14 sm:w-16 bg-zinc-800 rounded" />
                       <div className="h-3 w-10 bg-zinc-800 rounded ml-auto" />
                     </div>
                   </div>
 
                   {/* Title skeleton */}
-                  <div className="h-7 w-3/4 bg-zinc-800 rounded mb-2" />
+                  <div className="h-6 sm:h-7 w-3/4 bg-zinc-800 rounded mb-2" />
 
                   {/* Description skeleton */}
-                  <div className="space-y-2 mb-6">
+                  <div className="space-y-2 mb-4 sm:mb-6">
                     <div className="h-4 w-full bg-zinc-800 rounded" />
                     <div className="h-4 w-2/3 bg-zinc-800 rounded" />
                   </div>
 
                   {/* Seller info skeleton */}
-                  <div className="mb-6 pb-6 border-b border-zinc-800">
+                  <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-zinc-800">
                     <div className="flex items-start justify-between gap-4">
                       <div className="h-4 w-32 bg-zinc-800 rounded" />
                       <div className="h-6 w-20 bg-zinc-800 rounded-full" />
@@ -550,7 +550,7 @@ export default function Home() {
         )}
 
         {!loading && !error && invites.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {invites.slice(0, 6).map((invite, i) => {
               const trustLevelConfig = invite.ethosData
                 ? getTrustLevelConfig(invite.ethosData.level)
@@ -581,10 +581,10 @@ export default function Home() {
                     />
 
                     {/* Header */}
-                    <div className="p-6">
+                    <div className="p-4 sm:p-6">
                       <div className="flex items-start justify-between mb-4">
                         {invite.appIconUrl ? (
-                          <div className="w-12 h-12 rounded-lg overflow-hidden border border-zinc-700 bg-white p-1">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden border border-zinc-700 bg-white p-1">
                             <Image
                               src={invite.appIconUrl}
                               alt={`${invite.app} icon`}
@@ -594,12 +594,12 @@ export default function Home() {
                             />
                           </div>
                         ) : (
-                          <div className="w-12 h-12 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center font-bold text-xl text-white">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center font-bold text-lg sm:text-xl text-white">
                             {invite.app.charAt(0)}
                           </div>
                         )}
                         <div className="text-right">
-                          <div className="text-2xl font-bold text-cyan-400">
+                          <div className="text-xl sm:text-2xl font-bold text-cyan-400">
                             {invite.price}
                           </div>
                           <div className="text-xs text-zinc-500 font-medium">
@@ -609,19 +609,19 @@ export default function Home() {
                       </div>
 
                       {/* Time since listed */}
-                      <div className="text-xs text-zinc-500 mb-3">
+                      <div className="text-xs text-zinc-500 mb-2 sm:mb-3">
                         Listed {timeAgo(invite.createdAt)}
                       </div>
 
-                      <h3 className="text-2xl font-bold text-white mb-2">
+                      <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
                         {invite.app}
                       </h3>
 
-                      <p className="text-sm text-zinc-400 leading-relaxed mb-6">
+                      <p className="text-sm text-zinc-400 leading-relaxed mb-4 sm:mb-6">
                         {invite.description}
                       </p>
 
-                      <div className="mb-6 pb-6 border-b border-zinc-800">
+                      <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-zinc-800">
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-xs text-zinc-500">Seller</p>
                           <p className="text-xs text-zinc-500">Ethos Score</p>
@@ -720,7 +720,7 @@ export default function Home() {
                       </div>
 
                       {/* CTA Buttons */}
-                      <div className="flex gap-3">
+                      <div className="flex flex-col xs:flex-row gap-2 xs:gap-3">
                         <QuickBuyButton
                           price={invite.price}
                           isPending={
