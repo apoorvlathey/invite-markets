@@ -19,6 +19,7 @@ export const EIP712_TYPES = {
     { name: "sellerAddress", type: "address" },
     { name: "appId", type: "string" },
     { name: "appName", type: "string" },
+    { name: "maxUses", type: "string" },
     { name: "nonce", type: "uint256" },
   ],
 } as const;
@@ -33,6 +34,7 @@ export const EIP712_UPDATE_TYPES = {
     { name: "priceUsdc", type: "string" },
     { name: "sellerAddress", type: "address" },
     { name: "appName", type: "string" },
+    { name: "maxUses", type: "string" },
     { name: "nonce", type: "uint256" },
   ],
 } as const;
@@ -54,6 +56,7 @@ export interface ListingMessage {
   sellerAddress: `0x${string}`;
   appId: string;
   appName: string;
+  maxUses: string; // Maximum number of uses (-1 for unlimited)
   nonce: bigint;
 }
 
@@ -66,6 +69,7 @@ export interface UpdateListingMessage {
   priceUsdc: string;
   sellerAddress: `0x${string}`;
   appName: string;
+  maxUses: string; // Maximum number of uses (-1 for unlimited)
   nonce: bigint;
 }
 

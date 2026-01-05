@@ -21,6 +21,7 @@ export async function PATCH(request: NextRequest) {
       accessCode,
       appId,
       appName,
+      maxUses,
       nonce,
       chainId,
       signature,
@@ -65,6 +66,10 @@ export async function PATCH(request: NextRequest) {
 
     const listingType: ListingType = listing.listingType || "invite_link";
 
+    // Get current maxUses for the message (use provided value or current)
+    const currentMaxUses = listing.maxUses ?? 1;
+    const messageMaxUses = maxUses !== undefined ? maxUses.toString() : currentMaxUses.toString();
+
     // Verify EIP-712 signature
     const message: UpdateListingMessage = {
       slug,
@@ -75,6 +80,7 @@ export async function PATCH(request: NextRequest) {
       priceUsdc: priceUsdc?.toString() || "",
       sellerAddress: sellerAddress as `0x${string}`,
       appName: appName || "",
+      maxUses: messageMaxUses,
       nonce: BigInt(nonce),
     };
 
@@ -164,6 +170,29 @@ export async function PATCH(request: NextRequest) {
       listing.appName = appName?.trim() || undefined;
     }
 
+    // Handle maxUses update (only allow increasing to prevent abuse)
+    if (maxUses !== undefined) {
+      const newMaxUses = typeof maxUses === "number" ? maxUses : parseInt(maxUses, 10);
+      
+      if (isNaN(newMaxUses) || (newMaxUses < -1) || newMaxUses === 0) {
+        return NextResponse.json(
+          { success: false, error: "maxUses must be -1 (unlimited) or a positive number" },
+          { status: 400 }
+        );
+      }
+
+      // -1 means unlimited - always allowed as it's the most permissive
+      // Otherwise, new value must be >= current value (or current is unlimited)
+      if (newMaxUses !== -1 && currentMaxUses !== -1 && newMaxUses < currentMaxUses) {
+        return NextResponse.json(
+          { success: false, error: "Cannot decrease maxUses. You can only increase it." },
+          { status: 400 }
+        );
+      }
+
+      listing.maxUses = newMaxUses;
+    }
+
     // Ensure at least appId or appName exists
     if (!listing.appId && !listing.appName) {
       return NextResponse.json(
@@ -186,6 +215,8 @@ export async function PATCH(request: NextRequest) {
         appUrl: listingType === "access_code" ? listing.appUrl : undefined,
         appId: listing.appId,
         appName: listing.appName,
+        maxUses: listing.maxUses ?? 1,
+        purchaseCount: listing.purchaseCount ?? 0,
         status: listing.status,
         updatedAt: listing.updatedAt,
       },

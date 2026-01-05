@@ -69,6 +69,9 @@ export async function GET() {
         appUrl:
           listing.listingType === "access_code" ? listing.appUrl : undefined,
         appIconUrl: getAppIconUrl(listing),
+        // Multi-use listing fields (with backward compatibility defaults)
+        maxUses: listing.maxUses ?? 1,
+        purchaseCount: listing.purchaseCount ?? 0,
         createdAt: listing.createdAt,
         updatedAt: listing.updatedAt,
       })),
@@ -99,10 +102,11 @@ export async function POST(request: NextRequest) {
       signature,
       appId,
       appName,
+      maxUses = 1, // Default to 1 for single-use listings
     } = body;
 
     // Debug logging
-    console.log("Received data:", { listingType, appId, appName });
+    console.log("Received data:", { listingType, appId, appName, maxUses });
 
     // Validate listing type
     if (listingType !== "invite_link" && listingType !== "access_code") {
@@ -164,6 +168,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate maxUses
+    const parsedMaxUses = typeof maxUses === "number" ? maxUses : parseInt(maxUses, 10);
+    if (isNaN(parsedMaxUses) || (parsedMaxUses < -1) || parsedMaxUses === 0) {
+      return NextResponse.json(
+        { error: "maxUses must be -1 (unlimited) or a positive number" },
+        { status: 400 }
+      );
+    }
+
     // Validate Ethereum address format
     if (!/^0x[a-fA-F0-9]{40}$/.test(sellerAddress)) {
       return NextResponse.json(
@@ -182,6 +195,7 @@ export async function POST(request: NextRequest) {
       sellerAddress: sellerAddress as `0x${string}`,
       appId: appId || "",
       appName: appName || "",
+      maxUses: parsedMaxUses.toString(),
       nonce: BigInt(nonce),
     };
 
@@ -246,6 +260,8 @@ export async function POST(request: NextRequest) {
       sellerAddress: sellerAddress.toLowerCase(),
       status: "active" as const,
       chainId,
+      maxUses: parsedMaxUses,
+      purchaseCount: 0,
       ...(listingType === "invite_link" ? { inviteUrl } : {}),
       ...(listingType === "access_code" ? { appUrl, accessCode } : {}),
       ...(appId && appId.trim() ? { appId: appId.trim() } : {}),
@@ -275,6 +291,8 @@ export async function POST(request: NextRequest) {
             appUrl: listing.appUrl,
             listingType: listing.listingType,
           }),
+          maxUses: listing.maxUses,
+          purchaseCount: listing.purchaseCount,
           createdAt: listing.createdAt,
         },
       },

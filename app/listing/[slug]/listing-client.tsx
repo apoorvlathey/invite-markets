@@ -19,6 +19,7 @@ import { fetchEthosData, type EthosData } from "@/lib/ethos-scores";
 import {
   fetchListingsData,
   getGradientForApp,
+  isListingAvailable,
   type Listing,
   type ListingsData,
 } from "@/lib/listings";
@@ -258,8 +259,22 @@ export default function ListingClient() {
     }
   };
 
-  const getStatusConfig = (status: Listing["status"]) =>
-    ({
+  const getStatusConfig = (listing: Listing) => {
+    // Check if listing has inventory available
+    const available = isListingAvailable(listing);
+    
+    if (listing.status === "active" && !available) {
+      // Active but sold out (all uses consumed)
+      return {
+        bg: "bg-zinc-500/20",
+        border: "border-zinc-500/30",
+        text: "text-zinc-300",
+        dot: "bg-zinc-400",
+        label: "Sold Out",
+      };
+    }
+
+    return {
       active: {
         bg: "bg-emerald-500/20",
         border: "border-emerald-500/30",
@@ -272,7 +287,7 @@ export default function ListingClient() {
         border: "border-zinc-500/30",
         text: "text-zinc-300",
         dot: "bg-zinc-400",
-        label: "Sold",
+        label: "Sold Out",
       },
       cancelled: {
         bg: "bg-red-500/20",
@@ -281,7 +296,8 @@ export default function ListingClient() {
         dot: "bg-red-400",
         label: "Cancelled",
       },
-    }[status]);
+    }[listing.status];
+  };
 
   if (loading) {
     return (
@@ -424,7 +440,14 @@ export default function ListingClient() {
   // For linking to app page: use appId for featured apps, appName for custom apps
   const appSlug = listing.appId || listing.appName;
   const gradient = getGradientForApp(appName);
-  const status = getStatusConfig(listing.status);
+  const status = getStatusConfig(listing);
+
+  // Inventory calculations
+  const maxUses = listing.maxUses ?? 1;
+  const purchaseCount = listing.purchaseCount ?? 0;
+  const isUnlimited = maxUses === -1;
+  const remainingUses = isUnlimited ? null : maxUses - purchaseCount;
+  const canPurchase = isListingAvailable(listing);
 
   const trustLevelConfig = ethosData
     ? getTrustLevelConfig(ethosData.level)
@@ -529,8 +552,8 @@ export default function ListingClient() {
                   : `Early access invite to ${appName}`}
               </p>
 
-              {/* Listing Type Badge */}
-              <div className="flex items-center gap-2 mb-6">
+              {/* Listing Type Badge & Inventory */}
+              <div className="flex items-center gap-2 mb-6 flex-wrap">
                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
                   listing.listingType === "access_code"
                     ? "bg-purple-500/20 border border-purple-500/30 text-purple-400"
@@ -552,6 +575,25 @@ export default function ListingClient() {
                     </>
                   )}
                 </span>
+                {/* Inventory Badge - only show for multi-use listings */}
+                {(isUnlimited || maxUses > 1) && (
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
+                    isUnlimited
+                      ? "bg-blue-500/20 border border-blue-500/30 text-blue-400"
+                      : canPurchase
+                        ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"
+                        : "bg-zinc-500/20 border border-zinc-500/30 text-zinc-400"
+                  }`}>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {isUnlimited ? (
+                      <>Unlimited · {purchaseCount} sold</>
+                    ) : (
+                      <>{remainingUses} of {maxUses} remaining</>
+                    )}
+                  </span>
+                )}
               </div>
 
               {/* App URL - Only shown for access_code type */}
@@ -598,7 +640,7 @@ export default function ListingClient() {
               </div>
 
               {/* Purchase Button - CSS hover for mobile performance */}
-              {listing.status === "active" && (
+              {canPurchase && (
                 <button
                   disabled={isPending}
                   onClick={handlePurchase}
@@ -648,7 +690,8 @@ export default function ListingClient() {
                 </button>
               )}
 
-              {listing.status === "sold" && (
+              {/* Sold Out state - when status is "sold" or inventory depleted */}
+              {!canPurchase && listing.status !== "cancelled" && (
                 <div className="w-full mt-5 py-4 rounded-xl font-bold text-lg text-center bg-zinc-800 text-zinc-400 border border-zinc-700">
                   Sold Out
                 </div>

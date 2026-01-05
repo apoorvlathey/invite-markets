@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getListingBySlug, markListingAsSold } from "@/lib/listing";
+import {
+  getListingBySlug,
+  incrementPurchaseCount,
+  isListingAvailable,
+} from "@/lib/listing";
 import { createThirdwebClient } from "thirdweb";
 import { facilitator, settlePayment } from "thirdweb/x402";
 import { base, baseSepolia } from "thirdweb/chains";
@@ -25,10 +29,15 @@ export async function POST(
 
   const listing = await getListingBySlug(slug, true);
 
-  if (!listing || listing.status !== "active") {
+  if (!listing) {
+    return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+  }
+
+  // Check if listing is available for purchase (considers multi-use inventory)
+  if (!isListingAvailable(listing)) {
     return NextResponse.json(
       { error: "Listing not available" },
-      { status: 404 }
+      { status: 410 } // 410 Gone - listing is sold out
     );
   }
 
@@ -66,7 +75,8 @@ export async function POST(
     console.error("Failed to create transaction record:", error);
   }
 
-  await markListingAsSold(slug);
+  // Increment purchase count (and mark as sold if all uses consumed)
+  await incrementPurchaseCount(slug);
 
   // Return appropriate data based on listing type
   const listingType = listing.listingType || "invite_link";

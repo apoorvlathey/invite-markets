@@ -21,6 +21,10 @@ export interface IListing {
   appName?: string;
   // Chain ID for multi-network support (e.g., 84532 for Base Sepolia, 8453 for Base Mainnet)
   chainId: number;
+  // Maximum number of times this listing can be purchased (default: 1, -1 for unlimited)
+  maxUses: number;
+  // Current number of completed purchases
+  purchaseCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -77,6 +81,18 @@ const ListingSchema = new mongoose.Schema<IListing>(
       type: Number,
       required: true,
       index: true,
+    },
+    maxUses: {
+      type: Number,
+      required: false,
+      default: 1,
+      min: -1, // -1 represents unlimited
+    },
+    purchaseCount: {
+      type: Number,
+      required: false,
+      default: 0,
+      min: 0,
     },
   },
   {

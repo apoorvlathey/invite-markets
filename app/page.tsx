@@ -600,6 +600,25 @@ export default function Home() {
                           <div className="text-xs text-zinc-500 font-medium">
                             USDC
                           </div>
+                          {/* Inventory Badge - only show for multi-use listings */}
+                          {(() => {
+                            const maxUses = invite.maxUses ?? 1;
+                            const isUnlimited = maxUses === -1;
+                            const remaining = invite.remainingUses;
+                            // Only show badge for multi-use or unlimited listings
+                            if (!isUnlimited && maxUses <= 1) return null;
+                            return (
+                              <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded ${
+                                isUnlimited
+                                  ? "bg-blue-500/20 text-blue-400"
+                                  : remaining === 1
+                                    ? "bg-yellow-500/20 text-yellow-400"
+                                    : "bg-zinc-800 text-zinc-400"
+                              }`}>
+                                {isUnlimited ? `∞` : `${remaining} left`}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
 

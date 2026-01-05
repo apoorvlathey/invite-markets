@@ -19,6 +19,9 @@ export interface Listing {
   appName?: string;
   appUrl?: string; // For access_code type - public URL
   appIconUrl?: string;
+  // Multi-use listing fields
+  maxUses?: number; // Maximum purchases allowed (-1 for unlimited, default: 1)
+  purchaseCount?: number; // Current number of purchases (default: 0)
   createdAt: string;
   updatedAt: string;
 }
@@ -35,6 +38,10 @@ export interface Invite {
   gradientTo: string;
   slug: string;
   sellerAddress: string;
+  // Multi-use inventory info
+  maxUses: number; // -1 for unlimited
+  purchaseCount: number;
+  remainingUses: number | null; // null for unlimited
   createdAt: string;
 }
 
@@ -77,6 +84,26 @@ export function getGradientForApp(appName: string): {
   return GRADIENTS[hash % GRADIENTS.length];
 }
 
+/**
+ * Checks if a listing is available for purchase.
+ * A listing is available if status is "active" AND has remaining inventory.
+ */
+export function isListingAvailable(listing: {
+  status: string;
+  maxUses?: number;
+  purchaseCount?: number;
+}): boolean {
+  if (listing.status !== "active") return false;
+
+  const maxUses = listing.maxUses ?? 1;
+  const purchaseCount = listing.purchaseCount ?? 0;
+
+  // -1 means unlimited
+  if (maxUses === -1) return true;
+
+  return purchaseCount < maxUses;
+}
+
 // ============================================================================
 // TRANSFORM FUNCTION
 // ============================================================================
@@ -101,6 +128,11 @@ function transformListing(listing: Listing): Invite {
     6
   )}…${listing.sellerAddress.slice(-4)}`;
 
+  // Multi-use inventory calculations
+  const maxUses = listing.maxUses ?? 1;
+  const purchaseCount = listing.purchaseCount ?? 0;
+  const remainingUses = maxUses === -1 ? null : maxUses - purchaseCount;
+
   return {
     app: host.charAt(0).toUpperCase() + host.slice(1),
     appIconUrl: listing.appIconUrl,
@@ -113,6 +145,9 @@ function transformListing(listing: Listing): Invite {
     gradientTo: gradient.to,
     slug: listing.slug,
     sellerAddress: listing.sellerAddress,
+    maxUses,
+    purchaseCount,
+    remainingUses,
     createdAt: listing.createdAt,
   };
 }
@@ -135,8 +170,9 @@ export async function fetchListingsData(): Promise<ListingsData> {
   }
 
   const listings: Listing[] = data.listings || [];
-  const active = listings.filter((l) => l.status === "active");
-  const transformedInvites = active.map(transformListing);
+  // Filter to only show listings with remaining inventory
+  const available = listings.filter((l) => isListingAvailable(l));
+  const transformedInvites = available.map(transformListing);
 
   // Only fetch Ethos data if there are active listings
   let ethosDataMap: Record<string, EthosData> = {};
@@ -152,5 +188,5 @@ export async function fetchListingsData(): Promise<ListingsData> {
     ethosData: ethosDataMap[invite.sellerAddress.toLowerCase()] ?? null,
   }));
 
-  return { invites: invitesWithEthosData, rawListings: active };
+  return { invites: invitesWithEthosData, rawListings: available };
 }

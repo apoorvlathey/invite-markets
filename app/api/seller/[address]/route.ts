@@ -104,7 +104,7 @@ export async function GET(
 
     const listings = await listingsQuery.lean();
 
-    // Map listings to include listingType with default and appUrl where applicable
+    // Map listings to include listingType with default, inventory fields, and appUrl where applicable
     const mappedListings = listings.map((listing) => {
       const listingType = listing.listingType || "invite_link";
       return {
@@ -112,6 +112,9 @@ export async function GET(
         listingType,
         // appUrl is always public for access_code type
         appUrl: listingType === "access_code" ? listing.appUrl : undefined,
+        // Multi-use listing fields (with backward compatibility defaults)
+        maxUses: listing.maxUses ?? 1,
+        purchaseCount: listing.purchaseCount ?? 0,
       };
     });
 

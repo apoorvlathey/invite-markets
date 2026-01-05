@@ -45,6 +45,10 @@ export async function getListingBySlug(slug: string, includeSecrets: boolean) {
 
   const listingType: ListingType = listing.listingType || "invite_link";
 
+  // Default values for backward compatibility
+  const maxUses = listing.maxUses ?? 1;
+  const purchaseCount = listing.purchaseCount ?? 0;
+
   // Base response - public data only
   const response = {
     slug: listing.slug,
@@ -57,6 +61,9 @@ export async function getListingBySlug(slug: string, includeSecrets: boolean) {
     appIconUrl: getAppIconUrl(listing),
     // appUrl is public for access_code type
     appUrl: listingType === "access_code" ? listing.appUrl : undefined,
+    // Multi-use listing fields
+    maxUses,
+    purchaseCount,
     createdAt: listing.createdAt,
     updatedAt: listing.updatedAt,
     // Private fields - only included when includeSecrets is true
@@ -89,13 +96,62 @@ export async function getSoldListingsBySlug(slug: string) {
   return formattedSales;
 }
 
-export async function markListingAsSold(slug: string) {
+/**
+ * Increments the purchase count for a listing and marks it as sold if all uses are consumed.
+ * Returns the updated listing.
+ */
+export async function incrementPurchaseCount(slug: string) {
+  await connectDB();
+
+  // First, get the current listing to check maxUses
+  const listing = await Listing.findOne({ slug, chainId });
+  if (!listing) return null;
+
+  const maxUses = listing.maxUses ?? 1;
+  const currentCount = listing.purchaseCount ?? 0;
+  const newCount = currentCount + 1;
+
+  // Determine if we should mark as sold
+  // -1 means unlimited, so never mark as sold based on count
+  const shouldMarkSold = maxUses !== -1 && newCount >= maxUses;
+
   return Listing.findOneAndUpdate(
     { slug, chainId },
     {
-      status: "sold",
+      purchaseCount: newCount,
+      ...(shouldMarkSold ? { status: "sold" } : {}),
       updatedAt: new Date(),
     },
     { new: true }
   );
+}
+
+/**
+ * @deprecated Use incrementPurchaseCount instead for multi-use listings support.
+ * This function is kept for backward compatibility but now internally uses incrementPurchaseCount.
+ */
+export async function markListingAsSold(slug: string) {
+  return incrementPurchaseCount(slug);
+}
+
+/**
+ * Checks if a listing is available for purchase.
+ * A listing is available if:
+ * - status is "active"
+ * - AND (maxUses is unlimited (-1) OR purchaseCount < maxUses)
+ */
+export function isListingAvailable(listing: {
+  status: string;
+  maxUses?: number;
+  purchaseCount?: number;
+}): boolean {
+  if (listing.status !== "active") return false;
+
+  const maxUses = listing.maxUses ?? 1;
+  const purchaseCount = listing.purchaseCount ?? 0;
+
+  // -1 means unlimited
+  if (maxUses === -1) return true;
+
+  return purchaseCount < maxUses;
 }

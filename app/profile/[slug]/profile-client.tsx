@@ -71,6 +71,9 @@ interface Listing {
   status: "active" | "sold" | "cancelled";
   appId?: string;
   appName?: string;
+  // Multi-use listing fields
+  maxUses?: number; // -1 for unlimited, default: 1
+  purchaseCount?: number; // default: 0
   createdAt: string;
   updatedAt: string;
 }
@@ -227,6 +230,11 @@ function EditListingModal({
   // accessCode is available when authenticated as the seller (access_code type)
   const [accessCode, setAccessCode] = useState(listing.accessCode || "");
   const [appName, setAppName] = useState(listing.appName || "");
+  // Multi-use inventory fields
+  const currentMaxUses = listing.maxUses ?? 1;
+  const [maxUses, setMaxUses] = useState(currentMaxUses === -1 ? "1" : currentMaxUses.toString());
+  const [isUnlimitedUses, setIsUnlimitedUses] = useState(currentMaxUses === -1);
+  const purchaseCount = listing.purchaseCount ?? 0;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isSecretFocused, setIsSecretFocused] = useState(false);
@@ -255,6 +263,8 @@ function EditListingModal({
     try {
       const nonce = BigInt(Date.now());
       const appNameValue = listing.appId ? "" : appName;
+      // Calculate maxUses value: -1 for unlimited, or the entered number
+      const maxUsesValue = isUnlimitedUses ? -1 : parseInt(maxUses, 10) || currentMaxUses;
 
       const message: UpdateListingMessage = {
         slug: listing.slug,
@@ -265,6 +275,7 @@ function EditListingModal({
         priceUsdc: price,
         sellerAddress: account.address as `0x${string}`,
         appName: appNameValue,
+        maxUses: maxUsesValue.toString(),
         nonce,
       };
 
@@ -287,6 +298,7 @@ function EditListingModal({
             ? { appUrl, accessCode }
             : { inviteUrl }),
           appName: listing.appId ? undefined : appName,
+          maxUses: maxUsesValue,
           nonce: nonce.toString(),
           chainId,
           signature,
@@ -453,6 +465,62 @@ function EditListingModal({
             </div>
           )}
 
+          {/* Max Uses (Inventory) - only show if not sold out */}
+          {listing.status === "active" && (
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                Number of Uses
+              </label>
+              <div className="space-y-3">
+                {/* Current inventory status */}
+                <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-zinc-400">Current inventory:</span>
+                    <span className="text-sm font-medium text-cyan-400">
+                      {purchaseCount} sold
+                      {currentMaxUses === -1 ? " (unlimited)" : ` of ${currentMaxUses}`}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Unlimited Toggle */}
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={isUnlimitedUses}
+                      onChange={(e) => setIsUnlimitedUses(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 rounded-full bg-zinc-700 peer-checked:bg-cyan-500 transition-colors"></div>
+                    <div className="absolute left-0.5 top-0.5 w-5 h-5 rounded-full bg-white transition-transform peer-checked:translate-x-5"></div>
+                  </div>
+                  <span className="text-sm text-zinc-300 group-hover:text-zinc-200 transition-colors">
+                    Unlimited uses
+                  </span>
+                </label>
+
+                {/* Number Input - hidden when unlimited */}
+                {!isUnlimitedUses && (
+                  <div>
+                    <input
+                      type="number"
+                      min={Math.max(1, purchaseCount + 1)}
+                      step="1"
+                      value={maxUses}
+                      onChange={(e) => setMaxUses(e.target.value)}
+                      onWheel={(e) => e.currentTarget.blur()}
+                      className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white focus:border-cyan-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <p className="mt-1.5 text-xs text-zinc-500">
+                      Must be at least {purchaseCount + 1} (one more than current purchases)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
               {error}
@@ -610,6 +678,28 @@ function ListingCard({
             >
               {listing.status}
             </span>
+            {/* Inventory Badge - only show for multi-use listings */}
+            {(() => {
+              const maxUses = listing.maxUses ?? 1;
+              const purchaseCount = listing.purchaseCount ?? 0;
+              const isUnlimited = maxUses === -1;
+              const remaining = isUnlimited ? null : maxUses - purchaseCount;
+              // Only show badge for multi-use or unlimited listings
+              if (!isUnlimited && maxUses <= 1) return null;
+              return (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${
+                  isUnlimited
+                    ? "bg-blue-500/10 text-blue-400"
+                    : remaining === 1
+                      ? "bg-yellow-500/10 text-yellow-400"
+                      : remaining === 0
+                        ? "bg-red-500/10 text-red-400"
+                        : "bg-zinc-500/10 text-zinc-400"
+                }`}>
+                  {isUnlimited ? `${purchaseCount} sold (∞)` : `${purchaseCount}/${maxUses} sold`}
+                </span>
+              );
+            })()}
           </div>
         </div>
 
@@ -902,7 +992,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
     walletAddress: string;
     createdAt: number;
   } | null>(null);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [authenticatingListingId, setAuthenticatingListingId] = useState<string | null>(null);
 
   // Check if cached auth is still valid
   const isAuthCacheValid = useCallback(() => {
@@ -975,7 +1065,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
     async (listing: Listing) => {
       if (!account) return;
 
-      setIsAuthenticating(true);
+      setAuthenticatingListingId(listing._id);
 
       try {
         // Check if we have valid cached auth
@@ -991,7 +1081,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
               setEditingListing(authenticatedListing);
             }
           }
-          setIsAuthenticating(false);
+          setAuthenticatingListingId(null);
           return;
         }
 
@@ -1028,7 +1118,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
         // User rejected signature - don't open modal
         console.log("Edit authentication cancelled:", error);
       } finally {
-        setIsAuthenticating(false);
+        setAuthenticatingListingId(null);
       }
     },
     [account, fetchSellerData, isAuthCacheValid]
@@ -1424,7 +1514,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                         onDelete={handleListingUpdate}
                         account={account}
                         chainId={chainId}
-                        isAuthenticating={isAuthenticating}
+                        isAuthenticating={authenticatingListingId === listing._id}
                       />
                     ))}
                   </div>

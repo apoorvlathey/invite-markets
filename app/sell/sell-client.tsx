@@ -56,7 +56,10 @@ export default function SellClient() {
     accessCode: "",
     priceUsdc: "",
     appInput: "",
+    maxUses: "1", // Default to single use
   });
+  const [isUnlimitedUses, setIsUnlimitedUses] = useState(false);
+  const [isUsesExpanded, setIsUsesExpanded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [createdSlug, setCreatedSlug] = useState("");
@@ -246,6 +249,9 @@ export default function SellClient() {
     try {
       const nonce = BigInt(Date.now());
 
+      // Calculate maxUses value: -1 for unlimited, or the entered number
+      const maxUsesValue = isUnlimitedUses ? -1 : parseInt(formData.maxUses, 10) || 1;
+
       const message: ListingMessage = {
         listingType,
         inviteUrl: listingType === "invite_link" ? formData.inviteUrl : "",
@@ -255,6 +261,7 @@ export default function SellClient() {
         sellerAddress: address as `0x${string}`,
         appId: selectedApp ? selectedApp.id : "",
         appName: selectedApp ? "" : formData.appInput.trim(),
+        maxUses: maxUsesValue.toString(),
         nonce,
       };
 
@@ -283,6 +290,7 @@ export default function SellClient() {
           nonce: nonce.toString(),
           chainId,
           signature,
+          maxUses: maxUsesValue,
           // Send appId for featured apps, appName for custom apps
           ...(selectedApp
             ? { appId: selectedApp.id }
@@ -307,6 +315,8 @@ export default function SellClient() {
         appName: data.listing.appName,
         appUrl: data.listing.appUrl,
         appIconUrl: data.listing.appIconUrl,
+        maxUses: data.listing.maxUses,
+        purchaseCount: data.listing.purchaseCount,
         createdAt: data.listing.createdAt,
         updatedAt: data.listing.createdAt,
       };
@@ -360,10 +370,12 @@ export default function SellClient() {
       accessCode: "",
       priceUsdc: "",
       appInput: "",
+      maxUses: "1",
     });
     setSelectedApp(null);
     setIsValueConfirmed(false);
     setListingType("invite_link");
+    setIsUnlimitedUses(false);
   };
 
   if (createdSlug) {
@@ -979,6 +991,107 @@ export default function SellClient() {
                     Current lowest listing price for {formData.appInput} is $
                     {lowestPrice.toFixed(2)}
                   </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Number of Uses - Collapsible */}
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-zinc-300 py-2">
+                <svg
+                  className="w-4 h-4 text-cyan-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                <span>Number of Uses</span>
+                <span className="text-cyan-400 font-normal">
+                  {isUnlimitedUses ? "∞ Unlimited" : formData.maxUses || "1"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsUsesExpanded(!isUsesExpanded)}
+                  className="p-1.5 rounded-lg border border-zinc-700 hover:border-cyan-500/50 hover:bg-zinc-800 cursor-pointer transition-all"
+                >
+                  <svg
+                    className="w-3.5 h-3.5 text-zinc-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <AnimatePresence>
+                {isUsesExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pt-3 space-y-3">
+                      {/* Unlimited Toggle */}
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={isUnlimitedUses}
+                            onChange={(e) => setIsUnlimitedUses(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 rounded-full bg-zinc-700 peer-checked:bg-cyan-500 transition-colors"></div>
+                          <div className="absolute left-0.5 top-0.5 w-5 h-5 rounded-full bg-white transition-transform peer-checked:translate-x-5"></div>
+                        </div>
+                        <span className="text-sm text-zinc-300 group-hover:text-zinc-200 transition-colors">
+                          Unlimited uses
+                        </span>
+                      </label>
+
+                      {/* Number Input - hidden when unlimited */}
+                      {!isUnlimitedUses && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                        >
+                          <input
+                            type="number"
+                            id="maxUses"
+                            name="maxUses"
+                            value={formData.maxUses}
+                            onChange={handleChange}
+                            onWheel={(e) => e.currentTarget.blur()}
+                            min="1"
+                            step="1"
+                            placeholder="1"
+                            className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                        </motion.div>
+                      )}
+
+                      <p className="text-xs text-cyan-400">
+                        {isUnlimitedUses
+                          ? "This invite can be used unlimited times"
+                          : `This invite can be used ${formData.maxUses || 1} time${(parseInt(formData.maxUses, 10) || 1) === 1 ? "" : "s"}`}
+                      </p>
+                    </div>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>

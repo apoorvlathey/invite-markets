@@ -32,6 +32,8 @@ A marketplace for buying and selling invite links and access codes with MongoDB 
   appId?: string                  // For featured apps
   appName?: string                // For custom apps
   chainId: number                 // Network ID (e.g., 8453 for Base Mainnet)
+  maxUses?: number                // Maximum purchases allowed (-1 for unlimited, default: 1)
+  purchaseCount?: number          // Current number of purchases (default: 0)
   createdAt: Date (auto-generated)
   updatedAt: Date (auto-generated)
 }
@@ -75,7 +77,8 @@ All listing operations (create, update, delete) require EIP-712 typed data signa
   sellerAddress: address,
   appId: string,
   appName: string,
-  nonce: uint256
+  nonce: uint256,
+  maxUses: string              // "-1" for unlimited, "1" for single-use (default), or any positive number
 }
 ```
 
@@ -91,7 +94,8 @@ All listing operations (create, update, delete) require EIP-712 typed data signa
   priceUsdc: string,
   sellerAddress: address,
   appName: string,
-  nonce: uint256
+  nonce: uint256,
+  maxUses: string              // Can only increase maxUses, not decrease
 }
 ```
 
@@ -118,7 +122,8 @@ All listing operations (create, update, delete) require EIP-712 typed data signa
   "nonce": "1704067200000",
   "chainId": 8453,
   "signature": "0x...",
-  "appId": "ethos"
+  "appId": "ethos",
+  "maxUses": 1
 }
 ```
 
@@ -134,7 +139,8 @@ All listing operations (create, update, delete) require EIP-712 typed data signa
   "nonce": "1704067200000",
   "chainId": 8453,
   "signature": "0x...",
-  "appName": "Example App"
+  "appName": "Example App",
+  "maxUses": -1
 }
 ```
 
@@ -151,6 +157,8 @@ All listing operations (create, update, delete) require EIP-712 typed data signa
     "sellerAddress": "0x...",
     "status": "active",
     "appName": "Example App",
+    "maxUses": -1,
+    "purchaseCount": 0,
     "createdAt": "2024-01-01T00:00:00.000Z"
   }
 }
@@ -165,6 +173,7 @@ All listing operations (create, update, delete) require EIP-712 typed data signa
 - Fetches listing by unique slug
 - Returns 404 if not found
 - Includes `listingType` and `appUrl` (for access_code type)
+- Includes `maxUses` and `purchaseCount` for inventory tracking
 - **Does NOT include inviteUrl or accessCode** (security measure)
 
 **Response**:
@@ -179,7 +188,9 @@ All listing operations (create, update, delete) require EIP-712 typed data signa
     "priceUsdc": 10.5,
     "sellerAddress": "0x...",
     "status": "active",
-    "appName": "Example App"
+    "appName": "Example App",
+    "maxUses": 5,
+    "purchaseCount": 2
   }
 }
 ```
@@ -193,11 +204,13 @@ This is the **only endpoint** that returns the secret data (`inviteUrl` or `acce
 **Flow**:
 
 1. Client sends request with `x-payment` header containing x402 payment data
-2. Server calls `settlePayment()` to verify payment via thirdweb facilitator
-3. If payment verification fails → Returns error (no secret data)
-4. If payment succeeds:
+2. Server checks listing availability (`purchaseCount < maxUses` or `maxUses === -1` for unlimited)
+3. Server calls `settlePayment()` to verify payment via thirdweb facilitator
+4. If payment verification fails → Returns error (no secret data)
+5. If payment succeeds:
    - Creates transaction record
-   - Marks listing as sold
+   - Increments `purchaseCount`
+   - If `purchaseCount >= maxUses` (and not unlimited), marks listing as "sold"
    - Returns secret data to buyer based on listing type
 
 **Request Headers**:
@@ -279,6 +292,7 @@ x-seller-message: <base64 encoded message>
 - Requires EIP-712 signature verification
 - Supports updating fields based on listing type
 - Cannot change listing type after creation
+- `maxUses` can only be increased (to add more inventory), never decreased
 
 **Request Body (Access Code type)**:
 
@@ -289,6 +303,7 @@ x-seller-message: <base64 encoded message>
   "priceUsdc": 15.0,
   "appUrl": "https://newurl.example.com",
   "accessCode": "NEWSECRET456",
+  "maxUses": 10,
   "nonce": "1704067200000",
   "chainId": 8453,
   "signature": "0x..."
@@ -304,12 +319,14 @@ x-seller-message: <base64 encoded message>
 - **Listing Type Tabs**: Toggle between "Invite Link" and "Access Code" modes
 - App name autocomplete with featured apps
 - Different form fields based on listing type
+- **Number of Uses**: Collapsible setting to configure multi-use listings
 
 **Invite Link Mode:**
 
 - App Name (with autocomplete)
 - Invite URL (private)
 - Price (USDC)
+- Number of Uses (default: 1, expandable to edit)
 
 **Access Code Mode:**
 
@@ -317,6 +334,13 @@ x-seller-message: <base64 encoded message>
 - App URL (public - with warning notice)
 - Access Code (private)
 - Price (USDC)
+- Number of Uses (default: 1, expandable to edit)
+
+**Number of Uses Options:**
+
+- **Single use (default)**: Listing becomes "sold" after one purchase
+- **Multiple uses**: Specify exact number (e.g., 5, 10, 100)
+- **Unlimited**: Toggle for infinite purchases (-1 internally)
 
 **Features**:
 
@@ -326,6 +350,7 @@ x-seller-message: <base64 encoded message>
 - Loading states during submission
 - Error handling with user-friendly messages
 - Warning that App URL is publicly visible (for access_code type)
+- Collapsible "Number of Uses" section with edit button
 
 #### Listing Page - `/listing/[slug]`
 
@@ -337,6 +362,7 @@ x-seller-message: <base64 encoded message>
 - For access_code type: Shows public App URL with link
 - Formatted dates and prices
 - Purchase button triggers x402 payment flow
+- **Inventory display** for multi-use listings
 
 **Features**:
 
@@ -345,6 +371,8 @@ x-seller-message: <base64 encoded message>
 - Responsive design
 - Status-based UI (active/sold/cancelled)
 - Different messaging based on listing type
+- Inventory badge showing remaining uses (only for multi-use listings)
+- "Sold Out" state when all uses consumed
 
 #### Payment Success Modal
 
@@ -378,6 +406,7 @@ The edit modal adapts based on listing type:
 - Price (USDC)
 - Invite URL (masked, optional update)
 - App Name (for custom apps)
+- Number of Uses (can only increase)
 
 **Access Code type:**
 
@@ -385,6 +414,13 @@ The edit modal adapts based on listing type:
 - App URL (public)
 - Access Code (masked, optional update)
 - App Name (for custom apps)
+- Number of Uses (can only increase)
+
+**Inventory Display:**
+
+- Shows "X of Y sold" for multi-use listings
+- Shows "Unlimited · X sold" for unlimited listings
+- Sellers can increase `maxUses` to add more inventory
 
 ## User Flow
 
@@ -504,10 +540,45 @@ Cache validation:
 - Easy navigation between pages
 - Listing type tabs with smooth transitions
 
+### Multi-Use Listings
+
+Listings can be configured to allow multiple purchases of the same invite/code:
+
+**Configuration Options:**
+
+- **Single use** (`maxUses: 1`): Default behavior, listing becomes "sold" after one purchase
+- **Multiple uses** (`maxUses: N`): Allows N total purchases before "sold out"
+- **Unlimited** (`maxUses: -1`): Infinite purchases allowed
+
+**Availability Logic:**
+
+```typescript
+function isListingAvailable(listing) {
+  if (listing.status !== "active") return false;
+  if (listing.maxUses === -1) return true; // Unlimited
+  return listing.purchaseCount < listing.maxUses;
+}
+```
+
+**UI Display Rules:**
+
+- Single-use listings: No inventory badge shown
+- Multi-use listings: Shows "X left" badge (yellow when only 1 remaining)
+- Unlimited listings: Shows "∞" badge in blue
+- Sold out: Purchase button disabled, "Sold Out" state
+
+**Seller Restrictions:**
+
+- `maxUses` can only be increased via update (to add inventory)
+- Cannot decrease `maxUses` to prevent reducing promised availability
+- `purchaseCount` is system-managed and cannot be manually changed
+
 ## Migration Strategy
 
 - Existing listings without `listingType` are treated as `"invite_link"`
 - New fields (`listingType`, `appUrl`, `accessCode`) are optional in schema
+- Existing listings without `maxUses` default to `1` (single-use)
+- Existing listings without `purchaseCount` default to `0`
 - No database migration required for backward compatibility
 
 ## Future Enhancements

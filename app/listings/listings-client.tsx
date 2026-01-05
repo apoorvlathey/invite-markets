@@ -1046,11 +1046,31 @@ export default function ListingsClient() {
                           )}
                         </div>
 
-                        {/* Price */}
-                        <div className="flex items-center">
+                        {/* Price & Stock */}
+                        <div className="flex items-center gap-3">
                           <span className="text-lg font-bold text-cyan-400">
                             ${listing.priceUsdc}
                           </span>
+                          {/* Inventory Badge - only show for multi-use listings */}
+                          {(() => {
+                            const maxUses = listing.maxUses ?? 1;
+                            const purchaseCount = listing.purchaseCount ?? 0;
+                            const isUnlimited = maxUses === -1;
+                            const remaining = isUnlimited ? null : maxUses - purchaseCount;
+                            // Only show badge for multi-use or unlimited listings
+                            if (!isUnlimited && maxUses <= 1) return null;
+                            return (
+                              <span className={`text-xs px-2 py-0.5 rounded ${
+                                isUnlimited
+                                  ? "bg-blue-500/20 text-blue-400"
+                                  : remaining === 1
+                                    ? "bg-yellow-500/20 text-yellow-400"
+                                    : "bg-zinc-800 text-zinc-400"
+                              }`}>
+                                {isUnlimited ? `∞` : `${remaining} left`}
+                              </span>
+                            );
+                          })()}
                         </div>
 
                         {/* Actions */}
@@ -1199,9 +1219,31 @@ export default function ListingsClient() {
 
                         {/* Price & Actions Row */}
                         <div className="flex items-center justify-between gap-3 pt-2 border-t border-zinc-800/50">
-                          <span className="text-xl font-bold text-cyan-400">
-                            ${listing.priceUsdc}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl font-bold text-cyan-400">
+                              ${listing.priceUsdc}
+                            </span>
+                            {/* Inventory Badge - only show for multi-use listings */}
+                            {(() => {
+                              const maxUses = listing.maxUses ?? 1;
+                              const purchaseCount = listing.purchaseCount ?? 0;
+                              const isUnlimited = maxUses === -1;
+                              const remaining = isUnlimited ? null : maxUses - purchaseCount;
+                              // Only show badge for multi-use or unlimited listings
+                              if (!isUnlimited && maxUses <= 1) return null;
+                              return (
+                                <span className={`text-xs px-2 py-0.5 rounded ${
+                                  isUnlimited
+                                    ? "bg-blue-500/20 text-blue-400"
+                                    : remaining === 1
+                                      ? "bg-yellow-500/20 text-yellow-400"
+                                      : "bg-zinc-800 text-zinc-400"
+                                }`}>
+                                  {isUnlimited ? `∞` : `${remaining} left`}
+                                </span>
+                              );
+                            })()}
+                          </div>
                           <div className="flex items-center gap-2">
                             <QuickBuyButton
                               price={`$${listing.priceUsdc}`}
