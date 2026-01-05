@@ -3,7 +3,15 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, Copy, Check, X, AlertTriangle, ThumbsUp, ThumbsDown } from "lucide-react";
+import {
+  CheckCircle,
+  Copy,
+  Check,
+  X,
+  AlertTriangle,
+  ThumbsUp,
+  ThumbsDown,
+} from "lucide-react";
 
 interface PaymentSuccessModalProps {
   isOpen: boolean;
@@ -68,45 +76,88 @@ export function PaymentSuccessModal({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={() => setShowConfirmClose(false)}
-                  className="fixed inset-0 bg-black/60 z-60"
+                  className="fixed inset-0 bg-black/70 backdrop-blur-sm z-60"
                 />
                 <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    className="bg-zinc-900 border border-zinc-700 rounded-xl max-w-sm w-full shadow-2xl p-6"
+                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                    className="relative bg-zinc-900 rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
                   >
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-red-500/20 rounded-lg">
-                        <AlertTriangle className="h-5 w-5 text-red-400" />
-                      </div>
-                      <h3 className="text-lg font-bold text-zinc-100">
-                        Are you sure?
-                      </h3>
+                    {/* Gradient border effect */}
+                    <div className="absolute inset-0 rounded-2xl p-px bg-linear-to-b from-yellow-500/40 via-yellow-600/20 to-transparent">
+                      <div className="w-full h-full bg-zinc-900 rounded-2xl" />
                     </div>
-                    <p className="text-sm text-zinc-400 mb-6">
-                      You haven&apos;t copied your invite link yet. Once you
-                      close this modal,
-                      <span className="text-red-400 font-medium">
-                        {" "}
-                        you won&apos;t be able to access it again
-                      </span>
-                      .
-                    </p>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={handleConfirmClose}
-                        className="flex-1 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg font-medium text-zinc-100 transition-colors cursor-pointer"
+
+                    {/* Content */}
+                    <div className="relative p-6">
+                      {/* Warning icon with glow */}
+                      <div className="flex justify-center mb-4">
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{
+                            type: "spring",
+                            damping: 15,
+                            stiffness: 300,
+                            delay: 0.1,
+                          }}
+                          className="relative"
+                        >
+                          <div className="absolute inset-0 bg-yellow-500/30 rounded-full blur-xl" />
+                          <div className="relative p-4 bg-yellow-500/10 rounded-full border border-yellow-500/30">
+                            <AlertTriangle className="h-8 w-8 text-yellow-400" />
+                          </div>
+                        </motion.div>
+                      </div>
+
+                      {/* Title */}
+                      <motion.h3
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="text-xl font-bold text-center text-zinc-100 mb-3"
                       >
-                        Close Anyway
-                      </button>
-                      <button
-                        onClick={() => setShowConfirmClose(false)}
-                        className="flex-1 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg font-medium text-red-400 transition-colors cursor-pointer"
+                        Wait! Are you sure?
+                      </motion.h3>
+
+                      {/* Description */}
+                      <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-sm text-center text-zinc-400 mb-6 leading-relaxed"
                       >
-                        Back
-                      </button>
+                        You haven&apos;t copied your invite link yet.
+                        <br />
+                        <span className="text-yellow-400 font-semibold">
+                          This link will be lost forever.
+                        </span>
+                      </motion.p>
+
+                      {/* Buttons */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.25 }}
+                        className="flex flex-col gap-3"
+                      >
+                        <button
+                          onClick={() => setShowConfirmClose(false)}
+                          className="w-full px-4 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 hover:border-emerald-400 rounded-xl font-semibold text-emerald-400 transition-all cursor-pointer"
+                        >
+                          Go Back & Copy Link
+                        </button>
+                        <button
+                          onClick={handleConfirmClose}
+                          className="w-full px-4 py-3 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 hover:border-zinc-600 rounded-xl font-medium text-zinc-400 hover:text-zinc-300 transition-all cursor-pointer flex items-center justify-center gap-2"
+                        >
+                          <AlertTriangle className="h-4 w-4" />
+                          Close Anyway
+                        </button>
+                      </motion.div>
                     </div>
                   </motion.div>
                 </div>
