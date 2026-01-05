@@ -12,12 +12,33 @@ import { chainId } from "@/lib/chain";
 export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
-    const { slug, sellerAddress, nonce, chainId, signature } = body;
+    const {
+      slug,
+      sellerAddress,
+      nonce,
+      chainId: clientChainId,
+      signature,
+    } = body;
 
     // Validate required fields including signature
-    if (!slug || !sellerAddress || !nonce || !chainId || !signature) {
+    if (!slug || !sellerAddress || !nonce || !clientChainId || !signature) {
       return NextResponse.json(
-        { success: false, error: "Missing required fields: slug, sellerAddress, nonce, chainId, signature" },
+        {
+          success: false,
+          error:
+            "Missing required fields: slug, sellerAddress, nonce, chainId, signature",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate that the client's chainId matches the server's expected chainId
+    if (clientChainId !== chainId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Invalid chain. Expected chainId ${chainId}, got ${clientChainId}. Please switch to the correct network.`,
+        },
         { status: 400 }
       );
     }
@@ -48,7 +69,10 @@ export async function DELETE(request: NextRequest) {
 
     if (!isValid) {
       return NextResponse.json(
-        { success: false, error: "Invalid signature. Please sign the message with your wallet." },
+        {
+          success: false,
+          error: "Invalid signature. Please sign the message with your wallet.",
+        },
         { status: 401 }
       );
     }

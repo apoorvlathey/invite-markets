@@ -492,6 +492,48 @@ The edit modal adapts based on listing type:
 - MongoDB injection protection via Mongoose
 - Error handling without exposing internals
 - EIP-712 signature verification for all mutations
+- Server-side chain ID validation
+
+#### Chain ID Validation
+
+The application operates on a specific network determined by the `NEXT_PUBLIC_IS_TESTNET` environment variable. To prevent listings from being created on the wrong chain:
+
+**Server-Side Enforcement:**
+
+All mutation endpoints (`POST /api/listings`, `PATCH /api/listings/update`, `DELETE /api/listings/delete`) validate that the client-provided `chainId` matches the server's configured chain:
+
+```typescript
+// Server imports the authoritative chainId from lib/chain.ts
+import { chainId } from "@/lib/chain";
+
+// Client-provided chainId is validated against server's expected chainId
+if (clientChainId !== chainId) {
+  return NextResponse.json(
+    {
+      error: `Invalid chain. Expected chainId ${chainId}, got ${clientChainId}. Please switch to the correct network.`,
+    },
+    { status: 400 }
+  );
+}
+```
+
+**Client-Side Configuration:**
+
+Client components use the server-configured `chainId` from `lib/chain.ts` rather than the wallet's connected chain:
+
+```typescript
+// ✅ Correct: Use server-configured chainId
+import { chainId } from "@/lib/chain";
+
+// ❌ Wrong: Don't use wallet's chain (could be on wrong network)
+const chainId = chain?.id ?? defaultChainId;
+```
+
+**Why This Matters:**
+
+- Prevents listings from being stored with incorrect chainId even if user's wallet is connected to the wrong network
+- Ensures all database queries filter by the correct chainId
+- Signatures are verified against the server's expected chainId
 
 #### Secret Data Protection
 

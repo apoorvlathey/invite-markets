@@ -23,17 +23,28 @@ export async function PATCH(request: NextRequest) {
       appName,
       maxUses,
       nonce,
-      chainId,
+      chainId: clientChainId,
       signature,
     } = body;
 
     // Validate required fields including signature
-    if (!slug || !sellerAddress || !nonce || !chainId || !signature) {
+    if (!slug || !sellerAddress || !nonce || !clientChainId || !signature) {
       return NextResponse.json(
         {
           success: false,
           error:
             "Missing required fields: slug, sellerAddress, nonce, chainId, signature",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate that the client's chainId matches the server's expected chainId
+    if (clientChainId !== chainId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Invalid chain. Expected chainId ${chainId}, got ${clientChainId}. Please switch to the correct network.`,
         },
         { status: 400 }
       );
@@ -68,7 +79,8 @@ export async function PATCH(request: NextRequest) {
 
     // Get current maxUses for the message (use provided value or current)
     const currentMaxUses = listing.maxUses ?? 1;
-    const messageMaxUses = maxUses !== undefined ? maxUses.toString() : currentMaxUses.toString();
+    const messageMaxUses =
+      maxUses !== undefined ? maxUses.toString() : currentMaxUses.toString();
 
     // Verify EIP-712 signature
     const message: UpdateListingMessage = {
@@ -172,20 +184,31 @@ export async function PATCH(request: NextRequest) {
 
     // Handle maxUses update (only allow increasing to prevent abuse)
     if (maxUses !== undefined) {
-      const newMaxUses = typeof maxUses === "number" ? maxUses : parseInt(maxUses, 10);
-      
-      if (isNaN(newMaxUses) || (newMaxUses < -1) || newMaxUses === 0) {
+      const newMaxUses =
+        typeof maxUses === "number" ? maxUses : parseInt(maxUses, 10);
+
+      if (isNaN(newMaxUses) || newMaxUses < -1 || newMaxUses === 0) {
         return NextResponse.json(
-          { success: false, error: "maxUses must be -1 (unlimited) or a positive number" },
+          {
+            success: false,
+            error: "maxUses must be -1 (unlimited) or a positive number",
+          },
           { status: 400 }
         );
       }
 
       // -1 means unlimited - always allowed as it's the most permissive
       // Otherwise, new value must be >= current value (or current is unlimited)
-      if (newMaxUses !== -1 && currentMaxUses !== -1 && newMaxUses < currentMaxUses) {
+      if (
+        newMaxUses !== -1 &&
+        currentMaxUses !== -1 &&
+        newMaxUses < currentMaxUses
+      ) {
         return NextResponse.json(
-          { success: false, error: "Cannot decrease maxUses. You can only increase it." },
+          {
+            success: false,
+            error: "Cannot decrease maxUses. You can only increase it.",
+          },
           { status: 400 }
         );
       }

@@ -10,10 +10,10 @@ import {
   useResolveAddresses,
   getSellerDisplayInfo,
 } from "@/lib/resolve-addresses";
-import { getExplorerAddressUrl, chainId as defaultChainId } from "@/lib/chain";
+import { getExplorerAddressUrl, chainId } from "@/lib/chain";
 import { fetchEthosData, type EthosData } from "@/lib/ethos-scores";
 import { featuredApps } from "@/data/featuredApps";
-import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
+import { useActiveAccount } from "thirdweb/react";
 import { signMessage } from "thirdweb/utils";
 import {
   getEIP712Domain,
@@ -232,14 +232,18 @@ function EditListingModal({
   const [appName, setAppName] = useState(listing.appName || "");
   // Multi-use inventory fields
   const currentMaxUses = listing.maxUses ?? 1;
-  const [maxUses, setMaxUses] = useState(currentMaxUses === -1 ? "1" : currentMaxUses.toString());
+  const [maxUses, setMaxUses] = useState(
+    currentMaxUses === -1 ? "1" : currentMaxUses.toString()
+  );
   const [isUnlimitedUses, setIsUnlimitedUses] = useState(currentMaxUses === -1);
   const purchaseCount = listing.purchaseCount ?? 0;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isSecretFocused, setIsSecretFocused] = useState(false);
   // Track if we have the original secret (for display purposes)
-  const hasExistingSecret = isAccessCode ? !!listing.accessCode : !!listing.inviteUrl;
+  const hasExistingSecret = isAccessCode
+    ? !!listing.accessCode
+    : !!listing.inviteUrl;
 
   // Disable background scrolling when modal is open
   useEffect(() => {
@@ -264,7 +268,9 @@ function EditListingModal({
       const nonce = BigInt(Date.now());
       const appNameValue = listing.appId ? "" : appName;
       // Calculate maxUses value: -1 for unlimited, or the entered number
-      const maxUsesValue = isUnlimitedUses ? -1 : parseInt(maxUses, 10) || currentMaxUses;
+      const maxUsesValue = isUnlimitedUses
+        ? -1
+        : parseInt(maxUses, 10) || currentMaxUses;
 
       const message: UpdateListingMessage = {
         slug: listing.slug,
@@ -294,9 +300,7 @@ function EditListingModal({
           slug: listing.slug,
           sellerAddress: account.address,
           priceUsdc: parseFloat(price),
-          ...(isAccessCode
-            ? { appUrl, accessCode }
-            : { inviteUrl }),
+          ...(isAccessCode ? { appUrl, accessCode } : { inviteUrl }),
           appName: listing.appId ? undefined : appName,
           maxUses: maxUsesValue,
           nonce: nonce.toString(),
@@ -415,7 +419,9 @@ function EditListingModal({
                   onFocus={() => setIsSecretFocused(true)}
                   onBlur={() => setIsSecretFocused(false)}
                   placeholder={
-                    hasExistingSecret ? undefined : "Leave empty to keep existing code"
+                    hasExistingSecret
+                      ? undefined
+                      : "Leave empty to keep existing code"
                   }
                   className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none font-mono"
                 />
@@ -438,7 +444,9 @@ function EditListingModal({
                 onFocus={() => setIsSecretFocused(true)}
                 onBlur={() => setIsSecretFocused(false)}
                 placeholder={
-                  hasExistingSecret ? undefined : "Leave empty to keep existing URL"
+                  hasExistingSecret
+                    ? undefined
+                    : "Leave empty to keep existing URL"
                 }
                 className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none"
               />
@@ -475,10 +483,14 @@ function EditListingModal({
                 {/* Current inventory status */}
                 <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-zinc-400">Current inventory:</span>
+                    <span className="text-sm text-zinc-400">
+                      Current inventory:
+                    </span>
                     <span className="text-sm font-medium text-cyan-400">
                       {purchaseCount} sold
-                      {currentMaxUses === -1 ? " (unlimited)" : ` of ${currentMaxUses}`}
+                      {currentMaxUses === -1
+                        ? " (unlimited)"
+                        : ` of ${currentMaxUses}`}
                     </span>
                   </div>
                 </div>
@@ -513,7 +525,8 @@ function EditListingModal({
                       className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white focus:border-cyan-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <p className="mt-1.5 text-xs text-zinc-500">
-                      Must be at least {purchaseCount + 1} (one more than current purchases)
+                      Must be at least {purchaseCount + 1} (one more than
+                      current purchases)
                     </p>
                   </div>
                 )}
@@ -687,16 +700,20 @@ function ListingCard({
               // Only show badge for multi-use or unlimited listings
               if (!isUnlimited && maxUses <= 1) return null;
               return (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${
-                  isUnlimited
-                    ? "bg-blue-500/10 text-blue-400"
-                    : remaining === 1
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${
+                    isUnlimited
+                      ? "bg-blue-500/10 text-blue-400"
+                      : remaining === 1
                       ? "bg-yellow-500/10 text-yellow-400"
                       : remaining === 0
-                        ? "bg-red-500/10 text-red-400"
-                        : "bg-zinc-500/10 text-zinc-400"
-                }`}>
-                  {isUnlimited ? `${purchaseCount} sold (∞)` : `${purchaseCount}/${maxUses} sold`}
+                      ? "bg-red-500/10 text-red-400"
+                      : "bg-zinc-500/10 text-zinc-400"
+                  }`}
+                >
+                  {isUnlimited
+                    ? `${purchaseCount} sold (∞)`
+                    : `${purchaseCount}/${maxUses} sold`}
                 </span>
               );
             })()}
@@ -944,8 +961,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
     "listings"
   );
   const account = useActiveAccount();
-  const chain = useActiveWalletChain();
-  const chainId = chain?.id ?? defaultChainId;
+  // Always use the server-configured chainId, not the wallet's connected chain
 
   const isOwnProfile =
     address?.toLowerCase() === account?.address.toLowerCase();
@@ -992,7 +1008,9 @@ export default function ProfileClient({ address }: ProfileClientProps) {
     walletAddress: string;
     createdAt: number;
   } | null>(null);
-  const [authenticatingListingId, setAuthenticatingListingId] = useState<string | null>(null);
+  const [authenticatingListingId, setAuthenticatingListingId] = useState<
+    string | null
+  >(null);
 
   // Check if cached auth is still valid
   const isAuthCacheValid = useCallback(() => {
@@ -1514,7 +1532,9 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                         onDelete={handleListingUpdate}
                         account={account}
                         chainId={chainId}
-                        isAuthenticating={authenticatingListingId === listing._id}
+                        isAuthenticating={
+                          authenticatingListingId === listing._id
+                        }
                       />
                     ))}
                   </div>

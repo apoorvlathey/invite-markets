@@ -4,11 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createThirdwebClient } from "thirdweb";
-import {
-  useActiveAccount,
-  useActiveWalletChain,
-  useConnectModal,
-} from "thirdweb/react";
+import { useActiveAccount, useConnectModal } from "thirdweb/react";
 import { base, baseSepolia } from "thirdweb/chains";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,9 +17,8 @@ import {
 import { getFeaturedAppsForChain } from "@/data/featuredApps";
 import { LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
 import { type Listing, type ListingsData } from "@/lib/listings";
-import { chainId as defaultChainId } from "@/lib/chain";
+import { chainId, isTestnet } from "@/lib/chain";
 
-const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET === "true";
 const thirdwebChain = isTestnet ? baseSepolia : base;
 
 const thirdwebClient = createThirdwebClient({
@@ -41,11 +36,10 @@ export default function SellClient() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const account = useActiveAccount();
-  const chain = useActiveWalletChain();
   const { connect } = useConnectModal();
   const address = account?.address;
   const isConnected = !!account;
-  const chainId = chain?.id ?? defaultChainId;
+  // Always use the server-configured chainId, not the wallet's connected chain
 
   // Listing type state
   const [listingType, setListingType] = useState<ListingType>("invite_link");
@@ -250,7 +244,9 @@ export default function SellClient() {
       const nonce = BigInt(Date.now());
 
       // Calculate maxUses value: -1 for unlimited, or the entered number
-      const maxUsesValue = isUnlimitedUses ? -1 : parseInt(formData.maxUses, 10) || 1;
+      const maxUsesValue = isUnlimitedUses
+        ? -1
+        : parseInt(formData.maxUses, 10) || 1;
 
       const message: ListingMessage = {
         listingType,
@@ -1052,7 +1048,9 @@ export default function SellClient() {
                           <input
                             type="checkbox"
                             checked={isUnlimitedUses}
-                            onChange={(e) => setIsUnlimitedUses(e.target.checked)}
+                            onChange={(e) =>
+                              setIsUnlimitedUses(e.target.checked)
+                            }
                             className="sr-only peer"
                           />
                           <div className="w-11 h-6 rounded-full bg-zinc-700 peer-checked:bg-cyan-500 transition-colors"></div>
@@ -1088,7 +1086,13 @@ export default function SellClient() {
                       <p className="text-xs text-cyan-400">
                         {isUnlimitedUses
                           ? "This invite can be used unlimited times"
-                          : `This invite can be used ${formData.maxUses || 1} time${(parseInt(formData.maxUses, 10) || 1) === 1 ? "" : "s"}`}
+                          : `This invite can be used ${
+                              formData.maxUses || 1
+                            } time${
+                              (parseInt(formData.maxUses, 10) || 1) === 1
+                                ? ""
+                                : "s"
+                            }`}
                       </p>
                     </div>
                   </motion.div>

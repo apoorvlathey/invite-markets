@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       priceUsdc,
       sellerAddress,
       nonce,
-      chainId,
+      chainId: clientChainId,
       signature,
       appId,
       appName,
@@ -142,11 +142,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate common required fields
-    if (!priceUsdc || !sellerAddress || !nonce || !chainId || !signature) {
+    if (
+      !priceUsdc ||
+      !sellerAddress ||
+      !nonce ||
+      !clientChainId ||
+      !signature
+    ) {
       return NextResponse.json(
         {
           error:
             "Missing required fields: priceUsdc, sellerAddress, nonce, chainId, signature",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate that the client's chainId matches the server's expected chainId
+    if (clientChainId !== chainId) {
+      return NextResponse.json(
+        {
+          error: `Invalid chain. Expected chainId ${chainId}, got ${clientChainId}. Please switch to the correct network.`,
         },
         { status: 400 }
       );
@@ -169,8 +185,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate maxUses
-    const parsedMaxUses = typeof maxUses === "number" ? maxUses : parseInt(maxUses, 10);
-    if (isNaN(parsedMaxUses) || (parsedMaxUses < -1) || parsedMaxUses === 0) {
+    const parsedMaxUses =
+      typeof maxUses === "number" ? maxUses : parseInt(maxUses, 10);
+    if (isNaN(parsedMaxUses) || parsedMaxUses < -1 || parsedMaxUses === 0) {
       return NextResponse.json(
         { error: "maxUses must be -1 (unlimited) or a positive number" },
         { status: 400 }
