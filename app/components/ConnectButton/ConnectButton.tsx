@@ -120,6 +120,7 @@ function AccountMenu({
   triggerRef,
   chainName,
   onDisconnect,
+  onAction,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -127,6 +128,7 @@ function AccountMenu({
   triggerRef: React.RefObject<HTMLButtonElement | null>;
   chainName: string;
   onDisconnect: () => void;
+  onAction?: () => void;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
   const { resolvedAddresses } = useResolveAddresses([address]);
@@ -169,6 +171,12 @@ function AccountMenu({
   const handleDisconnect = () => {
     onDisconnect();
     onClose();
+    onAction?.();
+  };
+
+  const handleProfileClick = () => {
+    onClose();
+    onAction?.();
   };
 
   return (
@@ -234,7 +242,7 @@ function AccountMenu({
               }
               label="Profile"
               href={`/profile/${address}`}
-              onClick={onClose}
+              onClick={handleProfileClick}
             />
             <MenuItem
               icon={
@@ -264,7 +272,13 @@ function AccountMenu({
 }
 
 // Main ConnectButton component
-export function ConnectButton({ compact = false }: { compact?: boolean }) {
+export function ConnectButton({
+  compact = false,
+  onAction,
+}: {
+  compact?: boolean;
+  onAction?: () => void;
+}) {
   const activeAccount = useActiveAccount();
   const activeWallet = useActiveWallet();
   const activeChain = useActiveWalletChain();
@@ -386,6 +400,7 @@ export function ConnectButton({ compact = false }: { compact?: boolean }) {
         triggerRef={triggerRef}
         chainName={isTestnet ? "Base Sepolia" : "Base"}
         onDisconnect={handleDisconnect}
+        onAction={onAction}
       />
     </div>
   );

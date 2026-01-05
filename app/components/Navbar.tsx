@@ -219,7 +219,7 @@ export function Navbar() {
             {/* Show Connect button in menu if connected (since Sell is in navbar) */}
             {isConnected && (
               <div className="px-4 pt-2">
-                <ConnectButton />
+                <ConnectButton onAction={() => setMobileMenuOpen(false)} />
               </div>
             )}
           </div>
