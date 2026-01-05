@@ -747,11 +747,61 @@ export default function ProfileClient({ address }: ProfileClientProps) {
           transition={{ delay: 0.1 }}
           className="rounded-2xl bg-zinc-950 border border-zinc-800 shadow-premium overflow-hidden"
         >
-          <div className="h-24 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 relative">
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[length:40px_40px]" />
+          <div className="h-36 bg-zinc-950 relative overflow-hidden">
+            {/* Tiled Avatar Pattern Background */}
+            <div
+              className="absolute grid grid-cols-10 gap-4 opacity-[0.15]"
+              style={{
+                transform: "rotate(-20deg) scale(1.8)",
+                transformOrigin: "center center",
+                top: "-50%",
+                left: "-25%",
+                right: "-25%",
+                bottom: "-50%",
+              }}
+            >
+              {[...Array(70)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-10 h-10 flex items-center justify-center"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={displayInfo.avatarUrl || bloAvatar}
+                    alt=""
+                    className="w-full h-full rounded-xl object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Radial gradient for centered glow */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `radial-gradient(ellipse at center, transparent 0%, rgba(9, 9, 11, 0.4) 50%, rgba(9, 9, 11, 0.9) 100%)`,
+              }}
+            />
+
+            {/* Vignette Effects */}
+            <div className="absolute inset-0 bg-linear-to-b from-zinc-950/70 via-transparent to-zinc-950/90" />
+            <div className="absolute inset-0 bg-linear-to-r from-zinc-950/70 via-transparent to-zinc-950/70" />
+
+            {/* Subtle color accent based on resolution type */}
+            <div
+              className={`absolute inset-0 mix-blend-overlay ${
+                displayInfo.resolvedType === "farcaster"
+                  ? "bg-purple-500/10"
+                  : displayInfo.resolvedType === "basename"
+                  ? "bg-blue-500/10"
+                  : displayInfo.resolvedType === "ens"
+                  ? "bg-cyan-500/10"
+                  : "bg-cyan-500/8"
+              }`}
+            />
           </div>
 
-          <div className="px-8 -mt-12 relative z-10">
+          <div className="px-8 -mt-16 relative z-10">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -948,7 +998,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                   d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                 />
               </svg>
-              <span>My Listings</span>
+              <span>Listings</span>
               {!listingsLoading && activeListings.length > 0 && (
                 <span className="px-1.5 py-0.5 rounded-md bg-purple-500/20 text-purple-400 text-xs font-semibold">
                   {activeListings.length}
