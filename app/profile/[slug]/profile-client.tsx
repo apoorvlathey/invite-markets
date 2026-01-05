@@ -181,8 +181,8 @@ function EditListingModal({ listing, onClose, onUpdate }: { listing: Listing; on
           {error && <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>}
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-medium transition-colors">Cancel</button>
-            <button type="submit" disabled={isLoading} className="flex-1 px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-medium transition-colors disabled:opacity-50">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-medium transition-colors cursor-pointer">Cancel</button>
+            <button type="submit" disabled={isLoading} className="flex-1 px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-medium transition-colors cursor-pointer disabled:opacity-50">
               {isLoading ? "Updating..." : "Update"}
             </button>
           </div>
@@ -234,10 +234,10 @@ function ListingCard({ listing, isOwner, onEdit, onDelete }: { listing: Listing;
 
         {isOwner && listing.status === "active" && (
           <div className="flex gap-2">
-            <button onClick={onEdit} className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all group" title="Edit listing">
+            <button onClick={onEdit} className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all group cursor-pointer" title="Edit listing">
               <svg className="w-4 h-4 text-cyan-400 group-hover:text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
             </button>
-            <button onClick={() => setShowConfirmDelete(true)} disabled={isDeleting} className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 hover:border-red-500/50 transition-all group disabled:opacity-50" title="Delete listing">
+            <button onClick={() => setShowConfirmDelete(true)} disabled={isDeleting} className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 hover:border-red-500/50 transition-all group cursor-pointer disabled:opacity-50" title="Delete listing">
               <svg className="w-4 h-4 text-red-400 group-hover:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </button>
           </div>
@@ -249,8 +249,8 @@ function ListingCard({ listing, isOwner, onEdit, onDelete }: { listing: Listing;
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-3 pt-3 border-t border-zinc-800">
             <p className="text-sm text-zinc-400 mb-3">Delete this listing?</p>
             <div className="flex gap-2">
-              <button onClick={() => setShowConfirmDelete(false)} className="flex-1 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-medium text-white transition-colors">Cancel</button>
-              <button onClick={handleDelete} disabled={isDeleting} className="flex-1 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-sm font-medium text-white transition-colors disabled:opacity-50">
+              <button onClick={() => setShowConfirmDelete(false)} className="flex-1 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-medium text-white transition-colors cursor-pointer">Cancel</button>
+              <button onClick={handleDelete} disabled={isDeleting} className="flex-1 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-sm font-medium text-white transition-colors cursor-pointer disabled:opacity-50">
                 {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>

@@ -232,6 +232,8 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 
 ### Buttons
 
+> ⚠️ **IMPORTANT:** ALL buttons MUST include `cursor-pointer` class. This applies to primary, secondary, ghost, icon buttons, and any clickable element styled as a button.
+
 **Primary button (gradient - use for ONE main CTA only):**
 
 ```html
