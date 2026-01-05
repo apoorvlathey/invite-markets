@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ address: string }> }
 ) {
   try {
-    const { address } = await params; 
+    const { address } = await params;
 
     if (!address) {
       return NextResponse.json(
@@ -24,8 +24,6 @@ export async function GET(
     })
       .sort({ createdAt: -1 })
       .lean();
-
-      console.log("purchases", purchases)
 
     return NextResponse.json({
       success: true,
