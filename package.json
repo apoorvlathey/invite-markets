@@ -10,6 +10,8 @@
     "clean": "rm -rf .next"
   },
   "dependencies": {
+    "@farcaster/frame-wagmi-connector": "^1.0.0",
+    "@farcaster/miniapp-sdk": "^0.2.1",
     "@marsidev/react-turnstile": "^1.4.0",
     "@number-flow/react": "^0.5.10",
     "@solana/sysvars": "^5.0.0",

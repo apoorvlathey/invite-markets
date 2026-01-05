@@ -70,6 +70,23 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-touch-icon.png",
   },
+  other: {
+    "base:app_id": "695bb2fb4d3a403912ed8e27",
+    "fc:miniapp": JSON.stringify({
+      version: "1",
+      imageUrl: "https://invite.markets/opengraph-image",
+      button: {
+        title: "Open App",
+        action: {
+          type: "launch_frame",
+          name: "Open App",
+          url: "https://invite.markets/",
+          splashImageUrl: "https://invite.markets/icon.png",
+          splashBackgroundColor: "#09090b",
+        },
+      },
+    }),
+  },
 };
 
 export default function RootLayout({

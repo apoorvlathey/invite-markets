@@ -489,17 +489,17 @@ function ListingCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4 hover:border-zinc-700 transition-colors"
+      className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-3 sm:p-4 hover:border-zinc-700 transition-colors"
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-3 sm:gap-4">
         <div className="flex-1 min-w-0">
           <Link
             href={`/listing/${listing.slug}`}
-            className="text-base font-semibold text-white hover:text-cyan-400 transition-colors block mb-2"
+            className="text-sm sm:text-base font-semibold text-white hover:text-cyan-400 transition-colors block mb-2"
           >
             {getAppDisplayName(listing.appId, listing.appName, listing.slug)}
           </Link>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-zinc-500">
+          <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 text-xs text-zinc-500">
             <div className="flex items-center gap-1.5">
               <svg
                 className="w-3.5 h-3.5"
@@ -519,7 +519,7 @@ function ListingCard({
               </span>
             </div>
             <span
-              className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+              className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${
                 listing.status === "active"
                   ? "bg-emerald-500/10 text-emerald-400"
                   : listing.status === "sold"
@@ -533,14 +533,14 @@ function ListingCard({
         </div>
 
         {isOwner && listing.status === "active" && (
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={onEdit}
-              className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all group cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all group cursor-pointer"
               title="Edit listing"
             >
               <svg
-                className="w-4 h-4 text-cyan-400 group-hover:text-cyan-300"
+                className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 group-hover:text-cyan-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -556,11 +556,11 @@ function ListingCard({
             <button
               onClick={() => setShowConfirmDelete(true)}
               disabled={isDeleting}
-              className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 hover:border-red-500/50 transition-all group cursor-pointer disabled:opacity-50"
+              className="p-1.5 sm:p-2 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 hover:border-red-500/50 transition-all group cursor-pointer disabled:opacity-50"
               title="Delete listing"
             >
               <svg
-                className="w-4 h-4 text-red-400 group-hover:text-red-300"
+                className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-400 group-hover:text-red-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -837,7 +837,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
         />
       </div>
 
-      <div className="max-w-2xl mx-auto py-16 px-4 md:px-6">
+      <div className="max-w-2xl mx-auto py-8 sm:py-12 md:py-16 px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
@@ -870,10 +870,10 @@ export default function ProfileClient({ address }: ProfileClientProps) {
           transition={{ delay: 0.1 }}
           className="rounded-2xl bg-zinc-950 border border-zinc-800 shadow-premium overflow-hidden"
         >
-          <div className="h-36 bg-zinc-950 relative overflow-hidden">
+          <div className="h-28 sm:h-36 bg-zinc-950 relative overflow-hidden">
             {/* Tiled Avatar Pattern Background */}
             <div
-              className="absolute grid grid-cols-10 gap-4 opacity-[0.15]"
+              className="absolute grid grid-cols-6 sm:grid-cols-10 gap-3 sm:gap-4 opacity-[0.15]"
               style={{
                 transform: "rotate(-20deg) scale(1.8)",
                 transformOrigin: "center center",
@@ -886,13 +886,13 @@ export default function ProfileClient({ address }: ProfileClientProps) {
               {[...Array(70)].map((_, i) => (
                 <div
                   key={i}
-                  className="w-10 h-10 flex items-center justify-center"
+                  className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={displayInfo.avatarUrl || bloAvatar}
                     alt=""
-                    className="w-full h-full rounded-xl object-cover"
+                    className="w-full h-full rounded-lg sm:rounded-xl object-cover"
                   />
                 </div>
               ))}
@@ -924,14 +924,14 @@ export default function ProfileClient({ address }: ProfileClientProps) {
             />
           </div>
 
-          <div className="px-8 -mt-16 relative z-10">
+          <div className="px-4 sm:px-6 md:px-8 -mt-14 sm:-mt-16 relative z-10">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2 }}
               className="relative"
             >
-              <div className="w-24 h-24 rounded-2xl overflow-hidden border-4 border-zinc-950 shadow-xl">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-4 border-zinc-950 shadow-xl">
                 {isLoading ? (
                   <div className="w-full h-full bg-zinc-800 animate-pulse" />
                 ) : (
@@ -952,23 +952,23 @@ export default function ProfileClient({ address }: ProfileClientProps) {
             </motion.div>
           </div>
 
-          <div className="px-8 pt-4 pb-8">
+          <div className="px-4 sm:px-6 md:px-8 pt-3 sm:pt-4 pb-6 sm:pb-8">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
               {isLoading ? (
-                <div className="h-8 w-48 bg-zinc-800 rounded-lg animate-pulse mb-2" />
+                <div className="h-7 sm:h-8 w-40 sm:w-48 bg-zinc-800 rounded-lg animate-pulse mb-2" />
               ) : (
-                <h1 className="text-2xl font-bold text-white mb-1">
+                <h1 className="text-xl sm:text-2xl font-bold text-white mb-1 break-all">
                   {displayInfo.resolvedType === "farcaster" && "@"}
                   {displayInfo.displayName}
                 </h1>
               )}
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-xs text-zinc-500 font-mono">{address}</p>
-                <div className="flex items-center gap-1">
+                <p className="text-xs text-zinc-500 font-mono truncate max-w-[200px] sm:max-w-none">{address}</p>
+                <div className="flex items-center gap-1 shrink-0">
                   <CopyButton text={address} label="" small />
                   <a
                     href={getExplorerAddressUrl(address)}
@@ -1016,7 +1016,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
-              className="mt-6 flex flex-wrap items-stretch gap-3"
+              className="mt-4 sm:mt-6 flex flex-wrap items-stretch gap-2 sm:gap-3"
             >
               {/* Ethos Score */}
               {ethosData && trustLevelConfig && (
@@ -1024,35 +1024,35 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                   href={`https://app.ethos.network/profile/${address}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`inline-flex items-center gap-3 px-4 py-3 rounded-xl ${trustLevelConfig.bg} border ${trustLevelConfig.border} hover:border-opacity-70 transition-colors cursor-pointer group`}
+                  className={`inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl ${trustLevelConfig.bg} border ${trustLevelConfig.border} hover:border-opacity-70 transition-colors cursor-pointer group`}
                 >
                   <Image
                     src="/images/ethos.svg"
                     alt="Ethos"
                     width={24}
                     height={24}
-                    className="opacity-80 group-hover:opacity-100 transition-opacity"
+                    className="w-5 h-5 sm:w-6 sm:h-6 opacity-80 group-hover:opacity-100 transition-opacity"
                   />
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       <span
-                        className={`w-2 h-2 rounded-full ${trustLevelConfig.dot}`}
+                        className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${trustLevelConfig.dot}`}
                       />
                       <span
-                        className={`text-lg font-bold ${trustLevelConfig.text}`}
+                        className={`text-base sm:text-lg font-bold ${trustLevelConfig.text}`}
                       >
                         {ethosData.score}
                       </span>
                     </div>
                     <div className="h-4 w-px bg-zinc-700" />
                     <span
-                      className={`text-sm font-semibold ${trustLevelConfig.text}`}
+                      className={`text-xs sm:text-sm font-semibold ${trustLevelConfig.text}`}
                     >
                       {trustLevelConfig.label}
                     </span>
                   </div>
                   <svg
-                    className={`w-4 h-4 ${trustLevelConfig.text} opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all ml-1`}
+                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${trustLevelConfig.text} opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all ml-0.5 sm:ml-1`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1081,17 +1081,17 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.38 }}
-                  className="mt-6 grid grid-cols-2 gap-3"
+                  className="mt-4 sm:mt-6 grid grid-cols-2 gap-2 sm:gap-3"
                 >
-                  <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-                    <p className="text-xs text-zinc-500 mb-1">Total Sales</p>
-                    <p className="text-2xl font-bold text-white">
+                  <div className="p-3 sm:p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
+                    <p className="text-[10px] sm:text-xs text-zinc-500 mb-1">Total Sales</p>
+                    <p className="text-xl sm:text-2xl font-bold text-white">
                       {sellerStats.salesCount}
                     </p>
                   </div>
-                  <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-                    <p className="text-xs text-zinc-500 mb-1">Revenue</p>
-                    <p className="text-2xl font-bold text-emerald-400">
+                  <div className="p-3 sm:p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
+                    <p className="text-[10px] sm:text-xs text-zinc-500 mb-1">Revenue</p>
+                    <p className="text-xl sm:text-2xl font-bold text-emerald-400">
                       ${sellerStats.totalRevenue.toFixed(2)}
                     </p>
                   </div>
@@ -1108,10 +1108,10 @@ export default function ProfileClient({ address }: ProfileClientProps) {
           className="mt-8"
         >
           {/* Tab Navigation */}
-          <div className="flex gap-1 p-1 rounded-xl bg-zinc-900/50 border border-zinc-800 mb-6">
+          <div className="flex gap-1 p-1 rounded-xl bg-zinc-900/50 border border-zinc-800 mb-4 sm:mb-6">
             <button
               onClick={() => setActiveTab("listings")}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium text-sm transition-all cursor-pointer ${
+              className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 rounded-lg font-medium text-xs sm:text-sm transition-all cursor-pointer ${
                 activeTab === "listings"
                   ? "bg-zinc-800 text-white shadow-sm"
                   : "text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/50"
@@ -1132,14 +1132,14 @@ export default function ProfileClient({ address }: ProfileClientProps) {
               </svg>
               <span>Listings</span>
               {!listingsLoading && activeListings.length > 0 && (
-                <span className="px-1.5 py-0.5 rounded-md bg-purple-500/20 text-purple-400 text-xs font-semibold">
+                <span className="px-1.5 py-0.5 rounded-md bg-purple-500/20 text-purple-400 text-[10px] sm:text-xs font-semibold">
                   {activeListings.length}
                 </span>
               )}
             </button>
             <button
               onClick={() => setActiveTab("purchases")}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium text-sm transition-all cursor-pointer ${
+              className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 rounded-lg font-medium text-xs sm:text-sm transition-all cursor-pointer ${
                 activeTab === "purchases"
                   ? "bg-zinc-800 text-white shadow-sm"
                   : "text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/50"
@@ -1158,9 +1158,10 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                   d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              <span>Purchase History</span>
+              <span className="hidden sm:inline">Purchase History</span>
+              <span className="sm:hidden">Purchases</span>
               {!purchasesLoading && purchases.length > 0 && (
-                <span className="px-1.5 py-0.5 rounded-md bg-cyan-500/20 text-cyan-400 text-xs font-semibold">
+                <span className="px-1.5 py-0.5 rounded-md bg-cyan-500/20 text-cyan-400 text-[10px] sm:text-xs font-semibold">
                   {purchases.length}
                 </span>
               )}

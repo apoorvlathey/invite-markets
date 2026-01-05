@@ -696,15 +696,23 @@ export default function AppPageClient() {
             className="lg:col-span-3"
           >
             {/* Header */}
-            <div className="flex items-center justify-between gap-4 mb-6">
-              <h2 className="text-xl md:text-2xl font-bold text-white">
-                Available Listings
-              </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6">
+              <div className="flex items-center justify-between sm:justify-start gap-3">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
+                  Available Listings
+                </h2>
+                {/* Listing count badge */}
+                {listings.length > 0 && (
+                  <span className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-800 border border-zinc-700 text-sm font-semibold text-white">
+                    {listings.length}
+                  </span>
+                )}
+              </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 {/* Mobile Sort Buttons */}
                 {listings.length > 0 && (
-                  <div className="flex md:hidden items-center gap-2">
+                  <div className="flex md:hidden items-center gap-1.5 sm:gap-2">
                     <span className="text-xs text-zinc-500">Sort:</span>
                     <div className="flex gap-1">
                       {(["price", "date", "ethos"] as SortField[]).map(
@@ -712,7 +720,7 @@ export default function AppPageClient() {
                           <button
                             key={field}
                             onClick={() => handleSort(field)}
-                            className={`px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
+                            className={`px-1.5 sm:px-2 py-1 rounded text-[10px] sm:text-xs font-medium transition-colors cursor-pointer ${
                               sortField === field
                                 ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
                                 : "bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-zinc-600"
@@ -724,7 +732,7 @@ export default function AppPageClient() {
                               ? "Date"
                               : "Ethos"}
                             {sortField === field && (
-                              <span className="ml-1">
+                              <span className="ml-0.5 sm:ml-1">
                                 {sortDirection === "asc" ? "↑" : "↓"}
                               </span>
                             )}
@@ -841,7 +849,7 @@ export default function AppPageClient() {
 
             {/* Listings Table */}
             {!isPageLoading && !error && sortedListings.length > 0 && (
-              <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
+              <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden w-full min-w-0">
                 {/* Table Header with Sortable Columns */}
                 <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 bg-zinc-900/50 border-b border-zinc-800 text-xs font-medium uppercase tracking-wider">
                   <div className="col-span-3 text-zinc-500">Seller</div>
@@ -920,12 +928,12 @@ export default function AppPageClient() {
                         NProgress.start();
                         router.push(`/listing/${listing.slug}`);
                       }}
-                      className="grid grid-cols-1 md:grid-cols-12 gap-4 px-5 py-4 border-b border-zinc-800 last:border-b-0 hover:bg-zinc-900/30 transition-colors cursor-pointer"
+                      className="md:grid md:grid-cols-12 gap-2 sm:gap-4 px-4 sm:px-5 py-4 border-b border-zinc-800 last:border-b-0 hover:bg-zinc-900/30 transition-colors cursor-pointer"
                     >
                       {/* Seller - Mobile: Full width row */}
-                      <div className="col-span-1 md:col-span-3 flex items-center gap-3">
+                      <div className="md:col-span-3 flex items-center gap-3 mb-2 md:mb-0">
                         {/* Avatar */}
-                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-zinc-700">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0 border border-zinc-700">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={
@@ -939,23 +947,26 @@ export default function AppPageClient() {
                           />
                         </div>
 
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           {sellerInfo.resolvedType ? (
                             <>
                               <Link
                                 href={`/profile/${listing.sellerAddress}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="font-medium text-sm text-white flex items-center gap-1 hover:text-cyan-400 transition-colors truncate"
+                                className="font-medium text-sm text-white flex items-center gap-1 hover:text-cyan-400 transition-colors"
                               >
-                                {sellerInfo.resolvedType === "farcaster" && "@"}
-                                {sellerInfo.displayName}
+                                <span className="truncate">
+                                  {sellerInfo.resolvedType === "farcaster" &&
+                                    "@"}
+                                  {sellerInfo.displayName}
+                                </span>
                                 {sellerInfo.resolvedType === "farcaster" && (
                                   <Image
                                     src="/farcaster-logo.svg"
                                     alt="Farcaster"
                                     width={12}
                                     height={12}
-                                    className="inline-block opacity-60"
+                                    className="inline-block opacity-60 shrink-0"
                                   />
                                 )}
                               </Link>
@@ -980,8 +991,8 @@ export default function AppPageClient() {
                       </div>
 
                       {/* Listed - Mobile: Show label */}
-                      <div className="col-span-1 md:col-span-2 flex items-center">
-                        <span className="md:hidden text-xs text-zinc-500 mr-2">
+                      <div className="md:col-span-2 flex items-center mb-1 md:mb-0">
+                        <span className="md:hidden text-xs text-zinc-500 mr-2 w-12">
                           Listed:
                         </span>
                         <span className="text-sm text-zinc-400">
@@ -990,8 +1001,8 @@ export default function AppPageClient() {
                       </div>
 
                       {/* Trust Level */}
-                      <div className="col-span-1 md:col-span-2 flex items-center">
-                        <span className="md:hidden text-xs text-zinc-500 mr-2">
+                      <div className="md:col-span-2 flex items-center mb-1 md:mb-0">
+                        <span className="md:hidden text-xs text-zinc-500 mr-2 w-12">
                           Trust:
                         </span>
                         {listing.ethosData ? (
@@ -1000,7 +1011,7 @@ export default function AppPageClient() {
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${
+                            className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-full ${
                               trustLevelConfig?.bg || "bg-zinc-800"
                             } border ${
                               trustLevelConfig?.border || "border-zinc-700"
@@ -1034,12 +1045,12 @@ export default function AppPageClient() {
                       </div>
 
                       {/* Price */}
-                      <div className="col-span-1 md:col-span-2 flex items-center md:justify-end">
-                        <span className="md:hidden text-xs text-zinc-500 mr-2">
+                      <div className="md:col-span-2 flex items-center md:justify-end mb-2 md:mb-0">
+                        <span className="md:hidden text-xs text-zinc-500 mr-2 w-12">
                           Price:
                         </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-cyan-400">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <span className="text-base sm:text-lg font-bold text-cyan-400">
                             ${listing.priceUsdc}
                           </span>
                           <span className="text-xs text-zinc-500">USDC</span>
@@ -1047,7 +1058,7 @@ export default function AppPageClient() {
                       </div>
 
                       {/* Actions */}
-                      <div className="col-span-1 md:col-span-3 flex items-center gap-2 justify-end">
+                      <div className="md:col-span-3 flex items-center gap-2 justify-end mt-2 md:mt-0 pt-2 md:pt-0 border-t border-zinc-800 md:border-t-0">
                         <QuickBuyButton
                           price={`$${listing.priceUsdc}`}
                           isPending={

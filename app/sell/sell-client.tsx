@@ -411,16 +411,16 @@ export default function SellClient() {
 
   return (
     <div className="min-h-screen text-zinc-100">
-      <div className="max-w-3xl mx-auto py-16 px-4 md:px-6">
+      <div className="max-w-3xl mx-auto py-8 sm:py-12 md:py-16 px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-12 text-center"
+          className="mb-8 sm:mb-12 text-center"
         >
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 bg-linear-to-br from-white to-zinc-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3 sm:mb-4 bg-linear-to-br from-white to-zinc-400 bg-clip-text text-transparent">
             List Your Invite
           </h1>
-          <p className="text-lg text-zinc-400">
+          <p className="text-base sm:text-lg text-zinc-400">
             Sell your exclusive invite link and earn instantly
           </p>
         </motion.div>
@@ -429,9 +429,9 @@ export default function SellClient() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-2xl bg-zinc-950 border border-zinc-800 shadow-premium p-8 md:p-10"
+          className="rounded-2xl bg-zinc-950 border border-zinc-800 shadow-premium p-5 sm:p-8 md:p-10"
         >
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
             {/* App Name Input with Dropdown */}
             <div>
               <label
@@ -518,8 +518,8 @@ export default function SellClient() {
                         }
                       }}
                       required
-                      placeholder="Type app name or select from featured..."
-                      className="w-full px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600"
+                      placeholder="Type app name or select from fe..."
+                      className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 text-sm sm:text-base"
                     />
                     {selectedApp && !showDropdown && (
                       <span className="absolute right-5 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-cyan-500/20 border border-cyan-500/30 text-xs text-cyan-400 font-medium">
@@ -528,7 +528,7 @@ export default function SellClient() {
                     )}
                   </div>
                 ) : (
-                  <div className="w-full px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center gap-2">
+                  <div className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center gap-2">
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-600">
                       <div className="w-5 h-5 rounded overflow-hidden border border-zinc-500 bg-white p-0.5 shrink-0 flex items-center justify-center relative">
                         {/* Fallback letter (always rendered, behind image) */}
@@ -697,8 +697,8 @@ export default function SellClient() {
                 value={formData.inviteUrl}
                 onChange={handleChange}
                 required
-                placeholder="https://app.example.com/invite/..."
-                className="w-full px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600"
+                placeholder="https://app.example.com/invite/.."
+                className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 text-sm sm:text-base"
               />
               <p className="mt-2 text-xs text-zinc-500">
                 The unique invite link you want to sell
@@ -737,7 +737,7 @@ export default function SellClient() {
                   min="0"
                   step="0.01"
                   placeholder="1.00"
-                  className="w-full px-5 py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 text-sm sm:text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <span className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">
                   USDC
@@ -778,11 +778,11 @@ export default function SellClient() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl bg-zinc-900/80 border border-cyan-500/30 p-5"
+                className="rounded-xl bg-zinc-900/80 border border-cyan-500/30 p-4 sm:p-5"
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-2 sm:gap-3">
                   <svg
-                    className="w-5 h-5 text-cyan-400 mt-0.5 shrink-0"
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 mt-0.5 shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -794,11 +794,11 @@ export default function SellClient() {
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <div className="flex-1">
-                    <p className="text-sm text-zinc-300 mb-1">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm text-zinc-300 mb-1">
                       <span className="font-semibold">Payment recipient:</span>
                     </p>
-                    <p className="font-mono text-cyan-400 text-sm break-all">
+                    <p className="font-mono text-cyan-400 text-xs sm:text-sm break-all">
                       {address}
                     </p>
                   </div>
@@ -940,8 +940,8 @@ export default function SellClient() {
           </form>
 
           {/* Info section */}
-          <div className="mt-10 pt-8 border-t border-zinc-800">
-            <h3 className="text-sm font-semibold text-zinc-300 mb-4 flex items-center gap-2">
+          <div className="mt-8 sm:mt-10 pt-6 sm:pt-8 border-t border-zinc-800">
+            <h3 className="text-sm font-semibold text-zinc-300 mb-3 sm:mb-4 flex items-center gap-2">
               <svg
                 className="w-4 h-4 text-cyan-400"
                 fill="none"
@@ -957,21 +957,21 @@ export default function SellClient() {
               </svg>
               How it works
             </h3>
-            <ul className="space-y-3 text-sm text-zinc-400">
-              <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-xs font-bold text-cyan-400">
+            <ul className="space-y-2.5 sm:space-y-3 text-xs sm:text-sm text-zinc-400">
+              <li className="flex items-start gap-2.5 sm:gap-3">
+                <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-[10px] sm:text-xs font-bold text-cyan-400">
                   1
                 </span>
                 <span>Sign the message to create your listing</span>
               </li>
-              <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-xs font-bold text-cyan-400">
+              <li className="flex items-start gap-2.5 sm:gap-3">
+                <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-[10px] sm:text-xs font-bold text-cyan-400">
                   2
                 </span>
                 <span>Buyers discover your invite on the marketplace</span>
               </li>
-              <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-xs font-bold text-cyan-400">
+              <li className="flex items-start gap-2.5 sm:gap-3">
+                <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center shrink-0 text-[10px] sm:text-xs font-bold text-cyan-400">
                   3
                 </span>
                 <span>Receive instant payment when someone purchases</span>
