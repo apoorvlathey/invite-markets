@@ -302,6 +302,22 @@ Goal: **dark-mode first**, **premium**, **crypto-native**, **visually striking**
 />
 ```
 
+**Numeric inputs:**
+
+> ⚠️ **IMPORTANT:** All numeric inputs MUST prevent scroll-to-change behavior and hide the spin buttons (up/down arrows).
+
+```html
+<input
+  type="number"
+  onWheel={(e) => e.currentTarget.blur()}
+  class="... [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+/>
+```
+
+- `onWheel={(e) => e.currentTarget.blur()}` - Prevents accidental value changes when scrolling over the input
+- `[appearance:textfield]` - Hides spin buttons in Firefox
+- `[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none` - Hides spin buttons in Chrome/Safari/Edge
+
 ### Badges
 
 **Status badge (simple, no gradient):**

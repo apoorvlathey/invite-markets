@@ -203,6 +203,14 @@ function EditListingModal({
   const [error, setError] = useState("");
   const [isUrlFocused, setIsUrlFocused] = useState(false);
 
+  // Disable background scrolling when modal is open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -247,7 +255,7 @@ function EditListingModal({
           <h3 className="text-xl font-bold text-white">Edit Listing</h3>
           <button
             onClick={onClose}
-            className="text-zinc-400 hover:text-white transition-colors"
+            className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
           >
             <svg
               className="w-6 h-6"
@@ -276,7 +284,8 @@ function EditListingModal({
               min="0"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white focus:border-cyan-500 focus:outline-none"
+              onWheel={(e) => e.currentTarget.blur()}
+              className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white focus:border-cyan-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               required
             />
           </div>
