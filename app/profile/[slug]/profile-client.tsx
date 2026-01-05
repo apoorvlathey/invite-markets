@@ -298,6 +298,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
   const [listingsLoading, setListingsLoading] = useState(true);
   const [sellerStats, setSellerStats] = useState<SellerStats | null>(null);
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [activeTab, setActiveTab] = useState<"listings" | "purchases">("listings");
   const account = useActiveAccount();
 
   const isOwnProfile = address?.toLowerCase() === account?.address.toLowerCase();
@@ -455,101 +456,126 @@ export default function ProfileClient({ address }: ProfileClientProps) {
           </div>
         </motion.div>
 
-        {/* Listings Section */}
-        {(isOwnProfile && activeListings.length > 0) && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mt-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">{isOwnProfile ? "My Listings" : "Active Listings"}</h2>
-                <p className="text-sm text-zinc-500">
-                  {listingsLoading ? "Loading..." : activeListings.length === 0 ? "No active listings" : `${activeListings.length} active listing${activeListings.length !== 1 ? "s" : ""}`}
-                </p>
-              </div>
-            </div>
-
-            {listingsLoading ? (
-              <div className="space-y-3">
-                {[1, 2].map((i) => <div key={i} className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4 h-24 animate-pulse" />)}
-              </div>
-            ) : activeListings.length > 0 ? (
-              <div className="space-y-3">
-                {activeListings.map((listing) => (
-                  <ListingCard key={listing._id} listing={listing} isOwner={isOwnProfile} onEdit={() => setEditingListing(listing)} onDelete={handleListingUpdate} />
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-xl bg-zinc-950/50 border border-zinc-800/50 p-8 text-center">
-                <div className="w-16 h-16 rounded-full bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                  </svg>
-                </div>
-                <p className="text-zinc-500">{isOwnProfile ? "You haven't created any listings yet. Start selling!" : "This seller has no active listings."}</p>
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* Purchase History Section */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="mt-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* Tabs Section */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mt-8">
+          {/* Tab Navigation */}
+          <div className="flex gap-1 p-1 rounded-xl bg-zinc-900/50 border border-zinc-800 mb-6">
+            <button
+              onClick={() => setActiveTab("listings")}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium text-sm transition-all cursor-pointer ${
+                activeTab === "listings"
+                  ? "bg-zinc-800 text-white shadow-sm"
+                  : "text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/50"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <span>My Listings</span>
+              {!listingsLoading && activeListings.length > 0 && (
+                <span className="px-1.5 py-0.5 rounded-md bg-purple-500/20 text-purple-400 text-xs font-semibold">
+                  {activeListings.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("purchases")}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium text-sm transition-all cursor-pointer ${
+                activeTab === "purchases"
+                  ? "bg-zinc-800 text-white shadow-sm"
+                  : "text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/50"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">Purchase History</h2>
-              <p className="text-sm text-zinc-500">
-                {purchasesLoading ? "Loading..." : purchases.length === 0 ? "No purchases yet" : `${purchases.length} purchase${purchases.length !== 1 ? "s" : ""}`}
-              </p>
-            </div>
+              <span>Purchase History</span>
+              {!purchasesLoading && purchases.length > 0 && (
+                <span className="px-1.5 py-0.5 rounded-md bg-cyan-500/20 text-cyan-400 text-xs font-semibold">
+                  {purchases.length}
+                </span>
+              )}
+            </button>
           </div>
 
-          {purchasesLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => <div key={i} className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4 h-32 animate-pulse" />)}
-            </div>
-          ) : purchases.length > 0 ? (
-            <div className="space-y-3">
-              {purchases.map((purchase) => (
-                <PurchaseCard key={purchase.id} purchase={purchase} sellerInfo={getSellerDisplayInfo(purchase.sellerAddress, resolvedSellers)} />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-xl bg-zinc-950/50 border border-zinc-800/50 p-8 text-center">
-              <div className="w-16 h-16 rounded-full bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-              </div>
-              <p className="text-zinc-500">No purchases yet. Browse the marketplace to get started!</p>
-            </div>
-          )}
+          {/* Tab Content */}
+          <AnimatePresence mode="wait">
+            {activeTab === "listings" ? (
+              <motion.div
+                key="listings"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {listingsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2].map((i) => <div key={i} className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4 h-24 animate-pulse" />)}
+                  </div>
+                ) : activeListings.length > 0 ? (
+                  <div className="space-y-3">
+                    {activeListings.map((listing) => (
+                      <ListingCard key={listing._id} listing={listing} isOwner={isOwnProfile} onEdit={() => setEditingListing(listing)} onDelete={handleListingUpdate} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-xl bg-zinc-950/50 border border-zinc-800/50 p-8 text-center">
+                    <div className="w-16 h-16 rounded-full bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                      </svg>
+                    </div>
+                    <p className="text-zinc-500">{isOwnProfile ? "You haven't created any listings yet." : "This seller has no active listings."}</p>
+                    {isOwnProfile && (
+                      <Link href="/sell" className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-sm font-medium hover:bg-cyan-500/20 transition-colors cursor-pointer">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Create a Listing
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="purchases"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {purchasesLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => <div key={i} className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-4 h-32 animate-pulse" />)}
+                  </div>
+                ) : purchases.length > 0 ? (
+                  <div className="space-y-3">
+                    {purchases.map((purchase) => (
+                      <PurchaseCard key={purchase.id} purchase={purchase} sellerInfo={getSellerDisplayInfo(purchase.sellerAddress, resolvedSellers)} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-xl bg-zinc-950/50 border border-zinc-800/50 p-8 text-center">
+                    <div className="w-16 h-16 rounded-full bg-zinc-800/50 flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      </svg>
+                    </div>
+                    <p className="text-zinc-500">No purchases yet. Browse the marketplace to get started!</p>
+                    <Link href="/apps" className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-sm font-medium hover:bg-cyan-500/20 transition-colors cursor-pointer">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      Browse Marketplace
+                    </Link>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
-        {/* Additional info section */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="mt-8 rounded-xl bg-zinc-950/50 border border-zinc-800/50 p-6">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-zinc-300 mb-1">About this profile</h3>
-              <p className="text-sm text-zinc-500">
-                This is a public profile page for this wallet address on invite.markets. Identity is resolved from{" "}
-                {displayInfo.resolvedType === "farcaster" ? "Farcaster" : displayInfo.resolvedType === "basename" ? "Base Names" : displayInfo.resolvedType === "ens" ? "ENS" : "the blockchain"}.
-              </p>
-            </div>
-          </div>
-        </motion.div>
       </div>
 
       <AnimatePresence>
