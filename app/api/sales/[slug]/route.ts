@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import { Listing } from "@/models/listing";
+import { chainId } from "@/lib/chain";
 
 interface SalesQueryResult {
   priceUsdc: number;
@@ -19,6 +20,7 @@ export async function GET(
     const sales = await Listing.find({
       $or: [{ appId: slug }, { appName: slug }],
       status: "sold",
+      chainId,
     })
       .sort({ updatedAt: -1 })
       .limit(100)

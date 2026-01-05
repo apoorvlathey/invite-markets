@@ -7,6 +7,7 @@ import {
   EIP712_DELETE_TYPES,
   type DeleteListingMessage,
 } from "@/lib/signature";
+import { chainId } from "@/lib/chain";
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -71,6 +72,7 @@ export async function DELETE(request: NextRequest) {
       slug,
       sellerAddress: sellerAddress.toLowerCase(),
       status: "active",
+      chainId,
     });
 
     if (result.deletedCount === 0) {

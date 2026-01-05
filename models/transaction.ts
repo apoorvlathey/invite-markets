@@ -7,6 +7,8 @@ export interface ITransaction {
   buyerAddress: string;
   priceUsdc: number;
   appId: string;
+  // Chain ID for multi-network support (e.g., 84532 for Base Sepolia, 8453 for Base Mainnet)
+  chainId: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,6 +40,11 @@ const TransactionSchema = new mongoose.Schema<ITransaction>(
     appId: {
         type: String,
         required: false,
+    },
+    chainId: {
+      type: Number,
+      required: true,
+      index: true,
     },
   },
   {

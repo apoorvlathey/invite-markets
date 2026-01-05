@@ -10,6 +10,8 @@ export interface IListing {
   // For custom apps, appName will be set (user input)
   appId?: string;
   appName?: string;
+  // Chain ID for multi-network support (e.g., 84532 for Base Sepolia, 8453 for Base Mainnet)
+  chainId: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,11 +51,19 @@ const ListingSchema = new mongoose.Schema<IListing>(
       type: String,
       required: false,
     },
+    chainId: {
+      type: Number,
+      required: true,
+      index: true,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+// Compound index for efficient chain-specific queries
+ListingSchema.index({ chainId: 1, status: 1 });
 
 const Listing: Model<IListing> =
   (mongoose.models.Listing as Model<IListing>) ||

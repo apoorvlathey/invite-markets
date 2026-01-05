@@ -10,6 +10,7 @@ import {
 } from "@/lib/signature";
 import { getDomain, getFaviconUrl } from "@/lib/url";
 import { featuredApps } from "@/data/featuredApps";
+import { chainId } from "@/lib/chain";
 
 // Create a custom nanoid with URL-safe characters
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 8);
@@ -38,7 +39,7 @@ export async function GET() {
   try {
     await connectDB();
 
-    const listings = await Listing.find({}).sort({ createdAt: -1 }).lean();
+    const listings = await Listing.find({ chainId }).sort({ createdAt: -1 }).lean();
 
     return NextResponse.json({
       success: true,
@@ -210,6 +211,7 @@ export async function POST(request: NextRequest) {
       priceUsdc,
       sellerAddress: sellerAddress.toLowerCase(),
       status: "active" as const,
+      chainId,
       ...(appId && appId.trim() ? { appId: appId.trim() } : {}),
       ...(appName && appName.trim() ? { appName: appName.trim() } : {}),
     };

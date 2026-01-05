@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Transaction } from "@/models/transaction";
 import { connectDB } from "@/lib/mongoose";
+import { chainId } from "@/lib/chain";
 
 export async function GET(
   request: Request,
@@ -21,6 +22,7 @@ export async function GET(
     // Fetch all purchases where the user is the buyer
     const purchases = await Transaction.find({
       buyerAddress: address.toLowerCase(),
+      chainId,
     })
       .sort({ createdAt: -1 })
       .lean();

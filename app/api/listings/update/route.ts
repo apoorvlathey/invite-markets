@@ -7,6 +7,7 @@ import {
   EIP712_UPDATE_TYPES,
   type UpdateListingMessage,
 } from "@/lib/signature";
+import { chainId } from "@/lib/chain";
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -84,6 +85,7 @@ export async function PATCH(request: NextRequest) {
       slug,
       sellerAddress: sellerAddress.toLowerCase(),
       status: "active",
+      chainId,
     });
 
     if (!listing) {

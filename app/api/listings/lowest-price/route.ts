@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import { Listing } from "@/models/listing";
+import { chainId } from "@/lib/chain";
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
     // Build query based on whether it's a featured app (appId) or custom app (appName)
     const query: Record<string, unknown> = {
       status: "active",
+      chainId,
     };
 
     if (appId) {

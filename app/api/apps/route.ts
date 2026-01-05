@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/mongoose";
 import { Listing } from "@/models/listing";
 import { featuredApps } from "@/data/featuredApps";
 import { getDomain, getFaviconUrl } from "@/lib/url";
+import { chainId } from "@/lib/chain";
 
 interface AppAggregation {
   _id: string | null;
@@ -37,6 +38,9 @@ export async function GET() {
     // Aggregate listings by app
     // Group by appId first (for featured apps), then by appName (for custom apps)
     const aggregations = await Listing.aggregate([
+      {
+        $match: { chainId },
+      },
       {
         $group: {
           _id: { $ifNull: ["$appId", "$appName"] },

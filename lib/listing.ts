@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/mongoose";
 import { Listing } from "@/models/listing";
 import { getDomain, getFaviconUrl } from "@/lib/url";
 import { featuredApps } from "@/data/featuredApps";
+import { chainId } from "@/lib/chain";
 
 /**
  * Gets the app icon URL for a listing.
@@ -26,7 +27,7 @@ function getAppIconUrl(listing: { appId?: string; inviteUrl: string }): string {
 export async function getListingBySlug(slug: string, getInvite: boolean) {
   await connectDB();
 
-  const listing = await Listing.findOne({ slug });
+  const listing = await Listing.findOne({ slug, chainId });
 
   if (!listing) return null;
 
@@ -50,6 +51,7 @@ export async function getSoldListingsBySlug(slug: string) {
   const sales = await Listing.find({
     appId: slug,
     status: "sold",
+    chainId,
   })
     .sort({ completedAt: -1 })
     .limit(100)
@@ -67,7 +69,7 @@ export async function getSoldListingsBySlug(slug: string) {
 
 export async function markListingAsSold(slug: string) {
   return Listing.findOneAndUpdate(
-    { slug },
+    { slug, chainId },
     {
       status: "sold",
       updatedAt: new Date(),

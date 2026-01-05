@@ -4,8 +4,8 @@ import { createThirdwebClient } from "thirdweb";
 import { facilitator, settlePayment } from "thirdweb/x402";
 import { base, baseSepolia } from "thirdweb/chains";
 import { Transaction } from "@/models/transaction";
+import { chainId, isTestnet } from "@/lib/chain";
 
-const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET === "true";
 const network = isTestnet ? baseSepolia : base;
 
 const client = createThirdwebClient({
@@ -59,7 +59,8 @@ export async function POST(
       sellerAddress: listing.sellerAddress,
       buyerAddress: result.paymentReceipt.payer?.toLowerCase(),
       priceUsdc: listing.priceUsdc,
-      appId: listing.appId
+      appId: listing.appId,
+      chainId,
     });
   } catch (error) {
     console.error("Failed to create transaction record:", error);
