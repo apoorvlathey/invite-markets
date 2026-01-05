@@ -7,8 +7,8 @@
   "miniapp": {
     "version": "1",
     "name": "Invite Markets",
-    "subtitle": "Buy and sell early access to the hottest web3 apps!",
-    "tagline": "Buy and sell early access to the hottest web3 apps!",
+    "subtitle": "Trade web3 app invites",
+    "tagline": "Buy & sell app invites",
     "description": "Buy and sell early access to the hottest web3 apps — instantly. Powered by x402.",
     "iconUrl": "https://invite.markets/icon.png",
     "homeUrl": "https://invite.markets/",
