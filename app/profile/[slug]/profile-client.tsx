@@ -201,6 +201,7 @@ function EditListingModal({
   const [appName, setAppName] = useState(listing.appName || "");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isUrlFocused, setIsUrlFocused] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -285,9 +286,11 @@ function EditListingModal({
               Invite URL
             </label>
             <input
-              type="url"
+              type={isUrlFocused ? "text" : "password"}
               value={inviteUrl}
               onChange={(e) => setInviteUrl(e.target.value)}
+              onFocus={() => setIsUrlFocused(true)}
+              onBlur={() => setIsUrlFocused(false)}
               className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white focus:border-cyan-500 focus:outline-none"
               required
             />
