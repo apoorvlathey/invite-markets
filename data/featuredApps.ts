@@ -19,6 +19,33 @@ export const featuredApps: {
     chainIds: [base.id, baseSepolia.id],
   },
   {
+    id: "cascade",
+    appName: "Cascade",
+    siteUrl: "https://cascade.xyz/",
+    appIconUrl: "/images/appIcons/cascade.svg",
+    description:
+      "Trade crypto, U.S. equities, private markets 24/7. Fully accessible in the U.S. — no geo-blocking. Onboard with wire, ACH or stablecoin.",
+    chainIds: [base.id, baseSepolia.id],
+  },
+  {
+    id: "hyENA",
+    appName: "hyENA",
+    siteUrl: "https://app.hyena.trade/",
+    appIconUrl: "/images/appIcons/hyENA.png",
+    description:
+      "Trade any asset on earth 24/7 with maximum capital efficiency.",
+    chainIds: [base.id, baseSepolia.id],
+  },
+  {
+    id: "nado",
+    appName: "Nado",
+    siteUrl: "https://nado.xyz/",
+    appIconUrl: "/images/appIcons/nado.avif",
+    description:
+      "Orderbook on Ink L2 fusing CEX speed (5-15ms latency) & DeFi security. Trade spot & perps via a unified cross-margin system with deep liquidity",
+    chainIds: [base.id, baseSepolia.id],
+  },
+  {
     id: "base-app",
     appName: "Base App",
     siteUrl: "https://join.base.app/",
