@@ -446,9 +446,30 @@ export default function Home() {
         className="relative px-4 md:px-6 lg:px-8 pb-24 md:pb-32 max-w-7xl mx-auto scroll-mt-24"
       >
         <div className="flex items-center justify-between mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Latest Listings
-          </h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              Latest Listings
+            </h2>
+            <Link
+              href="/listings"
+              className="flex items-center gap-1 text-sm font-medium text-zinc-400 hover:text-cyan-400 transition-colors translate-y-0.5"
+            >
+              View All
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </Link>
+          </div>
 
           {/* Auto-refresh countdown with manual refresh button */}
           <RefreshIndicator

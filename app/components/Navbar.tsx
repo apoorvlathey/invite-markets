@@ -34,6 +34,12 @@ export function Navbar() {
               Explore
             </Link>
             <Link
+              href="/listings"
+              className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-150 rounded-lg hover:bg-white/5"
+            >
+              All Listings
+            </Link>
+            <Link
               href="/apps"
               className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-150 rounded-lg hover:bg-white/5"
             >
