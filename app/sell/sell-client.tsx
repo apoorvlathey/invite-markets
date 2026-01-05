@@ -814,6 +814,7 @@ export default function SellClient() {
                     onChange={handleChange}
                     required={listingType === "invite_link"}
                     placeholder="https://app.example.com/invite/.."
+                    autoComplete="off"
                     className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 text-sm sm:text-base"
                   />
                   <p className="mt-2 text-xs text-zinc-500">
@@ -910,6 +911,7 @@ export default function SellClient() {
                       onChange={handleChange}
                       required={listingType === "access_code"}
                       placeholder="Enter the access code"
+                      autoComplete="off"
                       className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 text-sm sm:text-base font-mono"
                     />
                     <p className="mt-2 text-xs text-zinc-500">
