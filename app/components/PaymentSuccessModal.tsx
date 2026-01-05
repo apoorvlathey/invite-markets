@@ -102,7 +102,7 @@ export function PaymentSuccessModal({
                         onClick={() => setShowConfirmClose(false)}
                         className="flex-1 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg font-medium text-red-400 transition-colors cursor-pointer"
                       >
-                        Go Back
+                        Back
                       </button>
                     </div>
                   </motion.div>

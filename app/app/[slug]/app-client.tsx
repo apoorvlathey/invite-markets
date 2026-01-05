@@ -456,11 +456,12 @@ export default function AppPageClient() {
           <p className="text-zinc-400 mb-8">
             This app doesn&apos;t exist in our marketplace.
           </p>
-          <Link href="/">
-            <button className="px-6 py-3 rounded-xl bg-linear-to-r from-cyan-500 to-blue-500 font-semibold text-black cursor-pointer hover:from-cyan-400 hover:to-blue-400 transition-all">
-              Back to Marketplace
-            </button>
-          </Link>
+          <button
+            onClick={() => router.back()}
+            className="px-6 py-3 rounded-xl bg-linear-to-r from-cyan-500 to-blue-500 font-semibold text-black cursor-pointer hover:from-cyan-400 hover:to-blue-400 transition-all"
+          >
+            Back
+          </button>
         </motion.div>
       </div>
     );
@@ -473,10 +474,11 @@ export default function AppPageClient() {
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
+          className="mb-8"
         >
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-zinc-400 hover:text-cyan-400 transition-colors mb-8 group"
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-2 text-zinc-400 hover:text-cyan-400 transition-colors cursor-pointer group"
           >
             <svg
               className="w-4 h-4 group-hover:-translate-x-1 transition-transform"
@@ -491,8 +493,8 @@ export default function AppPageClient() {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            Back to Marketplace
-          </Link>
+            <span className="text-sm font-medium">Back</span>
+          </button>
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
