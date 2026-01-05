@@ -1,6 +1,6 @@
 import { createConfig, http } from "wagmi";
 import { base, baseSepolia } from "wagmi/chains";
-import { farcasterFrame } from "@farcaster/frame-wagmi-connector";
+import { farcasterFrame } from "@farcaster/miniapp-wagmi-connector";
 
 const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET === "true";
 

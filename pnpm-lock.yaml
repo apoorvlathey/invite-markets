@@ -8,12 +8,12 @@ importers:
 
   .:
     dependencies:
-      '@farcaster/frame-wagmi-connector':
-        specifier: ^1.0.0
-        version: 1.0.0(@farcaster/frame-sdk@0.1.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(@wagmi/core@2.22.1(@tanstack/query-core@5.90.6)(@types/react@18.3.27)(immer@11.1.0)(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.3))(viem@2.38.6(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(viem@2.38.6(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))
       '@farcaster/miniapp-sdk':
         specifier: ^0.2.1
         version: 0.2.1(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@farcaster/miniapp-wagmi-connector':
+        specifier: ^1.1.0
+        version: 1.1.0(@farcaster/miniapp-sdk@0.2.1(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(@wagmi/core@2.22.1(@tanstack/query-core@5.90.6)(@types/react@18.3.27)(immer@11.1.0)(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.3))(viem@2.38.6(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(viem@2.38.6(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))
       '@marsidev/react-turnstile':
         specifier: ^1.4.0
         version: 1.4.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -339,31 +339,21 @@ packages:
     resolution: {integrity: sha512-zQ0IqbdX8FZ9aw11vP+dZkKDkS+kgIvQPHnSAXzP9pLu+Rfu3D3XEeLbicvoXJTYnhZiPmsZUxgdzXwNKxRPbA==}
     engines: {node: '>=14'}
 
-  '@farcaster/frame-sdk@0.1.12':
-    resolution: {integrity: sha512-qlikvkxsrsvKGutr3PM3Yvsuni2Fku15aPagrCyHZWbYAJrZ4mRJM6u9S8eLAXMMnYd9gJ9yor6COYgmZMBOgQ==}
-    engines: {node: '>=22.11.0'}
-
-  '@farcaster/frame-wagmi-connector@1.0.0':
-    resolution: {integrity: sha512-65zmI54PrJO88CYM3QrEXKgQIb+DD/h/U32tAaSRx+dT/AIG5w0tSQgON1zfLinNK8NYeBVRD40DBbR2vly3AQ==}
-    engines: {node: '>=22.11.0'}
-    peerDependencies:
-      '@farcaster/frame-sdk': ^0.1.0
-      '@wagmi/core': ^2.14.1
-      viem: ^2.21.55
-
   '@farcaster/miniapp-core@0.4.1':
     resolution: {integrity: sha512-20FxHTRToYUKx7CQ8PvIy9OoQ6XjdmF1pRMS7dsj37qdqjVDeEkYoK8yXwnoReZoJRcYwIg8P3i6V8bTWNR5mg==}
 
   '@farcaster/miniapp-sdk@0.2.1':
     resolution: {integrity: sha512-2SnDeOtDdlN1lGQt7UyH2jkrZRQDOkmhcrlzNWazYChyPh9XfV8+9fMS+Lr/E2pEws9Q40Xl9POrCzdpUC19lg==}
 
+  '@farcaster/miniapp-wagmi-connector@1.1.0':
+    resolution: {integrity: sha512-gf0nDx9nNJ6hJXbFBCgiTitb0eEqBvCU/njcyTXf7ebZhT0pzOrarOod2dkeisU5Py+WWjFyOVcqmeo4G3IvDA==}
+    peerDependencies:
+      '@farcaster/miniapp-sdk': ^0.2.0
+      '@wagmi/core': ^2.14.1
+      viem: ^2.21.55
+
   '@farcaster/quick-auth@0.0.6':
     resolution: {integrity: sha512-tiZndhpfDtEhaKlkmS5cVDuS+A/tafqZT3y9I44rC69m3beJok6e8dIH2JhxVy3EvOWTyTBnrmNn6GOOh+qK6A==}
-    peerDependencies:
-      typescript: 5.8.3
-
-  '@farcaster/quick-auth@0.0.8':
-    resolution: {integrity: sha512-NRIq1BcbcQCC6xBF5owfckkY00xKQVpqhpLNl5rICVpl0xeDsiVbkenIrHaUuyjtCK2W28YVc2ZCFRyz9ERHKg==}
     peerDependencies:
       typescript: 5.8.3
 
@@ -5781,26 +5771,6 @@ snapshots:
       ethereum-cryptography: 2.2.1
       micro-ftch: 0.3.1
 
-  '@farcaster/frame-sdk@0.1.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)':
-    dependencies:
-      '@farcaster/miniapp-sdk': 0.2.1(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
-      '@farcaster/quick-auth': 0.0.8(typescript@5.9.3)
-      comlink: 4.4.2
-      eventemitter3: 5.0.1
-      ox: 0.4.4(typescript@5.9.3)(zod@3.25.76)
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - typescript
-      - utf-8-validate
-      - zod
-
-  '@farcaster/frame-wagmi-connector@1.0.0(@farcaster/frame-sdk@0.1.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(@wagmi/core@2.22.1(@tanstack/query-core@5.90.6)(@types/react@18.3.27)(immer@11.1.0)(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.3))(viem@2.38.6(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(viem@2.38.6(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))':
-    dependencies:
-      '@farcaster/frame-sdk': 0.1.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
-      '@wagmi/core': 2.22.1(@tanstack/query-core@5.90.6)(@types/react@18.3.27)(immer@11.1.0)(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.3))(viem@2.38.6(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))
-      viem: 2.38.6(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
-
   '@farcaster/miniapp-core@0.4.1(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@solana/web3.js': 1.98.4(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)
@@ -5826,13 +5796,13 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@farcaster/quick-auth@0.0.6(typescript@5.9.3)':
+  '@farcaster/miniapp-wagmi-connector@1.1.0(@farcaster/miniapp-sdk@0.2.1(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))(@wagmi/core@2.22.1(@tanstack/query-core@5.90.6)(@types/react@18.3.27)(immer@11.1.0)(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.3))(viem@2.38.6(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)))(viem@2.38.6(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))':
     dependencies:
-      jose: 5.10.0
-      typescript: 5.9.3
-      zod: 3.25.76
+      '@farcaster/miniapp-sdk': 0.2.1(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@wagmi/core': 2.22.1(@tanstack/query-core@5.90.6)(@types/react@18.3.27)(immer@11.1.0)(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.3))(viem@2.38.6(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76))
+      viem: 2.38.6(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
 
-  '@farcaster/quick-auth@0.0.8(typescript@5.9.3)':
+  '@farcaster/quick-auth@0.0.6(typescript@5.9.3)':
     dependencies:
       jose: 5.10.0
       typescript: 5.9.3

@@ -21,9 +21,10 @@ export function FarcasterProvider({ children }: { children: React.ReactNode }) {
       const success = await initFarcasterSDK();
 
       if (success && !isConnected) {
-        // Find the Farcaster connector
+        // Find the Farcaster connector (miniapp-wagmi-connector uses "farcaster" as id)
         const farcasterConnector = connectors.find(
           (c) =>
+            c.id === "farcaster" ||
             c.id === "farcasterFrame" ||
             c.name.toLowerCase().includes("farcaster")
         );
