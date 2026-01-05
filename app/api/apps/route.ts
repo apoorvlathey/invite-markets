@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import { Listing } from "@/models/listing";
-import { featuredApps } from "@/data/featuredApps";
+import { featuredApps, getFeaturedAppsForChain } from "@/data/featuredApps";
 import { getDomain, getFaviconUrl } from "@/lib/url";
 import { chainId } from "@/lib/chain";
 
@@ -76,8 +76,8 @@ export async function GET() {
     // Build the apps list
     const appsMap = new Map<string, AppData>();
 
-    // First, add all featured apps (even if they have no listings)
-    for (const featuredApp of featuredApps) {
+    // First, add all featured apps for the current chain (even if they have no listings)
+    for (const featuredApp of getFeaturedAppsForChain()) {
       appsMap.set(featuredApp.id, {
         id: featuredApp.id,
         name: featuredApp.appName,

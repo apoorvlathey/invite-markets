@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import NProgress from "nprogress";
 import Image from "next/image";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { featuredApps } from "@/data/featuredApps";
+import { getFeaturedAppsForChain } from "@/data/featuredApps";
 import { timeAgo } from "@/lib/time";
 import { usePurchase, LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
 import { QuickBuyButton } from "@/app/components/QuickBuyButton";
@@ -124,9 +124,9 @@ export default function Home() {
     [listingsData?.rawListings]
   );
 
-  // Compute featured apps with their listing counts
+  // Compute featured apps with their listing counts (filtered by current chain)
   const featuredAppsWithCounts: FeaturedAppWithCount[] = useMemo(() => {
-    return featuredApps.map((app) => {
+    return getFeaturedAppsForChain().map((app) => {
       const count = rawListings.filter((l) => l.appId === app.id).length;
       return {
         ...app,

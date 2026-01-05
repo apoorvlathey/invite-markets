@@ -18,7 +18,7 @@ import {
   type ListingMessage,
   type ListingType,
 } from "@/lib/signature";
-import { featuredApps } from "@/data/featuredApps";
+import { getFeaturedAppsForChain } from "@/data/featuredApps";
 import { LISTINGS_QUERY_KEY } from "@/hooks/usePurchase";
 import { type Listing, type ListingsData } from "@/lib/listings";
 import { chainId as defaultChainId } from "@/lib/chain";
@@ -98,8 +98,8 @@ export default function SellClient() {
     fetchExistingApps();
   }, []);
 
-  // Filter featured apps based on input
-  const filteredFeaturedApps = featuredApps.filter((app) =>
+  // Filter featured apps based on input (already filtered by chain)
+  const filteredFeaturedApps = getFeaturedAppsForChain().filter((app) =>
     app.appName.toLowerCase().includes(formData.appInput.toLowerCase())
   );
 

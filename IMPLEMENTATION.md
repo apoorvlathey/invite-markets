@@ -59,7 +59,41 @@ A marketplace for buying and selling invite links and access codes with MongoDB 
 - Status tracking for listing lifecycle
 - Listing type support for both invite links and access codes
 
-### 3. EIP-712 Signatures
+### 3. Featured Apps Configuration
+
+**File**: `data/featuredApps.ts`
+
+Featured apps are pre-configured apps that appear prominently in the UI. Each app specifies which chains it's available on.
+
+```typescript
+{
+  id: string;           // Unique identifier (used as appId in listings)
+  appName: string;      // Display name
+  siteUrl: string;      // App website URL
+  appIconUrl: string;   // Path to app icon
+  description: string;  // App description
+  chainIds: number[];   // Chains where this app is featured (e.g., [8453, 84532])
+}
+```
+
+**Chain Filtering:**
+
+The `getFeaturedAppsForChain()` helper filters featured apps based on the current `chainId` from `lib/chain.ts`:
+
+- **Mainnet** (`chainId: 8453`): Shows apps with `8453` in their `chainIds` array
+- **Testnet** (`chainId: 84532`): Shows apps with `84532` in their `chainIds` array
+
+**Where filtering is applied:**
+
+| Location                               | Usage                  |
+| -------------------------------------- | ---------------------- |
+| Homepage (`app/page.tsx`)              | Featured apps carousel |
+| Sell page (`app/sell/sell-client.tsx`) | App selection dropdown |
+| Apps API (`app/api/apps/route.ts`)     | Building apps list     |
+
+**Note:** When looking up app info by ID (e.g., for displaying listing details), the full `featuredApps` array is used to ensure existing listings display correctly regardless of current chain.
+
+### 4. EIP-712 Signatures
 
 **File**: `lib/signature.ts`
 
@@ -99,7 +133,7 @@ All listing operations (create, update, delete) require EIP-712 typed data signa
 }
 ```
 
-### 4. API Endpoints
+### 5. API Endpoints
 
 #### Create Listing - POST `/api/listings`
 
@@ -310,7 +344,7 @@ x-seller-message: <base64 encoded message>
 }
 ```
 
-### 5. User Interface
+### 6. User Interface
 
 #### Sell Page - `/sell`
 
