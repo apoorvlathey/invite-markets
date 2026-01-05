@@ -110,7 +110,15 @@ function getTrustLevelConfig(level: string) {
   }
 }
 
-function CopyButton({ text, label }: { text: string; label: string }) {
+function CopyButton({
+  text,
+  label,
+  small = false,
+}: {
+  text: string;
+  label: string;
+  small?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
   const handleCopy = async () => {
     try {
@@ -122,15 +130,24 @@ function CopyButton({ text, label }: { text: string; label: string }) {
     }
   };
 
+  const isIconOnly = !label;
+  const iconSize = small ? "w-3 h-3" : "w-4 h-4";
+  const buttonSize = small
+    ? "w-6 h-6 rounded"
+    : isIconOnly
+    ? "w-10 h-10 rounded-lg"
+    : "px-4 py-2.5 rounded-xl";
+
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 hover:border-zinc-600 transition-all cursor-pointer text-sm font-medium"
+      className={`flex items-center justify-center gap-2 bg-zinc-800/80 hover:bg-zinc-700 transition-all cursor-pointer text-sm font-medium ${buttonSize}`}
+      title={isIconOnly ? (copied ? "Copied!" : "Copy Address") : undefined}
     >
       {copied ? (
         <>
           <svg
-            className="w-4 h-4 text-emerald-400"
+            className={`${iconSize} text-emerald-400`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -142,12 +159,14 @@ function CopyButton({ text, label }: { text: string; label: string }) {
               d="M5 13l4 4L19 7"
             />
           </svg>
-          <span className="text-emerald-400">Copied!</span>
+          {!isIconOnly && !small && (
+            <span className="text-emerald-400">Copied!</span>
+          )}
         </>
       ) : (
         <>
           <svg
-            className="w-4 h-4 text-zinc-400"
+            className={`${iconSize} text-zinc-400`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -159,7 +178,9 @@ function CopyButton({ text, label }: { text: string; label: string }) {
               d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
             />
           </svg>
-          <span className="text-zinc-300">{label}</span>
+          {!isIconOnly && !small && (
+            <span className="text-zinc-300">{label}</span>
+          )}
         </>
       )}
     </button>
@@ -771,11 +792,50 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                   {displayInfo.displayName}
                 </h1>
               )}
-              {displayInfo.displayName !== displayInfo.shortAddress && (
-                <p className="text-sm text-zinc-500 font-mono">
-                  {displayInfo.shortAddress}
-                </p>
-              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-xs text-zinc-500 font-mono">{address}</p>
+                <div className="flex items-center gap-1">
+                  <CopyButton text={address} label="" small />
+                  <a
+                    href={getExplorerAddressUrl(address)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center w-6 h-6 rounded bg-zinc-800/80 hover:bg-zinc-700 transition-all cursor-pointer"
+                    title="View on Explorer"
+                  >
+                    <svg
+                      className="w-3 h-3 text-zinc-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                  </a>
+                  {displayInfo.resolvedType === "farcaster" && (
+                    <a
+                      href={`https://farcaster.xyz/${displayInfo.displayName}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center w-6 h-6 rounded bg-purple-500/20 hover:bg-purple-500/30 transition-all cursor-pointer"
+                      title="View on Farcaster"
+                    >
+                      <Image
+                        src="/farcaster-logo.svg"
+                        alt="Farcaster"
+                        width={12}
+                        height={12}
+                        className="opacity-80"
+                      />
+                    </a>
+                  )}
+                </div>
+              </div>
             </motion.div>
 
             {ethosData && trustLevelConfig && (
@@ -855,67 +915,6 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                   </div>
                 </motion.div>
               )}
-
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="mt-6 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800"
-            >
-              <p className="text-xs text-zinc-500 mb-2 font-medium">
-                Wallet Address
-              </p>
-              <p className="font-mono text-sm text-zinc-300 break-all">
-                {address}
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="mt-6 flex flex-wrap gap-3"
-            >
-              <CopyButton text={address} label="Copy Address" />
-              <a
-                href={getExplorerAddressUrl(address)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 hover:border-zinc-600 transition-all cursor-pointer text-sm font-medium text-zinc-300"
-              >
-                <svg
-                  className="w-4 h-4 text-zinc-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-                View on Explorer
-              </a>
-              {displayInfo.resolvedType === "farcaster" && (
-                <a
-                  href={`https://farcaster.xyz/${displayInfo.displayName}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 hover:border-purple-500/50 transition-all cursor-pointer text-sm font-medium text-purple-300"
-                >
-                  <Image
-                    src="/farcaster-logo.svg"
-                    alt="Farcaster"
-                    width={16}
-                    height={16}
-                    className="opacity-80"
-                  />
-                  View on Farcaster
-                </a>
-              )}
-            </motion.div>
           </div>
         </motion.div>
 
