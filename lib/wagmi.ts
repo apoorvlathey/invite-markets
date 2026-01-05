@@ -1,5 +1,6 @@
 import { createConfig, http } from "wagmi";
 import { base, baseSepolia } from "wagmi/chains";
+import { farcasterFrame } from "@farcaster/frame-wagmi-connector";
 
 const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET === "true";
 
@@ -9,6 +10,7 @@ export const config = isTestnet
       transports: {
         [baseSepolia.id]: http(),
       },
+      connectors: [farcasterFrame()],
       ssr: false,
     })
   : createConfig({
@@ -16,5 +18,6 @@ export const config = isTestnet
       transports: {
         [base.id]: http(),
       },
+      connectors: [farcasterFrame()],
       ssr: false,
     });

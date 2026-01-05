@@ -1,0 +1,26 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjE0MjQxLCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4OTRmRDU1RjlkRWJmRTNBMjgwNTM4MjMzNDEyM0ExNUZjMmVBYjI3NSJ9",
+    "payload": "eyJkb21haW4iOiJpbnZpdGUubWFya2V0cyJ9",
+    "signature": "wE9k0P2rlp7g9RFtdjzB07c+oGvBOkqRtOEKuKp4sXMgTK00NZdYOcbwyxTrqXN1Atq4ayv4gNQZdt8PYJkwABw="
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Invite Markets",
+    "subtitle": "Buy and sell early access to the hottest web3 apps!",
+    "tagline": "Buy and sell early access to the hottest web3 apps!",
+    "description": "Buy and sell early access to the hottest web3 apps — instantly. Powered by x402.",
+    "iconUrl": "https://invite.markets/icon.png",
+    "homeUrl": "https://invite.markets/",
+    "heroImageUrl": "https://invite.markets/opengraph-image",
+    "ogImageUrl": "https://invite.markets/opengraph-image",
+    "ogTitle": "Invite Markets",
+    "ogDescription": "Buy and sell early access to the hottest web3 apps — instantly. Powered by x402.",
+    "buttonTitle": "Open App",
+    "splashImageUrl": "https://invite.markets/icon.png",
+    "splashBackgroundColor": "#09090b",
+    "requiredChains": ["eip155:8453"],
+    "primaryCategory": "shopping",
+    "tags": ["invite", "access", "apps", "marketplace"]
+  }
+}
