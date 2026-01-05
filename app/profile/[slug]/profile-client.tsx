@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,10 +10,17 @@ import {
   useResolveAddresses,
   getSellerDisplayInfo,
 } from "@/lib/resolve-addresses";
-import { getExplorerAddressUrl } from "@/lib/chain";
+import { getExplorerAddressUrl, chainId as defaultChainId } from "@/lib/chain";
 import { fetchEthosData, type EthosData } from "@/lib/ethos-scores";
 import { featuredApps } from "@/data/featuredApps";
-import { useActiveAccount } from "thirdweb/react";
+import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
+import {
+  getEIP712Domain,
+  EIP712_UPDATE_TYPES,
+  EIP712_DELETE_TYPES,
+  type UpdateListingMessage,
+  type DeleteListingMessage,
+} from "@/lib/signature";
 
 // Helper to resolve appId to proper app name
 function getAppDisplayName(
@@ -191,10 +198,14 @@ function EditListingModal({
   listing,
   onClose,
   onUpdate,
+  account,
+  chainId,
 }: {
   listing: Listing;
   onClose: () => void;
   onUpdate: () => void;
+  account: ReturnType<typeof useActiveAccount>;
+  chainId: number;
 }) {
   const [price, setPrice] = useState(listing.priceUsdc.toString());
   const [inviteUrl, setInviteUrl] = useState(listing.inviteUrl);
@@ -216,16 +227,45 @@ function EditListingModal({
     setIsLoading(true);
     setError("");
 
+    if (!account) {
+      setError("Please connect your wallet first");
+      setIsLoading(false);
+      return;
+    }
+
     try {
+      const nonce = BigInt(Date.now());
+      const appNameValue = listing.appId ? "" : appName;
+
+      const message: UpdateListingMessage = {
+        slug: listing.slug,
+        inviteUrl,
+        priceUsdc: price,
+        sellerAddress: account.address as `0x${string}`,
+        appName: appNameValue,
+        nonce,
+      };
+
+      // Sign typed data using thirdweb account
+      const signature = await account.signTypedData({
+        domain: getEIP712Domain(chainId),
+        types: EIP712_UPDATE_TYPES,
+        primaryType: "UpdateListing" as const,
+        message,
+      });
+
       const response = await fetch("/api/listings/update", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           slug: listing.slug,
-          sellerAddress: listing.sellerAddress,
+          sellerAddress: account.address,
           priceUsdc: parseFloat(price),
           inviteUrl,
           appName: listing.appId ? undefined : appName,
+          nonce: nonce.toString(),
+          chainId,
+          signature,
         }),
       });
 
@@ -237,7 +277,20 @@ function EditListingModal({
         setError(data.error || "Failed to update listing");
       }
     } catch (err) {
-      setError(`Failed to update listing: ${err}`);
+      if (err instanceof Error) {
+        if (
+          err.message.includes("User rejected") ||
+          err.message.includes("user rejected")
+        ) {
+          setError(
+            "Signature rejected. Please sign the message to update the listing."
+          );
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError(`Failed to update listing: ${err}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -353,30 +406,77 @@ function ListingCard({
   isOwner,
   onEdit,
   onDelete,
+  account,
+  chainId,
 }: {
   listing: Listing;
   isOwner: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  account: ReturnType<typeof useActiveAccount>;
+  chainId: number;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const handleDelete = async () => {
+    if (!account) {
+      setDeleteError("Please connect your wallet first");
+      return;
+    }
+
     setIsDeleting(true);
+    setDeleteError("");
+
     try {
+      const nonce = BigInt(Date.now());
+
+      const message: DeleteListingMessage = {
+        slug: listing.slug,
+        sellerAddress: account.address as `0x${string}`,
+        nonce,
+      };
+
+      // Sign typed data using thirdweb account
+      const signature = await account.signTypedData({
+        domain: getEIP712Domain(chainId),
+        types: EIP712_DELETE_TYPES,
+        primaryType: "DeleteListing" as const,
+        message,
+      });
+
       const response = await fetch("/api/listings/delete", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           slug: listing.slug,
-          sellerAddress: listing.sellerAddress,
+          sellerAddress: account.address,
+          nonce: nonce.toString(),
+          chainId,
+          signature,
         }),
       });
       const data = await response.json();
-      if (data.success) onDelete();
+      if (data.success) {
+        onDelete();
+      } else {
+        setDeleteError(data.error || "Failed to delete listing");
+      }
     } catch (err) {
-      console.error("Failed to delete listing:", err);
+      if (err instanceof Error) {
+        if (
+          err.message.includes("User rejected") ||
+          err.message.includes("user rejected")
+        ) {
+          setDeleteError("Signature rejected");
+        } else {
+          setDeleteError(err.message);
+        }
+      } else {
+        console.error("Failed to delete listing:", err);
+        setDeleteError("Failed to delete listing");
+      }
     } finally {
       setIsDeleting(false);
       setShowConfirmDelete(false);
@@ -484,10 +584,18 @@ function ListingCard({
             exit={{ opacity: 0, height: 0 }}
             className="mt-3 pt-3 border-t border-zinc-800"
           >
-            <p className="text-sm text-zinc-400 mb-3">Delete this listing?</p>
+            <p className="text-sm text-zinc-400 mb-3">
+              Sign a message to confirm deletion
+            </p>
+            {deleteError && (
+              <p className="text-sm text-red-400 mb-3">{deleteError}</p>
+            )}
             <div className="flex gap-2">
               <button
-                onClick={() => setShowConfirmDelete(false)}
+                onClick={() => {
+                  setShowConfirmDelete(false);
+                  setDeleteError("");
+                }}
                 className="flex-1 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-medium text-white transition-colors cursor-pointer"
               >
                 Cancel
@@ -497,7 +605,7 @@ function ListingCard({
                 disabled={isDeleting}
                 className="flex-1 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-sm font-medium text-white transition-colors cursor-pointer disabled:opacity-50"
               >
-                {isDeleting ? "Deleting..." : "Delete"}
+                {isDeleting ? "Signing..." : "Delete"}
               </button>
             </div>
           </motion.div>
@@ -641,6 +749,8 @@ export default function ProfileClient({ address }: ProfileClientProps) {
     "listings"
   );
   const account = useActiveAccount();
+  const chain = useActiveWalletChain();
+  const chainId = chain?.id ?? defaultChainId;
 
   const isOwnProfile =
     address?.toLowerCase() === account?.address.toLowerCase();
@@ -1075,6 +1185,8 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                         isOwner={isOwnProfile}
                         onEdit={() => setEditingListing(listing)}
                         onDelete={handleListingUpdate}
+                        account={account}
+                        chainId={chainId}
                       />
                     ))}
                   </div>
@@ -1210,6 +1322,8 @@ export default function ProfileClient({ address }: ProfileClientProps) {
               handleListingUpdate();
               setEditingListing(null);
             }}
+            account={account}
+            chainId={chainId}
           />
         )}
       </AnimatePresence>
