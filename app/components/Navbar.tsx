@@ -31,7 +31,7 @@ export function Navbar() {
               href="/#latest-listings"
               className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-150 rounded-lg hover:bg-white/5"
             >
-              Explore
+              Latest Listings
             </Link>
             <Link
               href="/listings"

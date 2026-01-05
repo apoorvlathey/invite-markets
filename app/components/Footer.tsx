@@ -7,6 +7,7 @@ import { OnboardingModal } from "./OnboardingModal";
 
 const footerLinks = {
   product: [
+    { label: "All Listings", href: "/listings" },
     { label: "Browse Apps", href: "/apps" },
     { label: "Sell Invites", href: "/sell" },
   ],
@@ -18,12 +19,7 @@ const footerLinks = {
     },
   ],
   social: [
-    { label: "Twitter", href: "https://twitter.com/apoorveth", external: true },
-    {
-      label: "Farcaster",
-      href: "https://farcaster.xyz/~/channel/x402",
-      external: true,
-    },
+    { label: "Twitter", href: "https://x.com/invitemarkets", external: true },
   ],
 };
 
