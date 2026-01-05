@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
-import { CheckCircle, Loader2, Sparkles } from "lucide-react";
+import { CheckCircle, Loader2, Sparkles, Key } from "lucide-react";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 
@@ -11,6 +12,7 @@ interface WaitlistModalProps {
 }
 
 export function WaitlistModal({ onSuccess }: WaitlistModalProps) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [xUsername, setXUsername] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -19,7 +21,16 @@ export function WaitlistModal({ onSuccess }: WaitlistModalProps) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [showTurnstile, setShowTurnstile] = useState(false);
   const [pendingSubmit, setPendingSubmit] = useState(false);
+  const [showAccessCodeInput, setShowAccessCodeInput] = useState(false);
+  const [accessCode, setAccessCode] = useState("");
   const turnstileRef = useRef<TurnstileInstance>(null);
+
+  const handleAccessCodeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (accessCode.trim()) {
+      router.push(`/invite/${accessCode.trim()}`);
+    }
+  };
 
   const submitForm = async (token: string) => {
     setIsSubmitting(true);
@@ -305,6 +316,61 @@ export function WaitlistModal({ onSuccess }: WaitlistModalProps) {
               The marketplace for early access to web3 apps
             </p>
           </div>
+        )}
+      </div>
+
+      {/* Access Code Input - Bottom Right */}
+      <div className="fixed bottom-4 right-4 z-50">
+        {showAccessCodeInput ? (
+          <form
+            onSubmit={handleAccessCodeSubmit}
+            className="flex items-center gap-2 bg-zinc-900/95 backdrop-blur-sm border border-zinc-700 rounded-lg p-2"
+          >
+            <input
+              type="text"
+              value={accessCode}
+              onChange={(e) => setAccessCode(e.target.value)}
+              placeholder="Access code"
+              autoFocus
+              className="w-32 px-2 py-1.5 text-sm bg-zinc-800 border border-zinc-700 rounded text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
+            />
+            <button
+              type="submit"
+              className="px-2 py-1.5 text-xs font-medium bg-zinc-700 hover:bg-zinc-600 rounded transition-colors cursor-pointer"
+            >
+              Go
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowAccessCodeInput(false);
+                setAccessCode("");
+              }}
+              className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </form>
+        ) : (
+          <button
+            onClick={() => setShowAccessCodeInput(true)}
+            className="flex items-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 rounded-lg text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
+            title="Enter access code"
+          >
+            <Key className="w-4 h-4" />
+          </button>
         )}
       </div>
     </div>
