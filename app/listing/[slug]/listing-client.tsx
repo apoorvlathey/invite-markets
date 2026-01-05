@@ -108,6 +108,7 @@ export default function ListingClient() {
     purchase,
     isPending,
     inviteUrl,
+    purchasedSellerAddress,
     showSuccessModal,
     closeSuccessModal,
   } = usePurchase();
@@ -243,7 +244,7 @@ export default function ListingClient() {
   const handlePurchase = async () => {
     if (!listing) return;
 
-    const result = await purchase(listing.slug);
+    const result = await purchase(listing.slug, listing.sellerAddress);
     if (result) {
       // Remove the purchased listing from the shared cache
       queryClient.setQueryData<ListingsData>(LISTINGS_QUERY_KEY, (old) => {
@@ -1094,6 +1095,7 @@ export default function ListingClient() {
       <PaymentSuccessModal
         isOpen={showSuccessModal}
         inviteUrl={inviteUrl || ""}
+        sellerAddress={purchasedSellerAddress}
         onClose={closeSuccessModal}
       />
     </div>

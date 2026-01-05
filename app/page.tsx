@@ -140,13 +140,15 @@ export default function Home() {
     purchase,
     isPending,
     inviteUrl,
+    purchasedSellerAddress,
     showSuccessModal,
     closeSuccessModal,
   } = usePurchase();
 
   const handleQuickBuy = async (slug: string) => {
     setPurchasingSlug(slug);
-    const result = await purchase(slug);
+    const invite = invites.find((inv) => inv.slug === slug);
+    const result = await purchase(slug, invite?.sellerAddress || "");
     if (result) {
       // Remove the purchased listing from the cache
       queryClient.setQueryData<ListingsData>(LISTINGS_QUERY_KEY, (old) => {
@@ -744,6 +746,7 @@ export default function Home() {
       <PaymentSuccessModal
         isOpen={showSuccessModal}
         inviteUrl={inviteUrl || ""}
+        sellerAddress={purchasedSellerAddress}
         onClose={closeSuccessModal}
       />
 

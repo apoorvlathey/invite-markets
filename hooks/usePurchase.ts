@@ -15,9 +15,10 @@ const thirdwebClient = createThirdwebClient({
 export const LISTINGS_QUERY_KEY = ["listings"];
 
 interface UsePurchaseResult {
-  purchase: (slug: string) => Promise<{ inviteUrl: string } | null>;
+  purchase: (slug: string, sellerAddress: string) => Promise<{ inviteUrl: string } | null>;
   isPending: boolean;
   inviteUrl: string | null;
+  purchasedSellerAddress: string | null;
   showSuccessModal: boolean;
   closeSuccessModal: () => void;
 }
@@ -42,10 +43,12 @@ export function usePurchase(): UsePurchaseResult {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [purchasedSellerAddress, setPurchasedSellerAddress] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const purchase = async (
-    slug: string
+    slug: string,
+    sellerAddress: string
   ): Promise<{ inviteUrl: string } | null> => {
     try {
       const res = (await fetchWithPayment(`/api/purchase/${slug}`, {
@@ -60,6 +63,7 @@ export function usePurchase(): UsePurchaseResult {
         queryClient.invalidateQueries({ queryKey: LISTINGS_QUERY_KEY });
 
         setInviteUrl(res.inviteUrl);
+        setPurchasedSellerAddress(sellerAddress);
         setShowSuccessModal(true);
         return { inviteUrl: res.inviteUrl };
       }
@@ -73,12 +77,14 @@ export function usePurchase(): UsePurchaseResult {
   const closeSuccessModal = () => {
     setShowSuccessModal(false);
     setInviteUrl(null);
+    setPurchasedSellerAddress(null);
   };
 
   return {
     purchase,
     isPending,
     inviteUrl,
+    purchasedSellerAddress,
     showSuccessModal,
     closeSuccessModal,
   };

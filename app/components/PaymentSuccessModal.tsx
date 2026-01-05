@@ -1,18 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, Copy, Check, X, AlertTriangle } from "lucide-react";
+import { CheckCircle, Copy, Check, X, AlertTriangle, ThumbsUp, ThumbsDown } from "lucide-react";
 
 interface PaymentSuccessModalProps {
   isOpen: boolean;
   inviteUrl: string;
+  sellerAddress: string | null;
   onClose: () => void;
 }
 
 export function PaymentSuccessModal({
   isOpen,
   inviteUrl,
+  sellerAddress,
   onClose,
 }: PaymentSuccessModalProps) {
   const [copied, setCopied] = useState(false);
@@ -233,7 +236,30 @@ export function PaymentSuccessModal({
                   </div>
                 </div>
 
-                {/* Close Button */}
+                {/* Rate Seller on Ethos */}
+                {sellerAddress && (
+                  <a
+                    href={`https://app.ethos.network/profile/${sellerAddress}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-3 py-3 px-4 bg-gradient-to-r from-emerald-500/10 via-zinc-800/80 to-rose-500/10 hover:from-emerald-500/20 hover:via-zinc-700/80 hover:to-rose-500/20 border border-zinc-600/50 hover:border-zinc-500 rounded-lg transition-all group"
+                  >
+                    <ThumbsUp className="w-4 h-4 text-emerald-400 group-hover:text-emerald-300 transition-colors" />
+                    <div className="flex items-center gap-2">
+                      <Image
+                        src="/images/ethos.svg"
+                        alt="Ethos"
+                        width={18}
+                        height={18}
+                        className="opacity-80 group-hover:opacity-100 transition-opacity"
+                      />
+                      <span className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">
+                        Rate Seller on Ethos
+                      </span>
+                    </div>
+                    <ThumbsDown className="w-4 h-4 text-rose-400 group-hover:text-rose-300 transition-colors" />
+                  </a>
+                )}
               </div>
             </motion.div>
           </div>
