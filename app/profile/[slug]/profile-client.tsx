@@ -12,9 +12,23 @@ import {
 } from "@/lib/resolve-addresses";
 import { getExplorerAddressUrl } from "@/lib/chain";
 import { fetchEthosData, type EthosData } from "@/lib/ethos-scores";
+import { featuredApps } from "@/data/featuredApps";
 import {
   useActiveAccount
 } from "thirdweb/react";
+
+// Helper to resolve appId to proper app name
+function getAppDisplayName(appId?: string, appName?: string, fallback?: string): string {
+  if (appId) {
+    const featuredApp = featuredApps.find((app) => app.id === appId);
+    if (featuredApp) {
+      return featuredApp.appName;
+    }
+    // If appId doesn't match any featured app, use appName or appId
+    return appName || appId;
+  }
+  return appName || fallback || "Unknown App";
+}
 
 interface ProfileClientProps {
   address: string;
@@ -205,7 +219,7 @@ function ListingCard({ listing, isOwner, onEdit, onDelete }: { listing: Listing;
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <Link href={`/listing/${listing.slug}`} className="text-base font-semibold text-white hover:text-cyan-400 transition-colors block mb-2">
-            {listing.appId || listing.appName || listing.slug}
+            {getAppDisplayName(listing.appId, listing.appName, listing.slug)}
           </Link>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-zinc-500">
             <div className="flex items-center gap-1.5">
@@ -256,7 +270,7 @@ function PurchaseCard({ purchase, sellerInfo }: { purchase: Purchase; sellerInfo
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <Link href={`/listing/${purchase.listingSlug}`} className="text-base font-semibold text-white hover:text-cyan-400 transition-colors block mb-2">
-            {purchase.appId || purchase.listingSlug}
+            {getAppDisplayName(purchase.appId, undefined, purchase.listingSlug)}
           </Link>
           <div className="flex items-center gap-2 mb-3">
             <span className="text-sm text-zinc-500">Seller:</span>
