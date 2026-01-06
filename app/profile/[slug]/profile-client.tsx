@@ -11,7 +11,11 @@ import {
   getSellerDisplayInfo,
 } from "@/lib/resolve-addresses";
 import { getExplorerAddressUrl, chainId } from "@/lib/chain";
-import { fetchEthosData, type EthosData } from "@/lib/ethos-scores";
+import {
+  fetchEthosData,
+  getTrustLevelConfig,
+  type EthosData,
+} from "@/lib/ethos-scores";
 import { featuredApps } from "@/data/featuredApps";
 import { useActiveAccount } from "thirdweb/react";
 import { signMessage } from "thirdweb/utils";
@@ -81,52 +85,6 @@ interface Listing {
 interface SellerStats {
   salesCount: number;
   totalRevenue: number;
-}
-
-function getTrustLevelConfig(level: string) {
-  const normalizedLevel = level.toLowerCase();
-  switch (normalizedLevel) {
-    case "trusted":
-      return {
-        bg: "bg-emerald-500/10",
-        border: "border-emerald-500/30",
-        text: "text-emerald-400",
-        dot: "bg-emerald-400",
-        label: "Trusted",
-      };
-    case "neutral":
-      return {
-        bg: "bg-blue-500/10",
-        border: "border-blue-500/30",
-        text: "text-blue-400",
-        dot: "bg-blue-400",
-        label: "Neutral",
-      };
-    case "questionable":
-      return {
-        bg: "bg-yellow-500/10",
-        border: "border-yellow-500/30",
-        text: "text-yellow-400",
-        dot: "bg-yellow-400",
-        label: "Questionable",
-      };
-    case "untrusted":
-      return {
-        bg: "bg-red-500/10",
-        border: "border-red-500/30",
-        text: "text-red-400",
-        dot: "bg-red-400",
-        label: "Untrusted",
-      };
-    default:
-      return {
-        bg: "bg-zinc-500/10",
-        border: "border-zinc-500/30",
-        text: "text-zinc-400",
-        dot: "bg-zinc-400",
-        label: "Unknown",
-      };
-  }
 }
 
 function CopyButton({

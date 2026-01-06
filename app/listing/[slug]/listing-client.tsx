@@ -15,7 +15,11 @@ import {
   getSellerDisplayInfo,
 } from "@/lib/resolve-addresses";
 import { timeAgo } from "@/lib/time";
-import { fetchEthosData, type EthosData } from "@/lib/ethos-scores";
+import {
+  fetchEthosData,
+  getTrustLevelConfig,
+  type EthosData,
+} from "@/lib/ethos-scores";
 import {
   fetchListingsData,
   getGradientForApp,
@@ -46,54 +50,6 @@ async function fetchSellerStats(address: string) {
     return data.stats;
   } catch {
     return null;
-  }
-}
-
-// Helper function to get trust level color and label
-function getTrustLevelConfig(level: string) {
-  const normalizedLevel = level.toLowerCase();
-
-  switch (normalizedLevel) {
-    case "trusted":
-      return {
-        bg: "bg-emerald-500/10",
-        border: "border-emerald-500/30",
-        text: "text-emerald-400",
-        dot: "bg-emerald-400",
-        label: "Trusted",
-      };
-    case "neutral":
-      return {
-        bg: "bg-blue-500/10",
-        border: "border-blue-500/30",
-        text: "text-blue-400",
-        dot: "bg-blue-400",
-        label: "Neutral",
-      };
-    case "questionable":
-      return {
-        bg: "bg-yellow-500/10",
-        border: "border-yellow-500/30",
-        text: "text-yellow-400",
-        dot: "bg-yellow-400",
-        label: "Questionable",
-      };
-    case "untrusted":
-      return {
-        bg: "bg-red-500/10",
-        border: "border-red-500/30",
-        text: "text-red-400",
-        dot: "bg-red-400",
-        label: "Untrusted",
-      };
-    default:
-      return {
-        bg: "bg-zinc-500/10",
-        border: "border-zinc-500/30",
-        text: "text-zinc-400",
-        dot: "bg-zinc-400",
-        label: "Unknown",
-      };
   }
 }
 
@@ -262,7 +218,7 @@ export default function ListingClient() {
   const getStatusConfig = (listing: Listing) => {
     // Check if listing has inventory available
     const available = isListingAvailable(listing);
-    
+
     if (listing.status === "active" && !available) {
       // Active but sold out (all uses consumed)
       return {
@@ -547,29 +503,51 @@ export default function ListingClient() {
                 )}
               </div>
               <p className="text-zinc-400 mb-4">
-                {listing.listingType === "access_code" 
-                  ? `Access code for ${appName}` 
+                {listing.listingType === "access_code"
+                  ? `Access code for ${appName}`
                   : `Early access invite to ${appName}`}
               </p>
 
               {/* Listing Type Badge & Inventory */}
               <div className="flex items-center gap-2 mb-6 flex-wrap">
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
-                  listing.listingType === "access_code"
-                    ? "bg-purple-500/20 border border-purple-500/30 text-purple-400"
-                    : "bg-cyan-500/20 border border-cyan-500/30 text-cyan-400"
-                }`}>
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
+                    listing.listingType === "access_code"
+                      ? "bg-purple-500/20 border border-purple-500/30 text-purple-400"
+                      : "bg-cyan-500/20 border border-cyan-500/30 text-cyan-400"
+                  }`}
+                >
                   {listing.listingType === "access_code" ? (
                     <>
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                        />
                       </svg>
                       Access Code
                     </>
                   ) : (
                     <>
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                        />
                       </svg>
                       Invite Link
                     </>
@@ -577,20 +555,34 @@ export default function ListingClient() {
                 </span>
                 {/* Inventory Badge - only show for multi-use listings */}
                 {(isUnlimited || maxUses > 1) && (
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
-                    isUnlimited
-                      ? "bg-blue-500/20 border border-blue-500/30 text-blue-400"
-                      : canPurchase
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
+                      isUnlimited
+                        ? "bg-blue-500/20 border border-blue-500/30 text-blue-400"
+                        : canPurchase
                         ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"
                         : "bg-zinc-500/20 border border-zinc-500/30 text-zinc-400"
-                  }`}>
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    }`}
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                     {isUnlimited ? (
                       <>Unlimited · {purchaseCount} sold</>
                     ) : (
-                      <>{remainingUses} of {maxUses} remaining</>
+                      <>
+                        {remainingUses} of {maxUses} remaining
+                      </>
                     )}
                   </span>
                 )}
@@ -599,20 +591,35 @@ export default function ListingClient() {
               {/* App URL - Only shown for access_code type */}
               {listing.listingType === "access_code" && listing.appUrl && (
                 <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 mb-5">
-                  <div className="text-sm text-zinc-500 mb-2">App Link (Public)</div>
+                  <div className="text-sm text-zinc-500 mb-2">
+                    App Link (Public)
+                  </div>
                   <a
                     href={listing.appUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors group"
                   >
-                    <span className="text-sm font-medium truncate">{listing.appUrl}</span>
-                    <svg className="w-4 h-4 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <span className="text-sm font-medium truncate">
+                      {listing.appUrl}
+                    </span>
+                    <svg
+                      className="w-4 h-4 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
                     </svg>
                   </a>
                   <p className="text-xs text-zinc-500 mt-2">
-                    After purchase, you&apos;ll receive an access code to use on this site.
+                    After purchase, you&apos;ll receive an access code to use on
+                    this site.
                   </p>
                 </div>
               )}
@@ -846,208 +853,116 @@ export default function ListingClient() {
               transition={{ delay: 0.2 }}
               className="order-2 lg:order-none"
             >
-            {/* App Icon Card - Horizontal banner on mobile, square on desktop */}
-            <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
-              {/* Gradient Header Bar */}
-              <div
-                className="h-1.5"
-                style={{
-                  background: `linear-gradient(90deg, ${gradient.from}, ${gradient.to})`,
-                }}
-              />
-
-              {/* Icon Display - Horizontal on mobile, square on desktop */}
-              <div className="relative flex items-center justify-center bg-zinc-950 overflow-hidden h-32 sm:h-40 lg:aspect-square lg:h-auto">
-                {/* Tiled Pattern Background */}
+              {/* App Icon Card - Horizontal banner on mobile, square on desktop */}
+              <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
+                {/* Gradient Header Bar */}
                 <div
-                  className="absolute grid grid-cols-5 sm:grid-cols-7 gap-3 sm:gap-6 opacity-[0.15]"
+                  className="h-1.5"
                   style={{
-                    transform: "rotate(-20deg) scale(1.8)",
-                  }}
-                >
-                  {[...Array(35)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center"
-                    >
-                      {appIconUrl ? (
-                        <div className="w-full h-full bg-white rounded-lg p-1 sm:p-1.5 flex items-center justify-center">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={appIconUrl}
-                            alt=""
-                            width={48}
-                            height={48}
-                            className="object-contain w-full h-full"
-                          />
-                        </div>
-                      ) : (
-                        <span
-                          className="text-xl sm:text-3xl font-bold"
-                          style={{ color: gradient.from }}
-                        >
-                          {appName.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Gradient Overlay */}
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: `radial-gradient(circle at center, transparent 0%, ${gradient.from}15 60%, ${gradient.to}25 100%)`,
+                    background: `linear-gradient(90deg, ${gradient.from}, ${gradient.to})`,
                   }}
                 />
 
-                {/* Vignette Effect */}
-                <div className="absolute inset-0 bg-linear-to-b from-zinc-950/80 via-transparent to-zinc-950/80" />
-                <div className="absolute inset-0 bg-linear-to-r from-zinc-950/80 via-transparent to-zinc-950/80" />
-
-                {/* Main Icon */}
-                <div className="relative z-10">
-                  {appIconUrl ? (
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl overflow-hidden border-2 border-zinc-600 shadow-2xl bg-white p-1.5 sm:p-2 ring-4 ring-black/50">
-                      <Image
-                        src={appIconUrl}
-                        alt={`${appName} icon`}
-                        width={80}
-                        height={80}
-                        className="object-contain w-full h-full rounded-lg"
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl font-bold text-white shadow-2xl ring-4 ring-black/50"
-                      style={{
-                        background: `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`,
-                      }}
-                    >
-                      {appName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Footer - Chain & App Link */}
-              <div className="p-3 sm:p-4 border-t border-zinc-800 bg-zinc-900/50">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Image
-                      src="/images/base.svg"
-                      alt="Base"
-                      width={20}
-                      height={20}
-                      className="rounded-full"
-                    />
-                    <span className="text-xs sm:text-sm text-zinc-400">
-                      Base Network
-                    </span>
-                  </div>
-                  {appSlug && (
-                    <Link
-                      href={`/app/${appSlug}`}
-                      className="group flex items-center gap-1.5 text-xs text-zinc-400 hover:text-cyan-400 transition-colors"
-                    >
-                      <span className="hidden sm:inline">
-                        View all {appName} listings
-                      </span>
-                      <span className="sm:hidden">View all</span>
-                      <svg
-                        className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                {/* Icon Display - Horizontal on mobile, square on desktop */}
+                <div className="relative flex items-center justify-center bg-zinc-950 overflow-hidden h-32 sm:h-40 lg:aspect-square lg:h-auto">
+                  {/* Tiled Pattern Background */}
+                  <div
+                    className="absolute grid grid-cols-5 sm:grid-cols-7 gap-3 sm:gap-6 opacity-[0.15]"
+                    style={{
+                      transform: "rotate(-20deg) scale(1.8)",
+                    }}
+                  >
+                    {[...Array(35)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
+                        {appIconUrl ? (
+                          <div className="w-full h-full bg-white rounded-lg p-1 sm:p-1.5 flex items-center justify-center">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={appIconUrl}
+                              alt=""
+                              width={48}
+                              height={48}
+                              className="object-contain w-full h-full"
+                            />
+                          </div>
+                        ) : (
+                          <span
+                            className="text-xl sm:text-3xl font-bold"
+                            style={{ color: gradient.from }}
+                          >
+                            {appName.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Gradient Overlay */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: `radial-gradient(circle at center, transparent 0%, ${gradient.from}15 60%, ${gradient.to}25 100%)`,
+                    }}
+                  />
+
+                  {/* Vignette Effect */}
+                  <div className="absolute inset-0 bg-linear-to-b from-zinc-950/80 via-transparent to-zinc-950/80" />
+                  <div className="absolute inset-0 bg-linear-to-r from-zinc-950/80 via-transparent to-zinc-950/80" />
+
+                  {/* Main Icon */}
+                  <div className="relative z-10">
+                    {appIconUrl ? (
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl overflow-hidden border-2 border-zinc-600 shadow-2xl bg-white p-1.5 sm:p-2 ring-4 ring-black/50">
+                        <Image
+                          src={appIconUrl}
+                          alt={`${appName} icon`}
+                          width={80}
+                          height={80}
+                          className="object-contain w-full h-full rounded-lg"
                         />
-                      </svg>
-                    </Link>
-                  )}
+                      </div>
+                    ) : (
+                      <div
+                        className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl font-bold text-white shadow-2xl ring-4 ring-black/50"
+                        style={{
+                          background: `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`,
+                        }}
+                      >
+                        {appName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Cheaper Listing Banner */}
-            {cheaperListing && listing.status === "active" && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="mt-4"
-              >
-                <Link href={`/listing/${cheaperListing.slug}`}>
-                  <div className="group relative rounded-xl overflow-hidden bg-linear-to-r from-emerald-500/10 via-cyan-500/10 to-emerald-500/10 border border-emerald-500/30 hover:border-emerald-400/50 transition-all cursor-pointer">
-                    {/* Animated gradient border effect */}
-                    <div className="absolute inset-0 bg-linear-to-r from-emerald-500/0 via-emerald-500/10 to-emerald-500/0 animate-pulse" />
-
-                    <div className="relative p-3 sm:p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                          {/* Price drop icon */}
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                            <svg
-                              className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-                              />
-                            </svg>
-                          </div>
-
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs sm:text-sm font-semibold text-emerald-300">
-                                Cheaper available!
-                              </span>
-                              <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-xs font-bold text-emerald-400">
-                                {Math.round(
-                                  ((listing.priceUsdc -
-                                    cheaperListing.priceUsdc) /
-                                    listing.priceUsdc) *
-                                    100
-                                )}
-                                % less
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              <span className="text-xs text-zinc-400">
-                                Only{" "}
-                                <span className="font-semibold text-cyan-400">
-                                  ${cheaperListing.priceUsdc}
-                                </span>
-                              </span>
-                              {cheaperListingEthosData &&
-                                cheaperTrustLevelConfig && (
-                                  <>
-                                    <span className="text-xs text-zinc-500 hidden sm:inline">
-                                      •
-                                    </span>
-                                    <span
-                                      className={`text-xs font-medium ${cheaperTrustLevelConfig.text} hidden sm:inline`}
-                                    >
-                                      {cheaperTrustLevelConfig.label}
-                                    </span>
-                                  </>
-                                )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Arrow */}
+                {/* Footer - Chain & App Link */}
+                <div className="p-3 sm:p-4 border-t border-zinc-800 bg-zinc-900/50">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Image
+                        src="/images/base.svg"
+                        alt="Base"
+                        width={20}
+                        height={20}
+                        className="rounded-full"
+                      />
+                      <span className="text-xs sm:text-sm text-zinc-400">
+                        Base Network
+                      </span>
+                    </div>
+                    {appSlug && (
+                      <Link
+                        href={`/app/${appSlug}`}
+                        className="group flex items-center gap-1.5 text-xs text-zinc-400 hover:text-cyan-400 transition-colors"
+                      >
+                        <span className="hidden sm:inline">
+                          View all {appName} listings
+                        </span>
+                        <span className="sm:hidden">View all</span>
                         <svg
-                          className="w-5 h-5 text-emerald-400 group-hover:translate-x-1 transition-transform shrink-0"
+                          className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -1059,13 +974,105 @@ export default function ListingClient() {
                             d="M9 5l7 7-7 7"
                           />
                         </svg>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Cheaper Listing Banner */}
+              {cheaperListing && listing.status === "active" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-4"
+                >
+                  <Link href={`/listing/${cheaperListing.slug}`}>
+                    <div className="group relative rounded-xl overflow-hidden bg-linear-to-r from-emerald-500/10 via-cyan-500/10 to-emerald-500/10 border border-emerald-500/30 hover:border-emerald-400/50 transition-all cursor-pointer">
+                      {/* Animated gradient border effect */}
+                      <div className="absolute inset-0 bg-linear-to-r from-emerald-500/0 via-emerald-500/10 to-emerald-500/0 animate-pulse" />
+
+                      <div className="relative p-3 sm:p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            {/* Price drop icon */}
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                              <svg
+                                className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                                />
+                              </svg>
+                            </div>
+
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs sm:text-sm font-semibold text-emerald-300">
+                                  Cheaper available!
+                                </span>
+                                <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-xs font-bold text-emerald-400">
+                                  {Math.round(
+                                    ((listing.priceUsdc -
+                                      cheaperListing.priceUsdc) /
+                                      listing.priceUsdc) *
+                                      100
+                                  )}
+                                  % less
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                <span className="text-xs text-zinc-400">
+                                  Only{" "}
+                                  <span className="font-semibold text-cyan-400">
+                                    ${cheaperListing.priceUsdc}
+                                  </span>
+                                </span>
+                                {cheaperListingEthosData &&
+                                  cheaperTrustLevelConfig && (
+                                    <>
+                                      <span className="text-xs text-zinc-500 hidden sm:inline">
+                                        •
+                                      </span>
+                                      <span
+                                        className={`text-xs font-medium ${cheaperTrustLevelConfig.text} hidden sm:inline`}
+                                      >
+                                        {cheaperTrustLevelConfig.label}
+                                      </span>
+                                    </>
+                                  )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Arrow */}
+                          <svg
+                            className="w-5 h-5 text-emerald-400 group-hover:translate-x-1 transition-transform shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              </motion.div>
-            )}
-          </motion.div>
+                  </Link>
+                </motion.div>
+              )}
+            </motion.div>
 
             {/* Payment Details Section - Last on mobile, stays in left column on desktop */}
             <motion.div
@@ -1102,7 +1109,8 @@ export default function ListingClient() {
                         Powered by x402
                       </p>
                       <p className="text-xs sm:text-sm text-zinc-500">
-                        Instant, gasless payments. No transaction fees for buyers.
+                        Instant, gasless payments. No transaction fees for
+                        buyers.
                       </p>
                     </div>
                   </div>
