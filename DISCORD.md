@@ -133,6 +133,25 @@ The following are exported and shared between the API routes and the backfill sc
 2. **Error handling**: Errors are logged but don't fail the API request
 3. **Chain routing**: `chainId` determines which webhook URL to use
 4. **Type safety**: Interfaces explicitly exclude sensitive fields
+5. **Rate limit handling**: Automatic retry with exponential backoff on 429 errors
+
+### Rate Limiting
+
+Discord webhooks have rate limits (typically 30 requests per 60 seconds). The notification system handles this automatically:
+
+**For real-time notifications (`lib/discord.ts`):**
+
+- Automatically retries on 429 (rate limit) errors
+- Respects Discord's `Retry-After` header
+- Uses exponential backoff for network errors
+- Maximum 3 retry attempts
+- Maximum wait time capped at 30 seconds
+
+**For backfill script:**
+
+- Same retry logic as real-time notifications
+- Configurable delay between notifications (default: 1000ms)
+- Recommended to use `--delay 2000` or higher for large backfills
 
 ### API Integration Points
 
@@ -291,7 +310,11 @@ pnpm backfill:discord -- --delay 2000
 
 ### Rate limiting
 
-If you see 429 errors, increase the delay between notifications or wait before retrying.
+The system automatically handles rate limits with retry logic. If you see persistent 429 errors:
+
+1. **For backfill**: Increase the delay with `--delay 3000` or higher
+2. **For real-time**: The system will retry up to 3 times automatically
+3. **If issues persist**: Check if another service is using the same webhook
 
 ### Wrong channel
 

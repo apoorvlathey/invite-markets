@@ -207,18 +207,80 @@ export function buildPurchaseEmbed(
 }
 
 // =============================================================================
-// PUBLIC API
+// RATE LIMITING
 // =============================================================================
 
 /**
+ * Default configuration for Discord webhook requests.
+ */
+const DISCORD_CONFIG = {
+  /** Maximum number of retry attempts for rate-limited requests */
+  maxRetries: 3,
+  /** Default wait time in ms if Retry-After header is missing */
+  defaultRetryDelayMs: 2000,
+  /** Maximum wait time in ms to prevent excessive delays */
+  maxRetryDelayMs: 30000,
+};
+
+/**
+ * Sleep for a specified duration.
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Parse the Retry-After header from Discord's response.
+ * Returns delay in milliseconds, or null if header is missing/invalid.
+ */
+function parseRetryAfter(response: Response): number | null {
+  const retryAfter = response.headers.get("Retry-After");
+  if (!retryAfter) return null;
+
+  // Retry-After can be seconds (integer) or a date string
+  const seconds = parseFloat(retryAfter);
+  if (!isNaN(seconds)) {
+    return Math.min(seconds * 1000, DISCORD_CONFIG.maxRetryDelayMs);
+  }
+
+  // Try parsing as date
+  const date = new Date(retryAfter);
+  if (!isNaN(date.getTime())) {
+    const delayMs = date.getTime() - Date.now();
+    return Math.min(Math.max(delayMs, 0), DISCORD_CONFIG.maxRetryDelayMs);
+  }
+
+  return null;
+}
+
+// =============================================================================
+// PUBLIC API
+// =============================================================================
+
+export interface SendDiscordEmbedOptions {
+  /** Maximum retry attempts (default: 3) */
+  maxRetries?: number;
+  /** Skip retry logic entirely (useful for backfill script which handles delays itself) */
+  skipRetry?: boolean;
+}
+
+/**
  * Sends a Discord embed to the appropriate webhook.
+ * Automatically handles rate limiting (429 errors) with retry logic.
  * Fire-and-forget - errors are logged but don't throw.
+ *
+ * @param embed - The Discord embed to send
+ * @param chainId - Chain ID to determine which webhook to use
+ * @param options - Optional configuration for retry behavior
  */
 export async function sendDiscordEmbed(
   embed: DiscordEmbed,
-  chainId: number
+  chainId: number,
+  options: SendDiscordEmbedOptions = {}
 ): Promise<boolean> {
   const webhookUrl = getWebhookUrl(chainId);
+  const maxRetries = options.maxRetries ?? DISCORD_CONFIG.maxRetries;
+  const skipRetry = options.skipRetry ?? false;
 
   if (!webhookUrl) {
     console.log(
@@ -231,24 +293,68 @@ export async function sendDiscordEmbed(
     embeds: [embed],
   };
 
-  try {
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+  let lastError: Error | null = null;
 
-    if (!response.ok) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      // Success
+      if (response.ok) {
+        return true;
+      }
+
+      // Rate limited - retry with backoff
+      if (response.status === 429 && !skipRetry && attempt < maxRetries) {
+        const retryAfterMs =
+          parseRetryAfter(response) ?? DISCORD_CONFIG.defaultRetryDelayMs;
+
+        console.warn(
+          `[Discord] Rate limited (429). Retrying in ${retryAfterMs}ms (attempt ${
+            attempt + 1
+          }/${maxRetries})`
+        );
+
+        await sleep(retryAfterMs);
+        continue;
+      }
+
+      // Other error
       console.error(
         `[Discord] Failed to send notification: ${response.status} ${response.statusText}`
       );
       return false;
+    } catch (error) {
+      lastError = error as Error;
+
+      // Network error - retry with exponential backoff
+      if (!skipRetry && attempt < maxRetries) {
+        const backoffMs = Math.min(
+          DISCORD_CONFIG.defaultRetryDelayMs * Math.pow(2, attempt),
+          DISCORD_CONFIG.maxRetryDelayMs
+        );
+
+        console.warn(
+          `[Discord] Network error. Retrying in ${backoffMs}ms (attempt ${
+            attempt + 1
+          }/${maxRetries}): ${lastError.message}`
+        );
+
+        await sleep(backoffMs);
+        continue;
+      }
     }
-    return true;
-  } catch (error) {
-    console.error("[Discord] Error sending notification:", error);
-    return false;
   }
+
+  console.error(
+    "[Discord] Error sending notification after retries:",
+    lastError
+  );
+  return false;
 }
 
 /**

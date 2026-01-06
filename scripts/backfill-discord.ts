@@ -111,8 +111,33 @@ function sleep(ms: number): Promise<void> {
 }
 
 // =============================================================================
-// DISCORD API
+// DISCORD API (with rate limit handling)
 // =============================================================================
+
+const MAX_RETRIES = 3;
+const DEFAULT_RETRY_DELAY_MS = 2000;
+const MAX_RETRY_DELAY_MS = 30000;
+
+/**
+ * Parse the Retry-After header from Discord's response.
+ */
+function parseRetryAfter(response: Response): number | null {
+  const retryAfter = response.headers.get("Retry-After");
+  if (!retryAfter) return null;
+
+  const seconds = parseFloat(retryAfter);
+  if (!isNaN(seconds)) {
+    return Math.min(seconds * 1000, MAX_RETRY_DELAY_MS);
+  }
+
+  const date = new Date(retryAfter);
+  if (!isNaN(date.getTime())) {
+    const delayMs = date.getTime() - Date.now();
+    return Math.min(Math.max(delayMs, 0), MAX_RETRY_DELAY_MS);
+  }
+
+  return null;
+}
 
 async function sendDiscordEmbed(
   webhookUrl: string,
@@ -124,24 +149,57 @@ async function sendDiscordEmbed(
     return true;
   }
 
-  try {
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ embeds: [embed] }),
-    });
+  let lastError: Error | null = null;
 
-    if (!response.ok) {
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ embeds: [embed] }),
+      });
+
+      if (response.ok) {
+        console.log(`  ✅ Sent: ${embed.title}`);
+        return true;
+      }
+
+      // Rate limited - retry with backoff
+      if (response.status === 429 && attempt < MAX_RETRIES) {
+        const retryAfterMs =
+          parseRetryAfter(response) ?? DEFAULT_RETRY_DELAY_MS;
+        console.warn(
+          `  ⏳ Rate limited. Waiting ${retryAfterMs}ms (retry ${
+            attempt + 1
+          }/${MAX_RETRIES})`
+        );
+        await sleep(retryAfterMs);
+        continue;
+      }
+
       console.error(`  ❌ Failed: ${response.status} ${response.statusText}`);
       return false;
-    }
+    } catch (error) {
+      lastError = error as Error;
 
-    console.log(`  ✅ Sent: ${embed.title}`);
-    return true;
-  } catch (error) {
-    console.error(`  ❌ Error:`, error);
-    return false;
+      if (attempt < MAX_RETRIES) {
+        const backoffMs = Math.min(
+          DEFAULT_RETRY_DELAY_MS * Math.pow(2, attempt),
+          MAX_RETRY_DELAY_MS
+        );
+        console.warn(
+          `  ⏳ Network error. Retrying in ${backoffMs}ms (retry ${
+            attempt + 1
+          }/${MAX_RETRIES})`
+        );
+        await sleep(backoffMs);
+        continue;
+      }
+    }
   }
+
+  console.error(`  ❌ Error after retries:`, lastError);
+  return false;
 }
 
 // =============================================================================
