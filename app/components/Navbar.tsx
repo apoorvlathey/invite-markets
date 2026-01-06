@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useAccount } from "wagmi";
+import { useActiveAccount } from "thirdweb/react";
 import { ConnectButton } from "@/app/components/ConnectButton";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isConnected } = useAccount();
+  const activeAccount = useActiveAccount();
+  const isConnected = !!activeAccount;
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10">

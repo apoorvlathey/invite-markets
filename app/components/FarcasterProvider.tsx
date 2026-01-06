@@ -1,13 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useConnect, useAccount } from "wagmi";
-import { initFarcasterSDK, isFarcasterMiniApp } from "@/lib/farcaster";
+import { useActiveAccount, useSetActiveWallet } from "thirdweb/react";
+import { createThirdwebClient } from "thirdweb";
+import { EIP1193 } from "thirdweb/wallets";
+import {
+  initFarcasterSDK,
+  isFarcasterMiniApp,
+  getFarcasterProvider,
+  isMiniAppAdded,
+  promptAddMiniApp,
+} from "@/lib/farcaster";
+
+const thirdwebClient = createThirdwebClient({
+  clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID!,
+});
 
 export function FarcasterProvider({ children }: { children: React.ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
-  const { connect, connectors } = useConnect();
-  const { isConnected } = useAccount();
+  const activeAccount = useActiveAccount();
+  const setActiveWallet = useSetActiveWallet();
 
   useEffect(() => {
     async function init() {
@@ -20,19 +32,36 @@ export function FarcasterProvider({ children }: { children: React.ReactNode }) {
       // Initialize the Farcaster SDK
       const success = await initFarcasterSDK();
 
-      if (success && !isConnected) {
-        // Find the Farcaster connector (miniapp-wagmi-connector uses "farcaster" as id)
-        const farcasterConnector = connectors.find(
-          (c) =>
-            c.id === "farcaster" ||
-            c.id === "farcasterFrame" ||
-            c.name.toLowerCase().includes("farcaster")
-        );
+      if (success) {
+        // Check if the user has added this mini app and prompt them if not
+        const isAdded = await isMiniAppAdded();
+        if (!isAdded) {
+          console.log("Mini app not added, prompting user to add it...");
+          await promptAddMiniApp();
+        }
 
-        if (farcasterConnector) {
+        // Auto-connect the Farcaster wallet if not already connected
+        if (!activeAccount) {
           try {
-            // Auto-connect using Farcaster wallet
-            connect({ connector: farcasterConnector });
+            // Get the Farcaster EIP-1193 provider
+            const farcasterProvider = getFarcasterProvider();
+
+            if (farcasterProvider) {
+              // Convert the Farcaster provider to a thirdweb wallet using the EIP1193 adapter
+              const thirdwebWallet = EIP1193.fromProvider({
+                provider: farcasterProvider,
+              });
+
+              // Connect the wallet
+              await thirdwebWallet.connect({
+                client: thirdwebClient,
+              });
+
+              // Set it as the active wallet in thirdweb
+              setActiveWallet(thirdwebWallet);
+
+              console.log("Farcaster wallet connected via thirdweb");
+            }
           } catch (error) {
             console.error("Failed to auto-connect Farcaster wallet:", error);
           }
@@ -43,7 +72,7 @@ export function FarcasterProvider({ children }: { children: React.ReactNode }) {
     }
 
     init();
-  }, [connect, connectors, isConnected]);
+  }, [activeAccount, setActiveWallet]);
 
   // Optionally show a loading state while initializing in Farcaster context
   if (!isInitialized && isFarcasterMiniApp()) {

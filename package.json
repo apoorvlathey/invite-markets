@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@farcaster/miniapp-sdk": "^0.2.1",
-    "@farcaster/miniapp-wagmi-connector": "^1.1.0",
     "@marsidev/react-turnstile": "^1.4.0",
     "@number-flow/react": "^0.5.10",
     "@solana/sysvars": "^5.0.0",
@@ -33,7 +32,6 @@
     "recharts": "^3.6.0",
     "thirdweb": "^5.116.1",
     "viem": "2.x",
-    "wagmi": "^2.19.2",
     "ws": "^8.18.0",
     "x402-axios": "^1.0.0",
     "x402-next": "^1.0.0"

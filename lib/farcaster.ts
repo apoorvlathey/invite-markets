@@ -41,3 +41,24 @@ export async function getFarcasterContext() {
     return null;
   }
 }
+
+// Check if the user has added this mini app to their Farcaster client
+export async function isMiniAppAdded(): Promise<boolean> {
+  try {
+    const context = await sdk.context;
+    return context?.client?.added ?? false;
+  } catch {
+    return false;
+  }
+}
+
+// Prompt the user to add the mini app to their Farcaster client
+export async function promptAddMiniApp(): Promise<boolean> {
+  try {
+    await sdk.actions.addMiniApp();
+    return true;
+  } catch (error) {
+    console.error("Failed to prompt add mini app:", error);
+    return false;
+  }
+}
