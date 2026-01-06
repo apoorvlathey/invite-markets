@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
+import { Transaction } from "@/models/transaction";
 import { Listing } from "@/models/listing";
 import { chainId } from "@/lib/chain";
 
-interface SalesQueryResult {
+interface TransactionQueryResult {
   priceUsdc: number;
-  updatedAt: Date;
+  createdAt: Date;
   appId: string;
+  listingSlug: string;
 }
 
 export async function GET(
@@ -15,22 +17,38 @@ export async function GET(
 ) {
   try {
     await connectDB();
-    const { slug } = await params; 
+    const { slug } = await params;
 
-    const sales = await Listing.find({
+    // First, find all listing slugs that belong to this app
+    // (needed because transactions store listingSlug, not appId/appName directly for all cases)
+    const listings = await Listing.find({
       $or: [{ appId: slug }, { appName: slug }],
-      status: "sold",
       chainId,
     })
-      .sort({ updatedAt: -1 })
-      .limit(100)
-      .select("priceUsdc updatedAt appId")
-      .lean<SalesQueryResult[]>();
+      .select("slug appId")
+      .lean<{ slug: string; appId: string }[]>();
 
-    const formattedSales = sales.map((sale) => ({
-      timestamp: sale.updatedAt,
-      priceUsdc: sale.priceUsdc,
-      slug: sale.appId,
+    const listingSlugs = listings.map((l) => l.slug);
+
+    if (listingSlugs.length === 0) {
+      return NextResponse.json([]);
+    }
+
+    // Query transactions for all listings of this app
+    // This correctly captures every sale, including multi-use listings
+    const transactions = await Transaction.find({
+      listingSlug: { $in: listingSlugs },
+      chainId,
+    })
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .select("priceUsdc createdAt appId listingSlug")
+      .lean<TransactionQueryResult[]>();
+
+    const formattedSales = transactions.map((tx) => ({
+      timestamp: tx.createdAt,
+      priceUsdc: tx.priceUsdc,
+      slug: tx.listingSlug,
     }));
 
     return NextResponse.json(formattedSales);

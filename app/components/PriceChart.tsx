@@ -36,17 +36,39 @@ export function PriceChart({
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
 
+    // Determine the time span to decide on label format
+    const firstDate = new Date(sorted[0].timestamp);
+    const lastDate = new Date(sorted[sorted.length - 1].timestamp);
+    const timeSpanMs = lastDate.getTime() - firstDate.getTime();
+    const timeSpanHours = timeSpanMs / (1000 * 60 * 60);
+
+    // If all sales are within 24 hours, show time; otherwise show date
+    const showTimeOnly = timeSpanHours < 24;
+
     return sorted.map((sale) => {
       const d = new Date(sale.timestamp);
+
+      // Format axis label based on time span
+      let axisLabel: string;
+      if (showTimeOnly) {
+        // Show time (e.g., "2:30 PM")
+        axisLabel = d.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+        });
+      } else {
+        // Show date (e.g., "Jan 6")
+        axisLabel = d.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
+      }
 
       return {
         // numeric x value so each point is unique
         x: d.getTime(),
         // short label for XAxis
-        date: d.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        }),
+        date: axisLabel,
         // full label for tooltip
         fullDate: d.toLocaleString("en-US", {
           month: "short",
