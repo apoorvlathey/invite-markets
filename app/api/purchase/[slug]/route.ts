@@ -9,6 +9,7 @@ import { facilitator, settlePayment } from "thirdweb/x402";
 import { base, baseSepolia } from "thirdweb/chains";
 import { Transaction } from "@/models/transaction";
 import { chainId, isTestnet } from "@/lib/chain";
+import { sendPurchaseNotification } from "@/lib/discord";
 
 const network = isTestnet ? baseSepolia : base;
 
@@ -77,6 +78,20 @@ export async function POST(
 
   // Increment purchase count (and mark as sold if all uses consumed)
   await incrementPurchaseCount(slug);
+
+  // Send Discord notification (fire-and-forget, won't block response)
+  // NOTE: Only safe, public data is passed - inviteUrl and accessCode are intentionally excluded
+  sendPurchaseNotification(
+    {
+      slug,
+      appName: listing.appName,
+      appId: listing.appId,
+      priceUsdc: listing.priceUsdc,
+      sellerAddress: listing.sellerAddress,
+      buyerAddress: result.paymentReceipt.payer?.toLowerCase() ?? "Unknown",
+    },
+    chainId
+  );
 
   // Return appropriate data based on listing type
   const listingType = listing.listingType || "invite_link";
