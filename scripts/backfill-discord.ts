@@ -5,6 +5,7 @@
  * Run with: pnpm backfill:discord [options]
  *
  * Options:
+ *   --test             Test mode: send only 1 latest listing + 1 latest purchase
  *   --listings-only    Only backfill listings
  *   --purchases-only   Only backfill purchases
  *   --chain <id>       Only backfill for specific chain (8453 or 84532)
@@ -14,15 +15,21 @@
  *
  * Examples:
  *   pnpm backfill:discord
+ *   pnpm backfill:discord -- --test
  *   pnpm backfill:discord -- --dry-run
  *   pnpm backfill:discord -- --listings-only --chain 8453
  *   pnpm backfill:discord -- --since 2024-01-01
  */
 
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+
+// Load .env.local file (not auto-loaded by dotenv/config)
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 import mongoose from "mongoose";
 import { Listing } from "../models/listing";
 import { Transaction } from "../models/transaction";
+import { ResolvedAddress } from "../models/resolvedAddress";
 import {
   getWebhookUrl,
   buildNewListingEmbed,
@@ -35,6 +42,7 @@ import {
 // =============================================================================
 
 interface Options {
+  test: boolean;
   listingsOnly: boolean;
   purchasesOnly: boolean;
   chainId: number | null;
@@ -46,6 +54,7 @@ interface Options {
 function parseArgs(): Options {
   const args = process.argv.slice(2);
   const options: Options = {
+    test: false,
     listingsOnly: false,
     purchasesOnly: false,
     chainId: null,
@@ -56,6 +65,9 @@ function parseArgs(): Options {
 
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
+      case "--test":
+        options.test = true;
+        break;
       case "--listings-only":
         options.listingsOnly = true;
         break;
@@ -81,6 +93,7 @@ Discord Backfill Script
 Usage: pnpm backfill:discord [options]
 
 Options:
+  --test             Test mode: send only 1 latest listing + 1 latest purchase
   --listings-only    Only backfill listings
   --purchases-only   Only backfill purchases
   --chain <id>       Only backfill for specific chain (8453 or 84532)
@@ -91,6 +104,7 @@ Options:
 
 Examples:
   pnpm backfill:discord
+  pnpm backfill:discord -- --test
   pnpm backfill:discord -- --dry-run
   pnpm backfill:discord -- --listings-only --chain 8453
   pnpm backfill:discord -- --since 2024-01-01
@@ -108,6 +122,43 @@ Examples:
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Cache expiry for resolved addresses (2 days, matching the API)
+const CACHE_EXPIRY_MS = 2 * 24 * 60 * 60 * 1000;
+
+/**
+ * Batch resolve addresses from the cache.
+ * Returns a map of address -> display name (or undefined if not resolved).
+ */
+async function resolveAddresses(
+  addresses: string[]
+): Promise<Map<string, string>> {
+  const result = new Map<string, string>();
+  if (addresses.length === 0) return result;
+
+  const uniqueAddresses = [...new Set(addresses.map((a) => a.toLowerCase()))];
+  const cacheExpiryDate = new Date(Date.now() - CACHE_EXPIRY_MS);
+
+  try {
+    const resolved = await ResolvedAddress.find({
+      address: { $in: uniqueAddresses },
+      resolvedAt: { $gte: cacheExpiryDate },
+    }).lean();
+
+    for (const entry of resolved) {
+      // Format with @ prefix for Farcaster
+      const displayName =
+        entry.resolvedType === "farcaster"
+          ? `@${entry.displayName}`
+          : entry.displayName;
+      result.set(entry.address, displayName);
+    }
+  } catch (error) {
+    console.warn("  ⚠️  Failed to resolve addresses:", error);
+  }
+
+  return result;
 }
 
 // =============================================================================
@@ -203,12 +254,51 @@ async function sendDiscordEmbed(
 }
 
 // =============================================================================
+// TYPES FOR UNIFIED PROCESSING
+// =============================================================================
+
+type ListingType = "invite_link" | "access_code";
+
+interface ListingEvent {
+  type: "listing";
+  createdAt: Date;
+  data: {
+    slug: string;
+    listingType: ListingType;
+    appName?: string;
+    appId?: string;
+    appUrl?: string;
+    priceUsdc: number;
+    sellerAddress: string;
+    maxUses: number;
+    chainId: number;
+  };
+}
+
+interface PurchaseEvent {
+  type: "purchase";
+  createdAt: Date;
+  data: {
+    listingSlug: string;
+    appName?: string;
+    appId?: string;
+    priceUsdc: number;
+    sellerAddress: string;
+    buyerAddress: string;
+    chainId: number;
+  };
+}
+
+type BackfillEvent = ListingEvent | PurchaseEvent;
+
+// =============================================================================
 // BACKFILL FUNCTIONS
 // =============================================================================
 
-async function backfillListings(options: Options): Promise<number> {
-  console.log("\n📋 Backfilling Listings...\n");
-
+async function fetchListings(
+  options: Options,
+  limit?: number
+): Promise<ListingEvent[]> {
   // Build query
   const query: Record<string, unknown> = {};
   if (options.chainId) {
@@ -218,50 +308,43 @@ async function backfillListings(options: Options): Promise<number> {
     query.createdAt = { $gte: options.since };
   }
 
-  const listings = await Listing.find(query).sort({ createdAt: 1 }).lean();
+  // SECURITY: Explicitly exclude sensitive fields (inviteUrl, accessCode) at DB level
+  // Sort descending when limit is set (to get latest), ascending otherwise (chronological)
+  let queryBuilder = Listing.find(query)
+    .select("-inviteUrl -accessCode")
+    .sort({ createdAt: limit ? -1 : 1 });
 
-  console.log(`Found ${listings.length} listings to backfill\n`);
-
-  let sent = 0;
-  for (const listing of listings) {
-    const webhookUrl = getWebhookUrl(listing.chainId);
-    if (!webhookUrl) {
-      console.log(
-        `  ⏭️  Skipping ${listing.slug}: No webhook for chain ${listing.chainId}`
-      );
-      continue;
-    }
-
-    const embed = buildNewListingEmbed(
-      {
-        slug: listing.slug,
-        listingType: listing.listingType || "invite_link",
-        appName: listing.appName,
-        appId: listing.appId,
-        appUrl:
-          listing.listingType === "access_code" ? listing.appUrl : undefined,
-        priceUsdc: listing.priceUsdc,
-        sellerAddress: listing.sellerAddress,
-        maxUses: listing.maxUses ?? 1,
-      },
-      listing.chainId,
-      listing.createdAt
-    );
-
-    const success = await sendDiscordEmbed(webhookUrl, embed, options.dryRun);
-    if (success) sent++;
-
-    if (!options.dryRun && options.delay > 0) {
-      await sleep(options.delay);
-    }
+  if (limit) {
+    queryBuilder = queryBuilder.limit(limit);
   }
 
-  return sent;
+  const listings = await queryBuilder.lean();
+
+  return listings.map((listing) => ({
+    type: "listing" as const,
+    createdAt: listing.createdAt,
+    data: {
+      slug: listing.slug,
+      listingType: (listing.listingType || "invite_link") as ListingType,
+      appName: listing.appName,
+      appId: listing.appId,
+      appUrl:
+        listing.listingType === "access_code" ? listing.appUrl : undefined,
+      priceUsdc: listing.priceUsdc,
+      sellerAddress: listing.sellerAddress,
+      maxUses: listing.maxUses ?? 1,
+      chainId: listing.chainId,
+    },
+  }));
 }
 
-async function backfillPurchases(options: Options): Promise<number> {
-  console.log("\n🛒 Backfilling Purchases...\n");
-
+async function fetchPurchases(
+  options: Options,
+  limit?: number
+): Promise<{
+  events: PurchaseEvent[];
+  listingMap: Map<string, { appName?: string }>;
+}> {
   // Build query
   const query: Record<string, unknown> = {};
   if (options.chainId) {
@@ -271,50 +354,159 @@ async function backfillPurchases(options: Options): Promise<number> {
     query.createdAt = { $gte: options.since };
   }
 
-  const transactions = await Transaction.find(query)
-    .sort({ createdAt: 1 })
-    .lean();
+  // Sort descending when limit is set (to get latest), ascending otherwise (chronological)
+  let queryBuilder = Transaction.find(query).sort({
+    createdAt: limit ? -1 : 1,
+  });
 
-  console.log(`Found ${transactions.length} purchases to backfill\n`);
+  if (limit) {
+    queryBuilder = queryBuilder.limit(limit);
+  }
+
+  const transactions = await queryBuilder.lean();
 
   // Pre-fetch all related listings for appName lookup
+  // SECURITY: Only select fields needed for display (exclude inviteUrl, accessCode)
   const listingSlugs = [...new Set(transactions.map((t) => t.listingSlug))];
-  const listings = await Listing.find({ slug: { $in: listingSlugs } }).lean();
-  const listingMap = new Map(listings.map((l) => [l.slug, l]));
+  const listings = await Listing.find({ slug: { $in: listingSlugs } })
+    .select("slug appName")
+    .lean();
+  const listingMap = new Map(
+    listings.map((l) => [l.slug, { appName: l.appName }])
+  );
 
-  let sent = 0;
-  for (const transaction of transactions) {
-    const webhookUrl = getWebhookUrl(transaction.chainId);
+  const events: PurchaseEvent[] = transactions.map((transaction) => ({
+    type: "purchase" as const,
+    createdAt: transaction.createdAt,
+    data: {
+      listingSlug: transaction.listingSlug,
+      appName: listingMap.get(transaction.listingSlug)?.appName,
+      appId: transaction.appId,
+      priceUsdc: transaction.priceUsdc,
+      sellerAddress: transaction.sellerAddress,
+      buyerAddress: transaction.buyerAddress,
+      chainId: transaction.chainId,
+    },
+  }));
+
+  return { events, listingMap };
+}
+
+async function backfillChronological(
+  options: Options,
+  limit?: number
+): Promise<{ listingsSent: number; purchasesSent: number }> {
+  console.log(
+    limit
+      ? `\n📋 Testing with ${limit} latest listing(s) + ${limit} latest purchase(s)...\n`
+      : "\n📋 Backfilling in chronological order...\n"
+  );
+
+  // Fetch data based on options
+  const listingEvents = options.purchasesOnly
+    ? []
+    : await fetchListings(options, limit);
+  const { events: purchaseEvents } = options.listingsOnly
+    ? { events: [] }
+    : await fetchPurchases(options, limit);
+
+  console.log(
+    `Found ${listingEvents.length} listing(s) and ${purchaseEvents.length} purchase(s)`
+  );
+
+  // Combine and sort chronologically
+  const allEvents: BackfillEvent[] = [...listingEvents, ...purchaseEvents];
+  allEvents.sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+
+  console.log(`Processing ${allEvents.length} event(s) in chronological order`);
+
+  // Pre-resolve all addresses
+  const allAddresses = allEvents.flatMap((event) => {
+    if (event.type === "listing") {
+      return [event.data.sellerAddress];
+    } else {
+      return [event.data.sellerAddress, event.data.buyerAddress];
+    }
+  });
+  console.log(`Resolving ${new Set(allAddresses).size} unique addresses...`);
+  const resolvedNames = await resolveAddresses(allAddresses);
+  console.log(`Resolved ${resolvedNames.size} addresses\n`);
+
+  let listingsSent = 0;
+  let purchasesSent = 0;
+
+  for (const event of allEvents) {
+    const chainId =
+      event.type === "listing" ? event.data.chainId : event.data.chainId;
+    const webhookUrl = getWebhookUrl(chainId);
+
     if (!webhookUrl) {
+      const identifier =
+        event.type === "listing" ? event.data.slug : event.data.listingSlug;
       console.log(
-        `  ⏭️  Skipping purchase: No webhook for chain ${transaction.chainId}`
+        `  ⏭️  Skipping ${event.type} ${identifier}: No webhook for chain ${chainId}`
       );
       continue;
     }
 
-    const listing = listingMap.get(transaction.listingSlug);
-    const embed = buildPurchaseEmbed(
-      {
-        slug: transaction.listingSlug,
-        appName: listing?.appName,
-        appId: transaction.appId,
-        priceUsdc: transaction.priceUsdc,
-        sellerAddress: transaction.sellerAddress,
-        buyerAddress: transaction.buyerAddress,
-      },
-      transaction.chainId,
-      transaction.createdAt
-    );
+    let embed: DiscordEmbed;
+
+    if (event.type === "listing") {
+      embed = buildNewListingEmbed(
+        {
+          slug: event.data.slug,
+          listingType: event.data.listingType,
+          appName: event.data.appName,
+          appId: event.data.appId,
+          appUrl: event.data.appUrl,
+          priceUsdc: event.data.priceUsdc,
+          sellerAddress: event.data.sellerAddress,
+          maxUses: event.data.maxUses,
+          sellerDisplayName: resolvedNames.get(
+            event.data.sellerAddress.toLowerCase()
+          ),
+        },
+        event.data.chainId,
+        event.createdAt
+      );
+    } else {
+      embed = buildPurchaseEmbed(
+        {
+          slug: event.data.listingSlug,
+          appName: event.data.appName,
+          appId: event.data.appId,
+          priceUsdc: event.data.priceUsdc,
+          sellerAddress: event.data.sellerAddress,
+          buyerAddress: event.data.buyerAddress,
+          sellerDisplayName: resolvedNames.get(
+            event.data.sellerAddress.toLowerCase()
+          ),
+          buyerDisplayName: resolvedNames.get(
+            event.data.buyerAddress.toLowerCase()
+          ),
+        },
+        event.data.chainId,
+        event.createdAt
+      );
+    }
 
     const success = await sendDiscordEmbed(webhookUrl, embed, options.dryRun);
-    if (success) sent++;
+    if (success) {
+      if (event.type === "listing") {
+        listingsSent++;
+      } else {
+        purchasesSent++;
+      }
+    }
 
     if (!options.dryRun && options.delay > 0) {
       await sleep(options.delay);
     }
   }
 
-  return sent;
+  return { listingsSent, purchasesSent };
 }
 
 // =============================================================================
@@ -325,7 +517,15 @@ async function main() {
   const options = parseArgs();
 
   console.log("🚀 Discord Backfill Script\n");
+
+  if (options.test) {
+    console.log(
+      "🧪 TEST MODE: Only sending 1 latest listing + 1 latest purchase\n"
+    );
+  }
+
   console.log("Options:");
+  console.log(`  - Test mode: ${options.test ? "✅" : "❌"}`);
   console.log(`  - Listings: ${options.purchasesOnly ? "❌" : "✅"}`);
   console.log(`  - Purchases: ${options.listingsOnly ? "❌" : "✅"}`);
   console.log(`  - Chain: ${options.chainId || "All"}`);
@@ -360,22 +560,18 @@ async function main() {
   }
 
   console.log("\n📡 Connecting to MongoDB...");
-  await mongoose.connect(mongoUrl);
+  await mongoose.connect(mongoUrl, { dbName: "InviteMarkets" });
   console.log("✅ Connected!\n");
 
-  let listingsSent = 0;
-  let purchasesSent = 0;
+  // In test mode, only process 1 of each
+  const limit = options.test ? 1 : undefined;
 
   try {
-    // Backfill listings
-    if (!options.purchasesOnly) {
-      listingsSent = await backfillListings(options);
-    }
-
-    // Backfill purchases
-    if (!options.listingsOnly) {
-      purchasesSent = await backfillPurchases(options);
-    }
+    // Backfill in chronological order
+    const { listingsSent, purchasesSent } = await backfillChronological(
+      options,
+      limit
+    );
 
     console.log("\n" + "=".repeat(50));
     console.log("📊 Summary:");

@@ -7,6 +7,7 @@
  */
 
 import { ListingType } from "@/models/listing";
+import { featuredApps } from "@/data/featuredApps";
 
 // =============================================================================
 // SAFE DATA TYPES - Explicitly exclude sensitive fields
@@ -25,6 +26,8 @@ export interface ListingNotificationData {
   priceUsdc: number;
   sellerAddress: string;
   maxUses: number;
+  // Optional pre-resolved display name for seller (farcaster/basename/ens)
+  sellerDisplayName?: string;
 }
 
 /**
@@ -38,6 +41,9 @@ export interface PurchaseNotificationData {
   priceUsdc: number;
   sellerAddress: string;
   buyerAddress: string;
+  // Optional pre-resolved display names (farcaster/basename/ens)
+  sellerDisplayName?: string;
+  buyerDisplayName?: string;
 }
 
 // =============================================================================
@@ -63,6 +69,7 @@ export interface DiscordEmbed {
   color: number;
   fields: Array<{ name: string; value: string; inline?: boolean }>;
   url?: string;
+  thumbnail?: { url: string };
   footer?: { text: string };
   timestamp?: string;
 }
@@ -101,10 +108,43 @@ export function truncateAddress(address: string | undefined | null): string {
 }
 
 /**
- * Gets the display name for an app (prioritizes appName over appId).
+ * Gets featured app info by ID.
+ * Returns the app config if found, otherwise null.
+ */
+export function getFeaturedAppById(
+  appId: string | undefined
+): (typeof featuredApps)[0] | null {
+  if (!appId) return null;
+  return featuredApps.find((app) => app.id === appId) ?? null;
+}
+
+/**
+ * Gets the display name for an app.
+ * For featured apps (appId), looks up the proper appName.
+ * Falls back to custom appName, then appId, then "Unknown App".
  */
 export function getAppDisplayName(appName?: string, appId?: string): string {
+  // First check if it's a featured app - use proper appName
+  const featuredApp = getFeaturedAppById(appId);
+  if (featuredApp) {
+    return featuredApp.appName;
+  }
+  // Otherwise use custom appName or fallback
   return appName || appId || "Unknown App";
+}
+
+/**
+ * Gets the full URL for an app icon (for Discord thumbnail).
+ * Returns null if no icon is available.
+ */
+export function getAppIconUrl(appName?: string, appId?: string): string | null {
+  const featuredApp = getFeaturedAppById(appId);
+  if (featuredApp) {
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL || "https://invite.markets";
+    return `${baseUrl}${featuredApp.appIconUrl}`;
+  }
+  return null;
 }
 
 /**
@@ -147,12 +187,17 @@ export function buildNewListingEmbed(
 ): DiscordEmbed {
   const appName = getAppDisplayName(data.appName, data.appId);
   const listingUrl = getListingUrl(data.slug);
+  const appIconUrl = getAppIconUrl(data.appName, data.appId);
+
+  // Use resolved display name if provided, otherwise truncate address
+  const sellerDisplay =
+    data.sellerDisplayName || truncateAddress(data.sellerAddress);
 
   const fields: Array<{ name: string; value: string; inline?: boolean }> = [
-    { name: "💰 Price", value: `${data.priceUsdc} USDC`, inline: true },
+    { name: "💵 Price", value: `${data.priceUsdc} USDC`, inline: true },
     {
       name: "👤 Seller",
-      value: truncateAddress(data.sellerAddress),
+      value: sellerDisplay,
       inline: true,
     },
     {
@@ -161,9 +206,14 @@ export function buildNewListingEmbed(
       inline: true,
     },
     { name: "🔢 Uses", value: formatUses(data.maxUses), inline: true },
+    {
+      name: "🔗 Link",
+      value: `[View Listing](${listingUrl})`,
+      inline: true,
+    },
   ];
 
-  return {
+  const embed: DiscordEmbed = {
     title: `🆕 New Listing: ${appName}`,
     color: DISCORD_COLORS.GREEN,
     fields,
@@ -171,6 +221,13 @@ export function buildNewListingEmbed(
     footer: { text: getNetworkName(chainId) },
     timestamp: (timestamp || new Date()).toISOString(),
   };
+
+  // Add app icon thumbnail if available
+  if (appIconUrl) {
+    embed.thumbnail = { url: appIconUrl };
+  }
+
+  return embed;
 }
 
 /**
@@ -183,22 +240,34 @@ export function buildPurchaseEmbed(
 ): DiscordEmbed {
   const appName = getAppDisplayName(data.appName, data.appId);
   const listingUrl = getListingUrl(data.slug);
+  const appIconUrl = getAppIconUrl(data.appName, data.appId);
+
+  // Use resolved display names if provided, otherwise truncate addresses
+  const buyerDisplay =
+    data.buyerDisplayName || truncateAddress(data.buyerAddress);
+  const sellerDisplay =
+    data.sellerDisplayName || truncateAddress(data.sellerAddress);
 
   const fields: Array<{ name: string; value: string; inline?: boolean }> = [
-    { name: "💰 Price", value: `${data.priceUsdc} USDC`, inline: true },
+    { name: "💵 Price", value: `${data.priceUsdc} USDC`, inline: true },
     {
       name: "🛒 Buyer",
-      value: truncateAddress(data.buyerAddress),
+      value: buyerDisplay,
       inline: true,
     },
     {
       name: "👤 Seller",
-      value: truncateAddress(data.sellerAddress),
+      value: sellerDisplay,
+      inline: true,
+    },
+    {
+      name: "🔗 Link",
+      value: `[View Listing](${listingUrl})`,
       inline: true,
     },
   ];
 
-  return {
+  const embed: DiscordEmbed = {
     title: `💸 Sale: ${appName}`,
     color: DISCORD_COLORS.BLUE,
     fields,
@@ -206,6 +275,13 @@ export function buildPurchaseEmbed(
     footer: { text: getNetworkName(chainId) },
     timestamp: (timestamp || new Date()).toISOString(),
   };
+
+  // Add app icon thumbnail if available
+  if (appIconUrl) {
+    embed.thumbnail = { url: appIconUrl };
+  }
+
+  return embed;
 }
 
 // =============================================================================

@@ -78,13 +78,16 @@ curl -X POST "YOUR_WEBHOOK_URL" \
 
 ```
 ┌─────────────────────────────────────┐
-│ 🆕 New Listing: [App Name]          │
+│ 🆕 New Listing: [App Name]     [📷] │  ← App icon thumbnail (for featured apps)
 ├─────────────────────────────────────┤
-│ 💰 Price      │ 👤 Seller           │
-│ 10 USDC       │ 0x1234...5678       │
+│ 💵 Price      │ 👤 Seller           │
+│ 10 USDC       │ @username           │  ← Resolved name (Farcaster/Basename/ENS)
 ├─────────────────────────────────────┤
 │ 📋 Type       │ 🔢 Uses             │
 │ Invite Link   │ Single use          │
+├─────────────────────────────────────┤
+│ 🔗 Link                             │
+│ View Listing                        │  ← Clickable link to listing page
 ├─────────────────────────────────────┤
 │ Base Mainnet            • Just now  │
 └─────────────────────────────────────┘
@@ -94,17 +97,24 @@ curl -X POST "YOUR_WEBHOOK_URL" \
 
 ```
 ┌─────────────────────────────────────┐
-│ 💸 Sale: [App Name]                 │
+│ 💸 Sale: [App Name]            [📷] │  ← App icon thumbnail (for featured apps)
 ├─────────────────────────────────────┤
-│ 💰 Price      │ 🛒 Buyer            │
-│ 10 USDC       │ 0xabcd...efgh       │
+│ 💵 Price      │ 🛒 Buyer            │
+│ 10 USDC       │ @buyer              │  ← Resolved name (Farcaster/Basename/ENS)
 ├─────────────────────────────────────┤
-│ 👤 Seller                           │
-│ 0x1234...5678                       │
+│ 👤 Seller     │ 🔗 Link             │
+│ seller.base.eth │ View Listing      │  ← Resolved name + clickable link
 ├─────────────────────────────────────┤
 │ Base Mainnet            • Just now  │
 └─────────────────────────────────────┘
 ```
+
+### Features
+
+- **App Icon Thumbnails**: Featured apps display their icon in the embed
+- **Address Resolution**: Addresses are resolved to Farcaster usernames (@), Basenames (.base.eth), or ENS names when available
+- **Clickable Links**: Each notification includes a direct link to the listing page
+- **Featured App Names**: When `appId` is provided, the proper app name is looked up from featured apps
 
 ## Implementation Details
 
@@ -123,9 +133,28 @@ The following are exported and shared between the API routes and the backfill sc
 
 - **Constants**: `BASE_MAINNET_CHAIN_ID`, `BASE_SEPOLIA_CHAIN_ID`, `DISCORD_COLORS`
 - **Types**: `ListingNotificationData`, `PurchaseNotificationData`, `DiscordEmbed`, `DiscordWebhookPayload`
-- **Helpers**: `getWebhookUrl()`, `truncateAddress()`, `getAppDisplayName()`, `formatUses()`, `getListingUrl()`, `getNetworkName()`
+- **Helpers**: `getWebhookUrl()`, `truncateAddress()`, `getAppDisplayName()`, `getFeaturedAppById()`, `getAppIconUrl()`, `formatUses()`, `getListingUrl()`, `getNetworkName()`
 - **Embed Builders**: `buildNewListingEmbed()`, `buildPurchaseEmbed()`
 - **Sender Functions**: `sendDiscordEmbed()`, `sendNewListingNotification()`, `sendPurchaseNotification()`
+
+### Address Resolution
+
+The notification data interfaces support optional pre-resolved display names:
+
+```typescript
+interface ListingNotificationData {
+  // ... other fields
+  sellerDisplayName?: string; // Optional resolved name (Farcaster/Basename/ENS)
+}
+
+interface PurchaseNotificationData {
+  // ... other fields
+  sellerDisplayName?: string;
+  buyerDisplayName?: string;
+}
+```
+
+When provided, these display names are shown instead of truncated addresses. The backfill script pre-resolves addresses from the cache before building embeds.
 
 ### How It Works
 
@@ -200,6 +229,9 @@ The backfill script sends Discord notifications for existing listings and purcha
 ### Usage
 
 ```bash
+# Test mode: send 1 latest listing + 1 latest purchase (great for testing changes!)
+pnpm backfill:discord -- --test
+
 # Preview what would be sent (recommended first!)
 pnpm backfill:discord -- --dry-run
 
@@ -224,6 +256,9 @@ pnpm backfill:discord -- --since 2024-01-01
 # Combine options
 pnpm backfill:discord -- --listings-only --chain 8453 --since 2024-06-01
 
+# Test with dry run
+pnpm backfill:discord -- --test --dry-run
+
 # Adjust delay between notifications (default: 1000ms)
 pnpm backfill:discord -- --delay 500
 
@@ -235,6 +270,7 @@ pnpm backfill:discord -- --help
 
 | Option             | Description                                        |
 | ------------------ | -------------------------------------------------- |
+| `--test`           | Test mode: send only 1 latest listing + 1 purchase |
 | `--dry-run`        | Preview without sending (highly recommended first) |
 | `--listings-only`  | Only backfill new listings                         |
 | `--purchases-only` | Only backfill purchases/sales                      |
@@ -245,10 +281,62 @@ pnpm backfill:discord -- --help
 
 ### Example Output
 
+**Test Mode:**
+
+```
+🚀 Discord Backfill Script
+
+🧪 TEST MODE: Only sending 1 latest listing + 1 latest purchase
+
+Options:
+  - Test mode: ✅
+  - Listings: ✅
+  - Purchases: ✅
+  - Chain: All
+  - Since: All time
+  - Dry run: ❌
+  - Delay: 1000ms
+
+Webhook Status:
+  - Mainnet: ✅ Configured
+  - Testnet: ✅ Configured
+
+📡 Connecting to MongoDB...
+✅ Connected!
+
+📋 Testing with 1 latest listing(s)...
+
+Found 1 listing(s) to process
+Resolving 1 unique addresses...
+Resolved 1 addresses
+
+  ✅ Sent: 🆕 New Listing: Nado
+
+🛒 Testing with 1 latest purchase(s)...
+
+Found 1 purchase(s) to process
+Resolving 2 unique addresses...
+Resolved 2 addresses
+
+  ✅ Sent: 💸 Sale: hyENA
+
+==================================================
+📊 Summary:
+  - Listings sent: 1
+  - Purchases sent: 1
+  - Total: 2
+==================================================
+
+📡 Disconnected from MongoDB
+```
+
+**Dry Run Mode:**
+
 ```
 🚀 Discord Backfill Script
 
 Options:
+  - Test mode: ❌
   - Listings: ✅
   - Purchases: ✅
   - Chain: All
@@ -265,7 +353,9 @@ Webhook Status:
 
 📋 Backfilling Listings...
 
-Found 12 listings to backfill
+Found 12 listing(s) to process
+Resolving 8 unique addresses...
+Resolved 6 addresses
 
   [DRY RUN] Would send: 🆕 New Listing: Ethos
   [DRY RUN] Would send: 🆕 New Listing: Base App
@@ -273,7 +363,9 @@ Found 12 listings to backfill
 
 🛒 Backfilling Purchases...
 
-Found 5 purchases to backfill
+Found 5 purchase(s) to process
+Resolving 10 unique addresses...
+Resolved 8 addresses
 
   [DRY RUN] Would send: 💸 Sale: Ethos
   ...
