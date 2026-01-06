@@ -11,6 +11,7 @@ import {
 import { getDomain, getFaviconUrl } from "@/lib/url";
 import { featuredApps } from "@/data/featuredApps";
 import { chainId } from "@/lib/chain";
+import { sendNewListingNotification } from "@/lib/discord";
 
 // Create a custom nanoid with URL-safe characters
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 8);
@@ -286,6 +287,23 @@ export async function POST(request: NextRequest) {
     };
 
     const listing = await Listing.create(listingData);
+
+    // Send Discord notification (fire-and-forget, won't block response)
+    // NOTE: Only safe, public data is passed - inviteUrl and accessCode are intentionally excluded
+    sendNewListingNotification(
+      {
+        slug: listing.slug,
+        listingType: listing.listingType || "invite_link",
+        appName: listing.appName,
+        appId: listing.appId,
+        appUrl:
+          listing.listingType === "access_code" ? listing.appUrl : undefined,
+        priceUsdc: listing.priceUsdc,
+        sellerAddress: listing.sellerAddress,
+        maxUses: listing.maxUses ?? 1,
+      },
+      chainId
+    );
 
     return NextResponse.json(
       {
