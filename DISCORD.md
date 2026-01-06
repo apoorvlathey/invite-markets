@@ -11,25 +11,25 @@ The system sends real-time notifications to Discord channels when:
 
 Notifications are sent to different channels based on the chain:
 
-| Chain ID | Network        | Discord Channel       |
-| -------- | -------------- | --------------------- |
-| 8453     | Base Mainnet   | `#base-mainnet`       |
-| 84532    | Base Sepolia   | `#base-sepolia-testnet` |
+| Chain ID | Network      | Discord Channel         |
+| -------- | ------------ | ----------------------- |
+| 8453     | Base Mainnet | `#base-mainnet`         |
+| 84532    | Base Sepolia | `#base-sepolia-testnet` |
 
 ## Security
 
 **IMPORTANT**: The notification system is designed to prevent leaking sensitive data.
 
-| Field         | Visibility | Sent to Discord |
-| ------------- | ---------- | --------------- |
-| `inviteUrl`   | PRIVATE    | ❌ Never        |
-| `accessCode`  | PRIVATE    | ❌ Never        |
-| `appUrl`      | PUBLIC     | ✅ Safe         |
-| `priceUsdc`   | PUBLIC     | ✅ Safe         |
-| `sellerAddress` | PUBLIC   | ✅ Safe         |
-| `buyerAddress`  | PUBLIC   | ✅ Safe         |
-| `appName/appId` | PUBLIC   | ✅ Safe         |
-| `slug`        | PUBLIC     | ✅ Safe         |
+| Field           | Visibility | Sent to Discord |
+| --------------- | ---------- | --------------- |
+| `inviteUrl`     | PRIVATE    | ❌ Never        |
+| `accessCode`    | PRIVATE    | ❌ Never        |
+| `appUrl`        | PUBLIC     | ✅ Safe         |
+| `priceUsdc`     | PUBLIC     | ✅ Safe         |
+| `sellerAddress` | PUBLIC     | ✅ Safe         |
+| `buyerAddress`  | PUBLIC     | ✅ Safe         |
+| `appName/appId` | PUBLIC     | ✅ Safe         |
+| `slug`          | PUBLIC     | ✅ Safe         |
 
 The TypeScript interfaces in `lib/discord.ts` explicitly exclude sensitive fields, making it impossible to accidentally pass them.
 
@@ -110,12 +110,22 @@ curl -X POST "YOUR_WEBHOOK_URL" \
 
 ### Files
 
-| File                              | Purpose                                    |
-| --------------------------------- | ------------------------------------------ |
-| `lib/discord.ts`                  | Discord webhook utility with type-safe interfaces |
-| `app/api/listings/route.ts`       | Sends notification on new listing creation |
-| `app/api/purchase/[slug]/route.ts`| Sends notification on successful purchase  |
-| `scripts/backfill-discord.ts`     | Backfill script for historical data        |
+| File                               | Purpose                                                              |
+| ---------------------------------- | -------------------------------------------------------------------- |
+| `lib/discord.ts`                   | Discord webhook utility with type-safe interfaces and shared helpers |
+| `app/api/listings/route.ts`        | Sends notification on new listing creation                           |
+| `app/api/purchase/[slug]/route.ts` | Sends notification on successful purchase                            |
+| `scripts/backfill-discord.ts`      | Backfill script for historical data (imports from `lib/discord.ts`)  |
+
+### Shared Utilities in `lib/discord.ts`
+
+The following are exported and shared between the API routes and the backfill script:
+
+- **Constants**: `BASE_MAINNET_CHAIN_ID`, `BASE_SEPOLIA_CHAIN_ID`, `DISCORD_COLORS`
+- **Types**: `ListingNotificationData`, `PurchaseNotificationData`, `DiscordEmbed`, `DiscordWebhookPayload`
+- **Helpers**: `getWebhookUrl()`, `truncateAddress()`, `getAppDisplayName()`, `formatUses()`, `getListingUrl()`, `getNetworkName()`
+- **Embed Builders**: `buildNewListingEmbed()`, `buildPurchaseEmbed()`
+- **Sender Functions**: `sendDiscordEmbed()`, `sendNewListingNotification()`, `sendPurchaseNotification()`
 
 ### How It Works
 
@@ -204,15 +214,15 @@ pnpm backfill:discord -- --help
 
 ### Options
 
-| Option             | Description                                      |
-| ------------------ | ------------------------------------------------ |
+| Option             | Description                                        |
+| ------------------ | -------------------------------------------------- |
 | `--dry-run`        | Preview without sending (highly recommended first) |
-| `--listings-only`  | Only backfill new listings                       |
-| `--purchases-only` | Only backfill purchases/sales                    |
-| `--chain <id>`     | Filter by chain ID (8453 or 84532)               |
-| `--since <date>`   | Only items after this date (ISO format)          |
-| `--delay <ms>`     | Delay between notifications (default: 1000ms)    |
-| `--help`           | Show help message                                |
+| `--listings-only`  | Only backfill new listings                         |
+| `--purchases-only` | Only backfill purchases/sales                      |
+| `--chain <id>`     | Filter by chain ID (8453 or 84532)                 |
+| `--since <date>`   | Only items after this date (ISO format)            |
+| `--delay <ms>`     | Delay between notifications (default: 1000ms)      |
+| `--help`           | Show help message                                  |
 
 ### Example Output
 
@@ -286,4 +296,3 @@ If you see 429 errors, increase the delay between notifications or wait before r
 ### Wrong channel
 
 Verify `chainId` is correctly set in the database entries and matches the expected values (8453 for mainnet, 84532 for testnet).
-

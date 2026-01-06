@@ -41,27 +41,45 @@ export interface PurchaseNotificationData {
 }
 
 // =============================================================================
-// CONSTANTS
+// CONSTANTS (exported for backfill script)
 // =============================================================================
 
-const BASE_MAINNET_CHAIN_ID = 8453;
-const BASE_SEPOLIA_CHAIN_ID = 84532;
+export const BASE_MAINNET_CHAIN_ID = 8453;
+export const BASE_SEPOLIA_CHAIN_ID = 84532;
 
 // Colors for Discord embeds (decimal format)
-const COLORS = {
+export const DISCORD_COLORS = {
   GREEN: 0x00ff00, // New listing
   BLUE: 0x0099ff, // Purchase
 };
 
 // =============================================================================
-// HELPER FUNCTIONS
+// DISCORD EMBED TYPES (exported for backfill script)
+// =============================================================================
+
+export interface DiscordEmbed {
+  title: string;
+  description?: string;
+  color: number;
+  fields: Array<{ name: string; value: string; inline?: boolean }>;
+  url?: string;
+  footer?: { text: string };
+  timestamp?: string;
+}
+
+export interface DiscordWebhookPayload {
+  embeds: DiscordEmbed[];
+}
+
+// =============================================================================
+// HELPER FUNCTIONS (exported for backfill script)
 // =============================================================================
 
 /**
  * Gets the Discord webhook URL based on chain ID.
  * Returns undefined if webhook is not configured.
  */
-function getWebhookUrl(chainId: number): string | undefined {
+export function getWebhookUrl(chainId: number): string | undefined {
   if (chainId === BASE_MAINNET_CHAIN_ID) {
     return process.env.DISCORD_WEBHOOK_MAINNET;
   }
@@ -75,7 +93,7 @@ function getWebhookUrl(chainId: number): string | undefined {
  * Truncates an Ethereum address for display.
  * 0x1234...5678
  */
-function truncateAddress(address: string): string {
+export function truncateAddress(address: string): string {
   if (address.length <= 13) return address;
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
@@ -83,14 +101,14 @@ function truncateAddress(address: string): string {
 /**
  * Gets the display name for an app (prioritizes appName over appId).
  */
-function getAppDisplayName(appName?: string, appId?: string): string {
+export function getAppDisplayName(appName?: string, appId?: string): string {
   return appName || appId || "Unknown App";
 }
 
 /**
  * Formats the uses display string.
  */
-function formatUses(maxUses: number): string {
+export function formatUses(maxUses: number): string {
   if (maxUses === -1) return "Unlimited";
   if (maxUses === 1) return "Single use";
   return `${maxUses} uses`;
@@ -99,45 +117,31 @@ function formatUses(maxUses: number): string {
 /**
  * Gets the listing URL for the frontend.
  */
-function getListingUrl(slug: string): string {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL || "https://invite.markets";
+export function getListingUrl(slug: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://invite.markets";
   return `${baseUrl}/listing/${slug}`;
 }
 
 /**
  * Gets the network name for display.
  */
-function getNetworkName(chainId: number): string {
+export function getNetworkName(chainId: number): string {
   if (chainId === BASE_MAINNET_CHAIN_ID) return "Base Mainnet";
   if (chainId === BASE_SEPOLIA_CHAIN_ID) return "Base Sepolia";
   return `Chain ${chainId}`;
 }
 
 // =============================================================================
-// DISCORD EMBED BUILDERS
+// DISCORD EMBED BUILDERS (exported for backfill script)
 // =============================================================================
-
-interface DiscordEmbed {
-  title: string;
-  description?: string;
-  color: number;
-  fields: Array<{ name: string; value: string; inline?: boolean }>;
-  url?: string;
-  footer?: { text: string };
-  timestamp?: string;
-}
-
-interface DiscordWebhookPayload {
-  embeds: DiscordEmbed[];
-}
 
 /**
  * Builds a Discord embed for a new listing notification.
  */
-function buildNewListingEmbed(
+export function buildNewListingEmbed(
   data: ListingNotificationData,
-  chainId: number
+  chainId: number,
+  timestamp?: Date
 ): DiscordEmbed {
   const appName = getAppDisplayName(data.appName, data.appId);
   const listingUrl = getListingUrl(data.slug);
@@ -159,20 +163,21 @@ function buildNewListingEmbed(
 
   return {
     title: `🆕 New Listing: ${appName}`,
-    color: COLORS.GREEN,
+    color: DISCORD_COLORS.GREEN,
     fields,
     url: listingUrl,
     footer: { text: getNetworkName(chainId) },
-    timestamp: new Date().toISOString(),
+    timestamp: (timestamp || new Date()).toISOString(),
   };
 }
 
 /**
  * Builds a Discord embed for a purchase notification.
  */
-function buildPurchaseEmbed(
+export function buildPurchaseEmbed(
   data: PurchaseNotificationData,
-  chainId: number
+  chainId: number,
+  timestamp?: Date
 ): DiscordEmbed {
   const appName = getAppDisplayName(data.appName, data.appId);
   const listingUrl = getListingUrl(data.slug);
@@ -193,17 +198,58 @@ function buildPurchaseEmbed(
 
   return {
     title: `💸 Sale: ${appName}`,
-    color: COLORS.BLUE,
+    color: DISCORD_COLORS.BLUE,
     fields,
     url: listingUrl,
     footer: { text: getNetworkName(chainId) },
-    timestamp: new Date().toISOString(),
+    timestamp: (timestamp || new Date()).toISOString(),
   };
 }
 
 // =============================================================================
 // PUBLIC API
 // =============================================================================
+
+/**
+ * Sends a Discord embed to the appropriate webhook.
+ * Fire-and-forget - errors are logged but don't throw.
+ */
+export async function sendDiscordEmbed(
+  embed: DiscordEmbed,
+  chainId: number
+): Promise<boolean> {
+  const webhookUrl = getWebhookUrl(chainId);
+
+  if (!webhookUrl) {
+    console.log(
+      `[Discord] Webhook not configured for chainId ${chainId}, skipping notification`
+    );
+    return false;
+  }
+
+  const payload: DiscordWebhookPayload = {
+    embeds: [embed],
+  };
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      console.error(
+        `[Discord] Failed to send notification: ${response.status} ${response.statusText}`
+      );
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("[Discord] Error sending notification:", error);
+    return false;
+  }
+}
 
 /**
  * Sends a new listing notification to Discord.
@@ -216,34 +262,8 @@ export async function sendNewListingNotification(
   data: ListingNotificationData,
   chainId: number
 ): Promise<void> {
-  const webhookUrl = getWebhookUrl(chainId);
-
-  if (!webhookUrl) {
-    console.log(
-      `[Discord] Webhook not configured for chainId ${chainId}, skipping notification`
-    );
-    return;
-  }
-
-  const payload: DiscordWebhookPayload = {
-    embeds: [buildNewListingEmbed(data, chainId)],
-  };
-
-  try {
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      console.error(
-        `[Discord] Failed to send new listing notification: ${response.status} ${response.statusText}`
-      );
-    }
-  } catch (error) {
-    console.error("[Discord] Error sending new listing notification:", error);
-  }
+  const embed = buildNewListingEmbed(data, chainId);
+  await sendDiscordEmbed(embed, chainId);
 }
 
 /**
@@ -257,33 +277,6 @@ export async function sendPurchaseNotification(
   data: PurchaseNotificationData,
   chainId: number
 ): Promise<void> {
-  const webhookUrl = getWebhookUrl(chainId);
-
-  if (!webhookUrl) {
-    console.log(
-      `[Discord] Webhook not configured for chainId ${chainId}, skipping notification`
-    );
-    return;
-  }
-
-  const payload: DiscordWebhookPayload = {
-    embeds: [buildPurchaseEmbed(data, chainId)],
-  };
-
-  try {
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      console.error(
-        `[Discord] Failed to send purchase notification: ${response.status} ${response.statusText}`
-      );
-    }
-  } catch (error) {
-    console.error("[Discord] Error sending purchase notification:", error);
-  }
+  const embed = buildPurchaseEmbed(data, chainId);
+  await sendDiscordEmbed(embed, chainId);
 }
-

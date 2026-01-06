@@ -2,7 +2,7 @@
  * Discord Backfill Script
  *
  * Sends Discord notifications for existing listings and purchases.
- * Run with: npx tsx scripts/backfill-discord.ts [options]
+ * Run with: pnpm backfill:discord [options]
  *
  * Options:
  *   --listings-only    Only backfill listings
@@ -13,28 +13,22 @@
  *   --delay <ms>       Delay between notifications (default: 1000ms)
  *
  * Examples:
- *   npx tsx scripts/backfill-discord.ts
- *   npx tsx scripts/backfill-discord.ts --dry-run
- *   npx tsx scripts/backfill-discord.ts --listings-only --chain 8453
- *   npx tsx scripts/backfill-discord.ts --since 2024-01-01
+ *   pnpm backfill:discord
+ *   pnpm backfill:discord -- --dry-run
+ *   pnpm backfill:discord -- --listings-only --chain 8453
+ *   pnpm backfill:discord -- --since 2024-01-01
  */
 
 import "dotenv/config";
 import mongoose from "mongoose";
-import { Listing, type IListing } from "../models/listing";
-import { Transaction, type ITransaction } from "../models/transaction";
-
-// =============================================================================
-// CONFIGURATION
-// =============================================================================
-
-const BASE_MAINNET_CHAIN_ID = 8453;
-const BASE_SEPOLIA_CHAIN_ID = 84532;
-
-const COLORS = {
-  GREEN: 0x00ff00,
-  BLUE: 0x0099ff,
-};
+import { Listing } from "../models/listing";
+import { Transaction } from "../models/transaction";
+import {
+  getWebhookUrl,
+  buildNewListingEmbed,
+  buildPurchaseEmbed,
+  type DiscordEmbed,
+} from "../lib/discord";
 
 // =============================================================================
 // ARGUMENT PARSING
@@ -84,7 +78,7 @@ function parseArgs(): Options {
         console.log(`
 Discord Backfill Script
 
-Usage: npx tsx scripts/backfill-discord.ts [options]
+Usage: pnpm backfill:discord [options]
 
 Options:
   --listings-only    Only backfill listings
@@ -96,10 +90,10 @@ Options:
   --help             Show this help message
 
 Examples:
-  npx tsx scripts/backfill-discord.ts
-  npx tsx scripts/backfill-discord.ts --dry-run
-  npx tsx scripts/backfill-discord.ts --listings-only --chain 8453
-  npx tsx scripts/backfill-discord.ts --since 2024-01-01
+  pnpm backfill:discord
+  pnpm backfill:discord -- --dry-run
+  pnpm backfill:discord -- --listings-only --chain 8453
+  pnpm backfill:discord -- --since 2024-01-01
         `);
         process.exit(0);
     }
@@ -112,42 +106,6 @@ Examples:
 // HELPERS
 // =============================================================================
 
-function getWebhookUrl(chainId: number): string | undefined {
-  if (chainId === BASE_MAINNET_CHAIN_ID) {
-    return process.env.DISCORD_WEBHOOK_MAINNET;
-  }
-  if (chainId === BASE_SEPOLIA_CHAIN_ID) {
-    return process.env.DISCORD_WEBHOOK_TESTNET;
-  }
-  return undefined;
-}
-
-function truncateAddress(address: string): string {
-  if (address.length <= 13) return address;
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
-
-function getAppDisplayName(appName?: string, appId?: string): string {
-  return appName || appId || "Unknown App";
-}
-
-function formatUses(maxUses: number): string {
-  if (maxUses === -1) return "Unlimited";
-  if (maxUses === 1) return "Single use";
-  return `${maxUses} uses`;
-}
-
-function getListingUrl(slug: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://invite.markets";
-  return `${baseUrl}/listing/${slug}`;
-}
-
-function getNetworkName(chainId: number): string {
-  if (chainId === BASE_MAINNET_CHAIN_ID) return "Base Mainnet";
-  if (chainId === BASE_SEPOLIA_CHAIN_ID) return "Base Sepolia";
-  return `Chain ${chainId}`;
-}
-
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -155,16 +113,6 @@ function sleep(ms: number): Promise<void> {
 // =============================================================================
 // DISCORD API
 // =============================================================================
-
-interface DiscordEmbed {
-  title: string;
-  description?: string;
-  color: number;
-  fields: Array<{ name: string; value: string; inline?: boolean }>;
-  url?: string;
-  footer?: { text: string };
-  timestamp?: string;
-}
 
 async function sendDiscordEmbed(
   webhookUrl: string,
@@ -200,71 +148,6 @@ async function sendDiscordEmbed(
 // BACKFILL FUNCTIONS
 // =============================================================================
 
-function buildListingEmbed(listing: IListing): DiscordEmbed {
-  const appName = getAppDisplayName(listing.appName, listing.appId);
-  const listingUrl = getListingUrl(listing.slug);
-
-  return {
-    title: `🆕 New Listing: ${appName}`,
-    color: COLORS.GREEN,
-    fields: [
-      { name: "💰 Price", value: `${listing.priceUsdc} USDC`, inline: true },
-      {
-        name: "👤 Seller",
-        value: truncateAddress(listing.sellerAddress),
-        inline: true,
-      },
-      {
-        name: "📋 Type",
-        value:
-          listing.listingType === "access_code" ? "Access Code" : "Invite Link",
-        inline: true,
-      },
-      {
-        name: "🔢 Uses",
-        value: formatUses(listing.maxUses ?? 1),
-        inline: true,
-      },
-    ],
-    url: listingUrl,
-    footer: { text: getNetworkName(listing.chainId) },
-    timestamp: listing.createdAt.toISOString(),
-  };
-}
-
-function buildPurchaseEmbed(
-  transaction: ITransaction,
-  listing: IListing | null
-): DiscordEmbed {
-  const appName = getAppDisplayName(listing?.appName, transaction.appId);
-  const listingUrl = getListingUrl(transaction.listingSlug);
-
-  return {
-    title: `💸 Sale: ${appName}`,
-    color: COLORS.BLUE,
-    fields: [
-      {
-        name: "💰 Price",
-        value: `${transaction.priceUsdc} USDC`,
-        inline: true,
-      },
-      {
-        name: "🛒 Buyer",
-        value: truncateAddress(transaction.buyerAddress),
-        inline: true,
-      },
-      {
-        name: "👤 Seller",
-        value: truncateAddress(transaction.sellerAddress),
-        inline: true,
-      },
-    ],
-    url: listingUrl,
-    footer: { text: getNetworkName(transaction.chainId) },
-    timestamp: transaction.createdAt.toISOString(),
-  };
-}
-
 async function backfillListings(options: Options): Promise<number> {
   console.log("\n📋 Backfilling Listings...\n");
 
@@ -291,7 +174,22 @@ async function backfillListings(options: Options): Promise<number> {
       continue;
     }
 
-    const embed = buildListingEmbed(listing);
+    const embed = buildNewListingEmbed(
+      {
+        slug: listing.slug,
+        listingType: listing.listingType || "invite_link",
+        appName: listing.appName,
+        appId: listing.appId,
+        appUrl:
+          listing.listingType === "access_code" ? listing.appUrl : undefined,
+        priceUsdc: listing.priceUsdc,
+        sellerAddress: listing.sellerAddress,
+        maxUses: listing.maxUses ?? 1,
+      },
+      listing.chainId,
+      listing.createdAt
+    );
+
     const success = await sendDiscordEmbed(webhookUrl, embed, options.dryRun);
     if (success) sent++;
 
@@ -321,7 +219,7 @@ async function backfillPurchases(options: Options): Promise<number> {
 
   console.log(`Found ${transactions.length} purchases to backfill\n`);
 
-  // Pre-fetch all related listings
+  // Pre-fetch all related listings for appName lookup
   const listingSlugs = [...new Set(transactions.map((t) => t.listingSlug))];
   const listings = await Listing.find({ slug: { $in: listingSlugs } }).lean();
   const listingMap = new Map(listings.map((l) => [l.slug, l]));
@@ -336,8 +234,20 @@ async function backfillPurchases(options: Options): Promise<number> {
       continue;
     }
 
-    const listing = listingMap.get(transaction.listingSlug) || null;
-    const embed = buildPurchaseEmbed(transaction, listing);
+    const listing = listingMap.get(transaction.listingSlug);
+    const embed = buildPurchaseEmbed(
+      {
+        slug: transaction.listingSlug,
+        appName: listing?.appName,
+        appId: transaction.appId,
+        priceUsdc: transaction.priceUsdc,
+        sellerAddress: transaction.sellerAddress,
+        buyerAddress: transaction.buyerAddress,
+      },
+      transaction.chainId,
+      transaction.createdAt
+    );
+
     const success = await sendDiscordEmbed(webhookUrl, embed, options.dryRun);
     if (success) sent++;
 
