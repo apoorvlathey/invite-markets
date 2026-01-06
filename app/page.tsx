@@ -23,6 +23,7 @@ import {
   getGradientForApp,
   type ListingsData,
 } from "@/lib/listings";
+import { getTrustLevelConfig } from "@/lib/ethos-scores";
 import { blo } from "blo";
 
 /* ---------- Types ---------- */
@@ -34,56 +35,6 @@ interface FeaturedAppWithCount {
   description: string;
   activeListings: number;
   gradient: { from: string; to: string };
-}
-
-/* ---------- Helper Functions ---------- */
-
-// Helper function to get trust level color and label
-function getTrustLevelConfig(level: string) {
-  const normalizedLevel = level.toLowerCase();
-
-  switch (normalizedLevel) {
-    case "trusted":
-      return {
-        bg: "bg-emerald-500/10",
-        border: "border-emerald-500/30",
-        text: "text-emerald-400",
-        dot: "bg-emerald-400",
-        label: "Trusted",
-      };
-    case "neutral":
-      return {
-        bg: "bg-blue-500/10",
-        border: "border-blue-500/30",
-        text: "text-blue-400",
-        dot: "bg-blue-400",
-        label: "Neutral",
-      };
-    case "questionable":
-      return {
-        bg: "bg-yellow-500/10",
-        border: "border-yellow-500/30",
-        text: "text-yellow-400",
-        dot: "bg-yellow-400",
-        label: "Questionable",
-      };
-    case "untrusted":
-      return {
-        bg: "bg-red-500/10",
-        border: "border-red-500/30",
-        text: "text-red-400",
-        dot: "bg-red-400",
-        label: "Untrusted",
-      };
-    default:
-      return {
-        bg: "bg-zinc-500/10",
-        border: "border-zinc-500/30",
-        text: "text-zinc-400",
-        dot: "bg-zinc-400",
-        label: "Unknown",
-      };
-  }
 }
 
 /* ---------- Page ---------- */
@@ -608,13 +559,15 @@ export default function Home() {
                             // Only show badge for multi-use or unlimited listings
                             if (!isUnlimited && maxUses <= 1) return null;
                             return (
-                              <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded ${
-                                isUnlimited
-                                  ? "bg-blue-500/20 text-blue-400"
-                                  : remaining === 1
+                              <span
+                                className={`inline-block mt-1 text-xs px-2 py-0.5 rounded ${
+                                  isUnlimited
+                                    ? "bg-blue-500/20 text-blue-400"
+                                    : remaining === 1
                                     ? "bg-yellow-500/20 text-yellow-400"
                                     : "bg-zinc-800 text-zinc-400"
-                              }`}>
+                                }`}
+                              >
                                 {isUnlimited ? `∞` : `${remaining} left`}
                               </span>
                             );
