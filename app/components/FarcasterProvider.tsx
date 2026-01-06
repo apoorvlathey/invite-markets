@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useActiveAccount, useSetActiveWallet } from "thirdweb/react";
 import { createThirdwebClient } from "thirdweb";
 import { EIP1193 } from "thirdweb/wallets";
 import {
-  initFarcasterSDK,
-  isFarcasterMiniApp,
-  getFarcasterProvider,
-  isMiniAppAdded,
-  promptAddMiniApp,
+  initMiniAppSDK,
+  isMiniAppContext,
+  getMiniAppProvider,
+  promptAddMiniAppIfNeeded,
 } from "@/lib/farcaster";
 
 const thirdwebClient = createThirdwebClient({
@@ -17,71 +16,51 @@ const thirdwebClient = createThirdwebClient({
 });
 
 export function FarcasterProvider({ children }: { children: React.ReactNode }) {
-  const [isInitialized, setIsInitialized] = useState(false);
   const activeAccount = useActiveAccount();
   const setActiveWallet = useSetActiveWallet();
 
   useEffect(() => {
     async function init() {
-      // Check if we're in a Farcaster mini-app context
-      if (!isFarcasterMiniApp()) {
-        setIsInitialized(true);
-        return;
-      }
+      // Check if we're in a mini app context using SDK's built-in detection
+      const inMiniApp = await isMiniAppContext();
+      if (!inMiniApp) return;
 
-      // Initialize the Farcaster SDK
-      const success = await initFarcasterSDK();
+      // Initialize the Mini App SDK (calls sdk.actions.ready())
+      // This works for any compatible client (Farcaster, Base app, etc.)
+      const success = await initMiniAppSDK();
+      if (!success) return;
 
-      if (success) {
-        // Check if the user has added this mini app and prompt them if not
-        const isAdded = await isMiniAppAdded();
-        if (!isAdded) {
-          console.log("Mini app not added, prompting user to add it...");
-          await promptAddMiniApp();
-        }
+      console.log("Mini app context detected, setting up wallet...");
 
-        // Auto-connect the Farcaster wallet if not already connected
-        if (!activeAccount) {
-          try {
-            // Get the Farcaster EIP-1193 provider
-            const farcasterProvider = getFarcasterProvider();
+      // Auto-connect the wallet if not already connected
+      if (!activeAccount) {
+        try {
+          const miniAppProvider = getMiniAppProvider();
+          if (miniAppProvider) {
+            const thirdwebWallet = EIP1193.fromProvider({
+              provider: miniAppProvider,
+            });
 
-            if (farcasterProvider) {
-              // Convert the Farcaster provider to a thirdweb wallet using the EIP1193 adapter
-              const thirdwebWallet = EIP1193.fromProvider({
-                provider: farcasterProvider,
-              });
+            await thirdwebWallet.connect({
+              client: thirdwebClient,
+            });
 
-              // Connect the wallet
-              await thirdwebWallet.connect({
-                client: thirdwebClient,
-              });
-
-              // Set it as the active wallet in thirdweb
-              setActiveWallet(thirdwebWallet);
-
-              console.log("Farcaster wallet connected via thirdweb");
-            }
-          } catch (error) {
-            console.error("Failed to auto-connect Farcaster wallet:", error);
+            setActiveWallet(thirdwebWallet);
+            console.log("Mini app wallet connected via thirdweb");
           }
+        } catch (error) {
+          console.error("Failed to auto-connect mini app wallet:", error);
         }
       }
 
-      setIsInitialized(true);
+      // Prompt to add mini app after a short delay
+      setTimeout(() => {
+        promptAddMiniAppIfNeeded();
+      }, 1000);
     }
 
     init();
   }, [activeAccount, setActiveWallet]);
-
-  // Optionally show a loading state while initializing in Farcaster context
-  if (!isInitialized && isFarcasterMiniApp()) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-        <div className="animate-pulse text-zinc-400">Loading...</div>
-      </div>
-    );
-  }
 
   return <>{children}</>;
 }
