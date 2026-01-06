@@ -88,7 +88,7 @@ export async function POST(
       appId: listing.appId,
       priceUsdc: listing.priceUsdc,
       sellerAddress: listing.sellerAddress,
-      buyerAddress: result.paymentReceipt.payer?.toLowerCase() || "",
+      buyerAddress: result.paymentReceipt.payer?.toLowerCase() ?? "Unknown",
     },
     chainId
   );
