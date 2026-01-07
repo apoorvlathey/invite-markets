@@ -104,7 +104,6 @@ export async function GET(request: NextRequest) {
 
         return {
           _id: tx._id,
-          txHash: tx.txHash,
           listingSlug: tx.listingSlug,
           sellerAddress: tx.sellerAddress,
           buyerAddress: tx.buyerAddress,
