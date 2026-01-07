@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import NProgress from "nprogress";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { featuredApps } from "@/data/featuredApps";
@@ -60,10 +60,15 @@ interface ListingWithEthos extends Listing {
   ethosData: EthosData | null;
 }
 
-interface SaleData {
-  timestamp: string;
+interface Transaction {
+  _id: string;
+  listingSlug: string;
+  sellerAddress: string;
+  buyerAddress: string;
   priceUsdc: number;
-  slug: string;
+  appId: string;
+  chainId: number;
+  createdAt: string;
 }
 
 type SortField = "price" | "date" | "ethos";
@@ -133,6 +138,7 @@ export default function AppPageClient() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
+  const [activeTab, setActiveTab] = useState<"listings" | "sales">("listings");
   const [sortField, setSortField] = useState<SortField>("price");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [purchasingSlug, setPurchasingSlug] = useState<string | null>(null);
@@ -168,7 +174,7 @@ export default function AppPageClient() {
     gcTime: 5 * 60 * 1000,
   });
 
-  const { data: salesData, isLoading: salesLoading } = useQuery<SaleData[]>({
+  const { data: salesTransactions, isLoading: salesLoading } = useQuery<Transaction[]>({
     queryKey: ["sales", slug],
     queryFn: async () => {
       const response = await fetch(`/api/sales/${encodeURIComponent(slug)}`);
@@ -179,6 +185,16 @@ export default function AppPageClient() {
     gcTime: 5 * 60 * 1000,
     enabled: !!slug,
   });
+
+  // Transform transactions for PriceChart
+  const salesData = useMemo(() => {
+    if (!salesTransactions) return [];
+    return salesTransactions.map(tx => ({
+      timestamp: tx.createdAt,
+      priceUsdc: tx.priceUsdc,
+      slug: tx.appId,
+    }));
+  }, [salesTransactions]);
 
   const error = queryError instanceof Error ? queryError.message : "";
 
@@ -277,6 +293,19 @@ export default function AppPageClient() {
   );
 
   const { resolvedAddresses } = useResolveAddresses(sellerAddresses);
+
+  // Get all addresses from sales transactions for resolution
+  const salesAddresses = useMemo(() => {
+    if (!salesTransactions) return [];
+    const addresses = new Set<string>();
+    salesTransactions.forEach((tx) => {
+      addresses.add(tx.sellerAddress);
+      addresses.add(tx.buyerAddress);
+    });
+    return [...addresses];
+  }, [salesTransactions]);
+
+  const { resolvedAddresses: salesResolvedAddresses } = useResolveAddresses(salesAddresses);
 
   // Scroll to top on mount
   useEffect(() => {
@@ -640,15 +669,87 @@ export default function AppPageClient() {
             </motion.div>
           )}
 
-          {/* Listings Table - Full Width */}
+          {/* Tabs Section - Full Width */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="lg:col-span-3"
           >
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6">
+            {/* Tab Navigation */}
+            <div className="flex gap-1 p-1 rounded-xl bg-zinc-900/50 border border-zinc-800 mb-6">
+              <button
+                onClick={() => setActiveTab("listings")}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium text-sm transition-all cursor-pointer ${
+                  activeTab === "listings"
+                    ? "bg-zinc-800 text-white shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/50"
+                }`}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
+                </svg>
+                <span>Available Listings</span>
+                {listings.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                    {listings.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("sales")}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium text-sm transition-all cursor-pointer ${
+                  activeTab === "sales"
+                    ? "bg-zinc-800 text-white shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/50"
+                }`}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                  />
+                </svg>
+                <span>Sales History</span>
+                {!salesLoading && salesTransactions && salesTransactions.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-400 text-xs font-semibold">
+                    {salesTransactions.length}
+                  </span>
+                )}
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Tab Content - Full Width */}
+          <div className="lg:col-span-3">
+            <AnimatePresence mode="wait">
+              {activeTab === "listings" ? (
+                <motion.div
+                  key="listings"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {/* Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6">
               <div className="flex items-center justify-between sm:justify-start gap-3">
                 <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
                   Available Listings
@@ -1055,7 +1156,321 @@ export default function AppPageClient() {
                 })}
               </div>
             )}
-          </motion.div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="sales"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {/* Sales Header */}
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
+                        Sales History
+                      </h2>
+                      {!salesLoading && salesTransactions && salesTransactions.length > 0 && (
+                        <span className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-800 border border-zinc-700 text-sm font-semibold text-white">
+                          {salesTransactions.length}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Sales Loading State */}
+                  {salesLoading && (
+                    <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
+                      {[...Array(3)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="border-b border-zinc-800 last:border-b-0 animate-pulse"
+                        >
+                          <div className="hidden md:grid grid-cols-[minmax(100px,1fr)_minmax(120px,1.5fr)_minmax(120px,1.5fr)_minmax(100px,1fr)] gap-4 px-5 py-4 items-center">
+                            <div className="h-4 w-16 bg-zinc-800 rounded" />
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-zinc-800" />
+                              <div className="h-4 w-20 bg-zinc-800 rounded" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-zinc-800" />
+                              <div className="h-4 w-20 bg-zinc-800 rounded" />
+                            </div>
+                            <div className="h-5 w-14 bg-zinc-800 rounded" />
+                          </div>
+                          <div className="md:hidden p-4 space-y-3">
+                            <div className="h-4 w-24 bg-zinc-800 rounded" />
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-zinc-800" />
+                              <div className="h-3 w-24 bg-zinc-800 rounded" />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Sales Empty State */}
+                  {!salesLoading && (!salesTransactions || salesTransactions.length === 0) && (
+                    <div className="rounded-xl bg-zinc-950 border border-zinc-800 p-12 text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center">
+                        <svg
+                          className="w-8 h-8 text-zinc-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                          />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        No sales yet
+                      </h3>
+                      <p className="text-zinc-400 text-sm">
+                        No purchases have been made for {displayName} invites yet.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Sales Table */}
+                  {!salesLoading && salesTransactions && salesTransactions.length > 0 && (
+                    <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
+                      {/* Desktop Table Header */}
+                      <div className="hidden md:grid grid-cols-[minmax(100px,1fr)_minmax(120px,1.5fr)_minmax(120px,1.5fr)_minmax(100px,1fr)] gap-4 px-5 py-3 bg-zinc-900/50 border-b border-zinc-800 text-xs font-medium uppercase tracking-wider">
+                        <div className="text-zinc-500">Time</div>
+                        <div className="text-zinc-500">Buyer</div>
+                        <div className="text-zinc-500">Seller</div>
+                        <div className="text-zinc-500">Price</div>
+                      </div>
+
+                      {/* Table Rows */}
+                      {salesTransactions.map((tx, i) => {
+                        const sellerInfo = getSellerDisplayInfo(
+                          tx.sellerAddress,
+                          salesResolvedAddresses
+                        );
+                        const buyerInfo = getSellerDisplayInfo(
+                          tx.buyerAddress,
+                          salesResolvedAddresses
+                        );
+
+                        const saleDate = new Date(tx.createdAt);
+                        const now = new Date();
+                        const diffMs = now.getTime() - saleDate.getTime();
+                        const diffMins = Math.floor(diffMs / 60000);
+                        const diffHours = Math.floor(diffMs / 3600000);
+                        const diffDays = Math.floor(diffMs / 86400000);
+
+                        let timeAgoText;
+                        if (diffMins < 1) timeAgoText = "Just now";
+                        else if (diffMins < 60) timeAgoText = `${diffMins}m ago`;
+                        else if (diffHours < 24) timeAgoText = `${diffHours}h ago`;
+                        else if (diffDays < 7) timeAgoText = `${diffDays}d ago`;
+                        else timeAgoText = saleDate.toLocaleDateString();
+
+                        return (
+                          <motion.div
+                            key={tx._id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            onClick={() => {
+                              NProgress.start();
+                              router.push(`/listing/${tx.listingSlug}`);
+                            }}
+                            className="border-b border-zinc-800 last:border-b-0 hover:bg-zinc-900/30 transition-colors cursor-pointer"
+                          >
+                            {/* Desktop Row */}
+                            <div className="hidden md:grid grid-cols-[minmax(100px,1fr)_minmax(120px,1.5fr)_minmax(120px,1.5fr)_minmax(100px,1fr)] gap-4 px-5 py-4 items-center">
+                              {/* Time */}
+                              <div className="flex items-center">
+                                <p className="text-sm font-medium text-zinc-300">
+                                  {timeAgoText}
+                                </p>
+                              </div>
+
+                              {/* Buyer */}
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-zinc-700">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={
+                                      buyerInfo.avatarUrl ||
+                                      blo(tx.buyerAddress as `0x${string}`)
+                                    }
+                                    alt="Buyer"
+                                    width={32}
+                                    height={32}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="min-w-0">
+                                  {buyerInfo.resolvedType ? (
+                                    <Link
+                                      href={`/profile/${tx.buyerAddress}`}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="font-medium text-sm text-white flex items-center gap-1 hover:text-cyan-400 transition-colors truncate"
+                                    >
+                                      {buyerInfo.resolvedType === "farcaster" && "@"}
+                                      {buyerInfo.displayName}
+                                      {buyerInfo.resolvedType === "farcaster" && (
+                                        <Image
+                                          src="/farcaster-logo.svg"
+                                          alt="Farcaster"
+                                          width={12}
+                                          height={12}
+                                          className="inline-block opacity-60"
+                                        />
+                                      )}
+                                    </Link>
+                                  ) : (
+                                    <Link
+                                      href={`/profile/${tx.buyerAddress}`}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="font-mono text-sm text-zinc-300 hover:text-cyan-400 transition-colors truncate"
+                                    >
+                                      {buyerInfo.shortAddress}
+                                    </Link>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Seller */}
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-zinc-700">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={
+                                      sellerInfo.avatarUrl ||
+                                      blo(tx.sellerAddress as `0x${string}`)
+                                    }
+                                    alt="Seller"
+                                    width={32}
+                                    height={32}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="min-w-0">
+                                  {sellerInfo.resolvedType ? (
+                                    <Link
+                                      href={`/profile/${tx.sellerAddress}`}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="font-medium text-sm text-white flex items-center gap-1 hover:text-cyan-400 transition-colors truncate"
+                                    >
+                                      {sellerInfo.resolvedType === "farcaster" && "@"}
+                                      {sellerInfo.displayName}
+                                      {sellerInfo.resolvedType === "farcaster" && (
+                                        <Image
+                                          src="/farcaster-logo.svg"
+                                          alt="Farcaster"
+                                          width={12}
+                                          height={12}
+                                          className="inline-block opacity-60"
+                                        />
+                                      )}
+                                    </Link>
+                                  ) : (
+                                    <Link
+                                      href={`/profile/${tx.sellerAddress}`}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="font-mono text-sm text-zinc-300 hover:text-cyan-400 transition-colors truncate"
+                                    >
+                                      {sellerInfo.shortAddress}
+                                    </Link>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Price */}
+                              <div className="flex items-center">
+                                <p className="text-sm font-bold text-cyan-400">
+                                  ${tx.priceUsdc.toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Mobile Card */}
+                            <div className="md:hidden p-4 space-y-3">
+                              <p className="text-sm text-zinc-400">{timeAgoText}</p>
+
+                              <div>
+                                <p className="text-xs text-zinc-500 mb-1">Buyer</p>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-zinc-700">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={
+                                        buyerInfo.avatarUrl ||
+                                        blo(tx.buyerAddress as `0x${string}`)
+                                      }
+                                      alt="Buyer"
+                                      width={24}
+                                      height={24}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <Link
+                                    href={`/profile/${tx.buyerAddress}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-sm text-zinc-300 hover:text-cyan-400 transition-colors truncate"
+                                  >
+                                    {buyerInfo.resolvedType
+                                      ? `${buyerInfo.resolvedType === "farcaster" ? "@" : ""}${buyerInfo.displayName}`
+                                      : buyerInfo.shortAddress}
+                                  </Link>
+                                </div>
+                              </div>
+
+                              <div>
+                                <p className="text-xs text-zinc-500 mb-1">Seller</p>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-zinc-700">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={
+                                        sellerInfo.avatarUrl ||
+                                        blo(tx.sellerAddress as `0x${string}`)
+                                      }
+                                      alt="Seller"
+                                      width={24}
+                                      height={24}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <Link
+                                    href={`/profile/${tx.sellerAddress}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-sm text-zinc-300 hover:text-cyan-400 transition-colors truncate"
+                                  >
+                                    {sellerInfo.resolvedType
+                                      ? `${sellerInfo.resolvedType === "farcaster" ? "@" : ""}${sellerInfo.displayName}`
+                                      : sellerInfo.shortAddress}
+                                  </Link>
+                                </div>
+                              </div>
+
+                              <div>
+                                <p className="text-xs text-zinc-500 mb-1">Price</p>
+                                <p className="text-lg font-bold text-cyan-400">
+                                  ${tx.priceUsdc.toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 

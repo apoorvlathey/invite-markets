@@ -4,13 +4,6 @@ import { Transaction } from "@/models/transaction";
 import { Listing } from "@/models/listing";
 import { chainId } from "@/lib/chain";
 
-interface TransactionQueryResult {
-  priceUsdc: number;
-  createdAt: Date;
-  appId: string;
-  listingSlug: string;
-}
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -35,23 +28,16 @@ export async function GET(
     }
 
     // Query transactions for all listings of this app
-    // This correctly captures every sale, including multi-use listings
+    // Return full transaction objects for the sales tab UI
     const transactions = await Transaction.find({
       listingSlug: { $in: listingSlugs },
       chainId,
     })
       .sort({ createdAt: -1 })
       .limit(100)
-      .select("priceUsdc createdAt appId listingSlug")
-      .lean<TransactionQueryResult[]>();
+      .lean();
 
-    const formattedSales = transactions.map((tx) => ({
-      timestamp: tx.createdAt,
-      priceUsdc: tx.priceUsdc,
-      slug: tx.listingSlug,
-    }));
-
-    return NextResponse.json(formattedSales);
+    return NextResponse.json(transactions);
   } catch (error) {
     console.error("Error fetching sales:", error);
     return NextResponse.json(
