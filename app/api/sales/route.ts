@@ -4,6 +4,7 @@ import { ITransaction, Transaction } from "@/models/transaction";
 import { Listing } from "@/models/listing";
 import { getDomain, getFaviconUrl } from "@/lib/url";
 import { featuredApps } from "@/data/featuredApps";
+import { chainId } from "@/lib/chain";
 
 /**
  * Gets the app icon URL for a transaction.
@@ -86,14 +87,14 @@ export async function GET(request: NextRequest) {
     const skip = parseInt(searchParams.get("skip") || "0");
 
     // Fetch transactions sorted by createdAt descending (newest first)
-    const transactions = await Transaction.find()
+    const transactions = await Transaction.find({ chainId })
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip(skip)
       .lean();
 
     // Get total count for pagination
-    const totalCount = await Transaction.countDocuments();
+    const totalCount = await Transaction.countDocuments({ chainId });
 
     // Enrich transactions with app info
     const enrichedTransactions = await Promise.all(
