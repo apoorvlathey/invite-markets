@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
-import { Listing } from "@/models/listing";
+import { Transaction } from "@/models/transaction";
 import { chainId } from "@/lib/chain";
-
-interface SalesQueryResult {
-  priceUsdc: number;
-  updatedAt: Date;
-  appId: string;
-}
 
 export async function GET(
   request: NextRequest,
@@ -15,25 +9,18 @@ export async function GET(
 ) {
   try {
     await connectDB();
-    const { slug } = await params; 
+    const { slug } = await params;
 
-    const sales = await Listing.find({
-      $or: [{ appId: slug }, { appName: slug }],
-      status: "sold",
+    // Fetch transactions for this specific app
+    const transactions = await Transaction.find({
+      $or: [{ appId: slug }],
       chainId,
     })
-      .sort({ updatedAt: -1 })
+      .sort({ createdAt: -1 })
       .limit(100)
-      .select("priceUsdc updatedAt appId")
-      .lean<SalesQueryResult[]>();
+      .lean();
 
-    const formattedSales = sales.map((sale) => ({
-      timestamp: sale.updatedAt,
-      priceUsdc: sale.priceUsdc,
-      slug: sale.appId,
-    }));
-
-    return NextResponse.json(formattedSales);
+    return NextResponse.json(transactions);
   } catch (error) {
     console.error("Error fetching sales:", error);
     return NextResponse.json(
