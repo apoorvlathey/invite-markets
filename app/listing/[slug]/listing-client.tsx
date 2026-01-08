@@ -145,15 +145,31 @@ export default function ListingClient() {
 
   // Find cheaper listing for the same app
   const cheaperListing = useMemo(() => {
-    if (!listing || !listingsData?.rawListings || !listing.appId) return null;
+    if (!listing || !listingsData?.rawListings) return null;
 
-    const sameAppListings = listingsData.rawListings.filter(
-      (l) =>
-        l.appId === listing.appId &&
-        l.slug !== listing.slug &&
-        l.status === "active" &&
-        l.priceUsdc < listing.priceUsdc
-    );
+    // Get the app identifier - could be appId (featured/dropdown) or appName (custom)
+    const appId = listing.appId;
+    const appName = listing.appName;
+
+    // Need at least one identifier to find similar listings
+    if (!appId && !appName) return null;
+
+    const sameAppListings = listingsData.rawListings.filter((l) => {
+      // Must be a different listing
+      if (l.slug === listing.slug) return false;
+      // Must be active and cheaper
+      if (l.status !== "active" || l.priceUsdc >= listing.priceUsdc) return false;
+
+      // Match by appId OR appName (handles both featured apps and custom apps)
+      // This ensures we find all listings for the same app regardless of how they were created
+      const matchesAppId = appId && l.appId === appId;
+      const matchesAppName = appName && l.appName === appName;
+      // Also check cross-matches (appId matches other's appName or vice versa)
+      const crossMatchId = appId && l.appName === appId;
+      const crossMatchName = appName && l.appId === appName;
+
+      return matchesAppId || matchesAppName || crossMatchId || crossMatchName;
+    });
 
     if (sameAppListings.length === 0) return null;
 
