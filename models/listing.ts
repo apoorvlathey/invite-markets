@@ -19,6 +19,8 @@ export interface IListing {
   // For custom apps, appName will be set (user input)
   appId?: string;
   appName?: string;
+  // Optional description for the listing (displayed on listing detail page)
+  description?: string;
   // Chain ID for multi-network support (e.g., 84532 for Base Sepolia, 8453 for Base Mainnet)
   chainId: number;
   // Maximum number of times this listing can be purchased (default: 1, -1 for unlimited)
@@ -76,6 +78,11 @@ const ListingSchema = new mongoose.Schema<IListing>(
     appName: {
       type: String,
       required: false,
+    },
+    description: {
+      type: String,
+      required: false,
+      maxlength: 500,
     },
     chainId: {
       type: Number,

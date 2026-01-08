@@ -23,6 +23,7 @@ export interface Listing {
   // Multi-use listing fields
   maxUses?: number; // Maximum purchases allowed (-1 for unlimited, default: 1)
   purchaseCount?: number; // Current number of purchases (default: 0)
+  description?: string; // Optional description for the listing
   createdAt: string;
   updatedAt: string;
 }
