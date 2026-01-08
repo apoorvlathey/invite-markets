@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
-import { Listing, type ListingType } from "@/models/listing";
+import { Listing } from "@/models/listing";
 import { customAlphabet } from "nanoid";
 import { verifyTypedData } from "viem";
 import {
@@ -8,45 +8,12 @@ import {
   EIP712_TYPES,
   type ListingMessage,
 } from "@/lib/signature";
-import { getDomain, getFaviconUrl } from "@/lib/url";
-import { featuredApps } from "@/data/featuredApps";
+import { getAppIconInfo } from "@/lib/url";
 import { chainId } from "@/lib/chain";
 import { sendNewListingNotification } from "@/lib/discord";
 
 // Create a custom nanoid with URL-safe characters
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 8);
-
-/**
- * Gets the app icon URL for a listing.
- * For featured apps, uses the configured icon.
- * For non-featured apps, extracts the domain from the URL and generates a favicon URL.
- */
-function getAppIconUrl(listing: {
-  appId?: string;
-  inviteUrl?: string;
-  appUrl?: string;
-  listingType?: ListingType;
-}): string {
-  // Check if this is a featured app
-  if (listing.appId) {
-    const featuredApp = featuredApps.find((app) => app.id === listing.appId);
-    if (featuredApp) {
-      return featuredApp.appIconUrl;
-    }
-  }
-
-  // For non-featured apps, get favicon from the domain
-  // Use appUrl for access_code type, inviteUrl for invite_link type
-  const url =
-    listing.listingType === "access_code" ? listing.appUrl : listing.inviteUrl;
-
-  if (!url) {
-    return getFaviconUrl(""); // Return default favicon
-  }
-
-  const domain = getDomain(url);
-  return getFaviconUrl(domain);
-}
 
 export async function GET() {
   try {
@@ -58,24 +25,28 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      listings: listings.map((listing) => ({
-        slug: listing.slug,
-        listingType: listing.listingType || "invite_link",
-        priceUsdc: listing.priceUsdc,
-        sellerAddress: listing.sellerAddress,
-        status: listing.status,
-        appId: listing.appId,
-        appName: listing.appName,
-        // appUrl is public for access_code type
-        appUrl:
-          listing.listingType === "access_code" ? listing.appUrl : undefined,
-        appIconUrl: getAppIconUrl(listing),
-        // Multi-use listing fields (with backward compatibility defaults)
-        maxUses: listing.maxUses ?? 1,
-        purchaseCount: listing.purchaseCount ?? 0,
-        createdAt: listing.createdAt,
-        updatedAt: listing.updatedAt,
-      })),
+      listings: listings.map((listing) => {
+        const iconInfo = getAppIconInfo(listing);
+        return {
+          slug: listing.slug,
+          listingType: listing.listingType || "invite_link",
+          priceUsdc: listing.priceUsdc,
+          sellerAddress: listing.sellerAddress,
+          status: listing.status,
+          appId: listing.appId,
+          appName: listing.appName,
+          // appUrl is public for access_code type
+          appUrl:
+            listing.listingType === "access_code" ? listing.appUrl : undefined,
+          appIconUrl: iconInfo.url,
+          iconNeedsDarkBg: iconInfo.needsDarkBg || false,
+          // Multi-use listing fields (with backward compatibility defaults)
+          maxUses: listing.maxUses ?? 1,
+          purchaseCount: listing.purchaseCount ?? 0,
+          createdAt: listing.createdAt,
+          updatedAt: listing.updatedAt,
+        };
+      }),
     });
   } catch (error) {
     console.error("Error fetching listings:", error);
@@ -305,6 +276,14 @@ export async function POST(request: NextRequest) {
       chainId
     );
 
+    const createdListingIconInfo = getAppIconInfo({
+      appId: listing.appId,
+      appName: listing.appName,
+      inviteUrl: listing.inviteUrl,
+      appUrl: listing.appUrl,
+      listingType: listing.listingType,
+    });
+
     return NextResponse.json(
       {
         success: true,
@@ -320,12 +299,8 @@ export async function POST(request: NextRequest) {
           status: listing.status,
           appId: listing.appId,
           appName: listing.appName,
-          appIconUrl: getAppIconUrl({
-            appId: listing.appId,
-            inviteUrl: listing.inviteUrl,
-            appUrl: listing.appUrl,
-            listingType: listing.listingType,
-          }),
+          appIconUrl: createdListingIconInfo.url,
+          iconNeedsDarkBg: createdListingIconInfo.needsDarkBg || false,
           maxUses: listing.maxUses,
           purchaseCount: listing.purchaseCount,
           createdAt: listing.createdAt,

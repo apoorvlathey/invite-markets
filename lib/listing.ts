@@ -1,40 +1,7 @@
 import { connectDB } from "@/lib/mongoose";
 import { Listing, type ListingType } from "@/models/listing";
-import { getDomain, getFaviconUrl } from "@/lib/url";
-import { featuredApps } from "@/data/featuredApps";
+import { getAppIconInfo } from "@/lib/url";
 import { chainId } from "@/lib/chain";
-
-/**
- * Gets the app icon URL for a listing.
- * For featured apps, uses the configured icon.
- * For non-featured apps, extracts the domain from the URL and generates a favicon URL.
- */
-function getAppIconUrl(listing: {
-  appId?: string;
-  inviteUrl?: string;
-  appUrl?: string;
-  listingType?: ListingType;
-}): string {
-  // Check if this is a featured app
-  if (listing.appId) {
-    const featuredApp = featuredApps.find((app) => app.id === listing.appId);
-    if (featuredApp) {
-      return featuredApp.appIconUrl;
-    }
-  }
-
-  // For non-featured apps, get favicon from the domain
-  // Use appUrl for access_code type, inviteUrl for invite_link type
-  const url =
-    listing.listingType === "access_code" ? listing.appUrl : listing.inviteUrl;
-
-  if (!url) {
-    return getFaviconUrl(""); // Return default favicon
-  }
-
-  const domain = getDomain(url);
-  return getFaviconUrl(domain);
-}
 
 export async function getListingBySlug(slug: string, includeSecrets: boolean) {
   await connectDB();
@@ -49,6 +16,9 @@ export async function getListingBySlug(slug: string, includeSecrets: boolean) {
   const maxUses = listing.maxUses ?? 1;
   const purchaseCount = listing.purchaseCount ?? 0;
 
+  // Get icon info including dark background flag
+  const iconInfo = getAppIconInfo(listing);
+
   // Base response - public data only
   const response = {
     slug: listing.slug,
@@ -58,7 +28,8 @@ export async function getListingBySlug(slug: string, includeSecrets: boolean) {
     status: listing.status,
     appId: listing.appId,
     appName: listing.appName,
-    appIconUrl: getAppIconUrl(listing),
+    appIconUrl: iconInfo.url,
+    iconNeedsDarkBg: iconInfo.needsDarkBg || false,
     // appUrl is public for access_code type
     appUrl: listingType === "access_code" ? listing.appUrl : undefined,
     // Multi-use listing fields

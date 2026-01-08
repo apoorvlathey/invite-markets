@@ -222,6 +222,7 @@ export default function AppPageClient() {
       return {
         name: firstListing.appName || slug,
         iconUrl: firstListing.appIconUrl || null,
+        iconNeedsDarkBg: firstListing.iconNeedsDarkBg || false,
       };
     }
     return null;
@@ -233,6 +234,7 @@ export default function AppPageClient() {
       return {
         name: appDataFromApi.name,
         iconUrl: appDataFromApi.iconUrl,
+        iconNeedsDarkBg: appDataFromApi.iconNeedsDarkBg || false,
         description: appDataFromApi.description,
         siteUrl: appDataFromApi.siteUrl,
       };
@@ -404,6 +406,7 @@ export default function AppPageClient() {
   // Determine the display info
   const displayName = featuredApp?.appName || appInfo?.name || slug;
   const displayIconUrl = featuredApp?.appIconUrl || appInfo?.iconUrl;
+  const displayIconNeedsDarkBg = appInfo?.iconNeedsDarkBg || false;
   const displayDescription =
     featuredApp?.description ||
     (appInfo && "description" in appInfo ? appInfo.description : null);
@@ -517,7 +520,9 @@ export default function AppPageClient() {
                         key={i}
                         className="w-10 h-10 flex items-center justify-center"
                       >
-                        <div className="w-full h-full bg-white rounded-lg p-1.5 flex items-center justify-center">
+                        <div className={`w-full h-full rounded-lg p-1.5 flex items-center justify-center ${
+                          displayIconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
+                        }`}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={displayIconUrl}
@@ -543,7 +548,9 @@ export default function AppPageClient() {
 
                   {/* Main Icon */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-zinc-600 shadow-2xl bg-white p-2 ring-4 ring-black/50">
+                    <div className={`w-20 h-20 rounded-2xl overflow-hidden border-2 border-zinc-600 shadow-2xl p-2 ring-4 ring-black/50 ${
+                      displayIconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
+                    }`}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={displayIconUrl}

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import { Listing } from "@/models/listing";
 import { featuredApps, getFeaturedAppsForChain } from "@/data/featuredApps";
-import { getDomain, getFaviconUrl } from "@/lib/url";
+import { getAppIconInfo } from "@/lib/url";
 import { chainId } from "@/lib/chain";
 
 interface AppAggregation {
@@ -19,6 +19,7 @@ interface AppData {
   id: string;
   name: string;
   iconUrl: string;
+  iconNeedsDarkBg: boolean;
   description: string;
   siteUrl?: string;
   totalListings: number;
@@ -82,6 +83,7 @@ export async function GET() {
         id: featuredApp.id,
         name: featuredApp.appName,
         iconUrl: featuredApp.appIconUrl,
+        iconNeedsDarkBg: false, // Featured apps have proper icons
         description: featuredApp.description,
         siteUrl: featuredApp.siteUrl,
         totalListings: 0,
@@ -108,23 +110,20 @@ export async function GET() {
       } else {
         // This is a custom app
         const appName = agg.appName || appKey;
-        // Use inviteUrl or appUrl (for access_code type listings)
-        const sampleUrl = agg.sampleInviteUrl || agg.sampleAppUrl;
-        let iconUrl = getFaviconUrl(""); // Default fallback
         
-        if (sampleUrl) {
-          try {
-            const domain = getDomain(sampleUrl);
-            iconUrl = getFaviconUrl(domain);
-          } catch {
-            // URL parsing failed, use default favicon
-          }
-        }
+        // Use centralized icon resolution
+        const iconInfo = getAppIconInfo({
+          appName,
+          inviteUrl: agg.sampleInviteUrl || undefined,
+          appUrl: agg.sampleAppUrl || undefined,
+          listingType: agg.sampleAppUrl ? "access_code" : "invite_link",
+        });
 
         appsMap.set(appKey, {
           id: appKey,
           name: appName,
-          iconUrl,
+          iconUrl: iconInfo.url,
+          iconNeedsDarkBg: iconInfo.needsDarkBg || false,
           description: `Early access invites for ${appName}`,
           totalListings: agg.totalListings,
           activeListings: agg.activeListings,

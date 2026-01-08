@@ -113,6 +113,7 @@ export default async function Image({
     : null;
   const appName = app?.appName ?? listing.appName ?? "Invite";
   const appIconUrl = listing.appIconUrl;
+  const iconNeedsDarkBg = listing.iconNeedsDarkBg || false;
   const gradient = getGradientForApp(appName);
   const isFeatured = !!app;
   const resolvedAddress = await getResolvedAddressFromCache(
@@ -216,7 +217,7 @@ export default async function Image({
                 width: "120px",
                 height: "120px",
                 borderRadius: "28px",
-                background: "#ffffff",
+                background: iconNeedsDarkBg ? "#18181b" : "#ffffff",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

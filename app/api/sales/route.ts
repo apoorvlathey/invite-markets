@@ -2,39 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import { ITransaction, Transaction } from "@/models/transaction";
 import { Listing } from "@/models/listing";
-import { getDomain, getFaviconUrl } from "@/lib/url";
+import { getAppIconInfo, getFaviconUrl, type AppIconInfo } from "@/lib/url";
 import { featuredApps } from "@/data/featuredApps";
 import { chainId } from "@/lib/chain";
 
 /**
- * Gets the app icon URL for a transaction.
- * First checks if the listing has an appIconUrl.
- * For featured apps, uses the configured icon.
- * For non-featured apps, generates a favicon URL.
+ * Gets the app icon info for a transaction by looking up the associated listing.
  */
-async function getAppIconUrl(transaction: ITransaction): Promise<string> {
+async function getTransactionAppIconInfo(transaction: ITransaction): Promise<AppIconInfo> {
   // Try to get listing to fetch appIconUrl if available
   try {
     const listing = await Listing.findOne({ slug: transaction.listingSlug }).lean();
     
     if (listing) {
-      // Check if this is a featured app
-      if (listing.appId) {
-        const featuredApp = featuredApps.find((app) => app.id === listing.appId);
-        if (featuredApp) {
-          return featuredApp.appIconUrl;
-        }
-      }
-
-      // For non-featured apps, get favicon from the domain
-      // Use appUrl for access_code type, inviteUrl for invite_link type
-      const url =
-        listing.listingType === "access_code" ? listing.appUrl : listing.inviteUrl;
-
-      if (url) {
-        const domain = getDomain(url);
-        return getFaviconUrl(domain);
-      }
+      return getAppIconInfo({
+        appId: listing.appId,
+        appName: listing.appName,
+        inviteUrl: listing.inviteUrl,
+        appUrl: listing.appUrl,
+        listingType: listing.listingType,
+      });
     }
   } catch (error) {
     console.error("Error fetching listing for icon:", error);
@@ -44,12 +31,12 @@ async function getAppIconUrl(transaction: ITransaction): Promise<string> {
   if (transaction.appId) {
     const featuredApp = featuredApps.find((app) => app.id === transaction.appId);
     if (featuredApp) {
-      return featuredApp.appIconUrl;
+      return { url: featuredApp.appIconUrl };
     }
   }
 
   // Return default favicon
-  return getFaviconUrl("");
+  return { url: getFaviconUrl("") };
 }
 
 /**
@@ -99,7 +86,7 @@ export async function GET(request: NextRequest) {
     // Enrich transactions with app info
     const enrichedTransactions = await Promise.all(
       transactions.map(async (tx) => {
-        const appIconUrl = await getAppIconUrl(tx);
+        const iconInfo = await getTransactionAppIconInfo(tx);
         const appName = await getAppName(tx);
 
         return {
@@ -110,7 +97,8 @@ export async function GET(request: NextRequest) {
           priceUsdc: tx.priceUsdc,
           appId: tx.appId,
           appName,
-          appIconUrl,
+          appIconUrl: iconInfo.url,
+          iconNeedsDarkBg: iconInfo.needsDarkBg || false,
           chainId: tx.chainId,
           createdAt: tx.createdAt,
         };
