@@ -188,6 +188,7 @@ function EditListingModal({
   // accessCode is available when authenticated as the seller (access_code type)
   const [accessCode, setAccessCode] = useState(listing.accessCode || "");
   const [appName, setAppName] = useState(listing.appName || "");
+  const [description, setDescription] = useState(listing.description || "");
   // Multi-use inventory fields
   const currentMaxUses = listing.maxUses ?? 1;
   const [maxUses, setMaxUses] = useState(
@@ -240,6 +241,7 @@ function EditListingModal({
         sellerAddress: account.address as `0x${string}`,
         appName: appNameValue,
         maxUses: maxUsesValue.toString(),
+        description: description || "",
         nonce,
       };
 
@@ -261,6 +263,7 @@ function EditListingModal({
           ...(isAccessCode ? { appUrl, accessCode } : { inviteUrl }),
           appName: listing.appId ? undefined : appName,
           maxUses: maxUsesValue,
+          description: description.trim() || undefined,
           nonce: nonce.toString(),
           chainId,
           signature,
@@ -430,6 +433,32 @@ function EditListingModal({
               />
             </div>
           )}
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-300 mb-2">
+              Description{" "}
+              <span className="text-zinc-500 font-normal text-xs">
+                (Optional)
+              </span>
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              maxLength={500}
+              placeholder="Add details about your invite or access code..."
+              className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none resize-none"
+            />
+            <div className="mt-1.5 flex justify-between items-center">
+              <p className="text-xs text-zinc-500">
+                Provide additional context about what buyers will get
+              </p>
+              <span className="text-xs text-zinc-500">
+                {description.length}/500
+              </span>
+            </div>
+          </div>
 
           {/* Max Uses (Inventory) - only show if not sold out */}
           {listing.status === "active" && (
