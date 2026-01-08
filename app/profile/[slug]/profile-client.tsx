@@ -78,6 +78,7 @@ interface Listing {
   // Multi-use listing fields
   maxUses?: number; // -1 for unlimited, default: 1
   purchaseCount?: number; // default: 0
+  description?: string;
   createdAt: string;
   updatedAt: string;
 }
