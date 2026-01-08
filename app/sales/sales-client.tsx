@@ -23,6 +23,7 @@ interface Transaction {
   appId: string;
   appName?: string;
   appIconUrl?: string;
+  iconNeedsDarkBg?: boolean;
   chainId: number;
   createdAt: string;
 }
@@ -179,7 +180,7 @@ export default function SalesClient() {
   const error = queryError ? "Failed to load sales" : null;
 
   const uniqueApps = useMemo(() => {
-    const appsMap = new Map<string, { name: string; iconUrl?: string; count: number }>();
+    const appsMap = new Map<string, { name: string; iconUrl?: string; iconNeedsDarkBg?: boolean; count: number }>();
     
     transactions.forEach((tx) => {
       const appName = resolveAppName(tx);
@@ -192,6 +193,7 @@ export default function SalesClient() {
         appsMap.set(key, {
           name: appName,
           iconUrl: tx.appIconUrl,
+          iconNeedsDarkBg: tx.iconNeedsDarkBg,
           count: 1,
         });
       }
@@ -461,7 +463,9 @@ export default function SalesClient() {
                           {/* App Icon */}
                           {app.iconUrl ? (
                             <div
-                              className="w-8 h-8 rounded-lg overflow-hidden border shrink-0 bg-white p-0.5"
+                              className={`w-8 h-8 rounded-lg overflow-hidden border shrink-0 p-0.5 ${
+                                app.iconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
+                              }`}
                               style={{
                                 borderColor: isSelected
                                   ? gradient.from
@@ -804,7 +808,9 @@ export default function SalesClient() {
                           <div className="flex items-center gap-2 min-w-0">
                             {tx.appIconUrl ? (
                               <div
-                                className="w-8 h-8 rounded-lg overflow-hidden border shrink-0 bg-white p-0.5"
+                                className={`w-8 h-8 rounded-lg overflow-hidden border shrink-0 p-0.5 ${
+                                  tx.iconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
+                                }`}
                                 style={{ borderColor: gradient.from }}
                               >
                                 <Image
@@ -940,7 +946,9 @@ export default function SalesClient() {
                           <div className="flex items-start gap-3">
                             {tx.appIconUrl ? (
                               <div
-                                className="w-10 h-10 rounded-lg overflow-hidden border shrink-0 bg-white p-0.5"
+                                className={`w-10 h-10 rounded-lg overflow-hidden border shrink-0 p-0.5 ${
+                                  tx.iconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
+                                }`}
                                 style={{ borderColor: gradient.from }}
                               >
                                 <Image

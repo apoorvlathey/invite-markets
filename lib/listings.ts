@@ -19,6 +19,7 @@ export interface Listing {
   appName?: string;
   appUrl?: string; // For access_code type - public URL
   appIconUrl?: string;
+  iconNeedsDarkBg?: boolean; // Whether the icon needs a dark background (e.g., white icons)
   // Multi-use listing fields
   maxUses?: number; // Maximum purchases allowed (-1 for unlimited, default: 1)
   purchaseCount?: number; // Current number of purchases (default: 0)
@@ -29,6 +30,7 @@ export interface Listing {
 export interface Invite {
   app: string;
   appIconUrl?: string;
+  iconNeedsDarkBg?: boolean; // Whether the icon needs a dark background
   description: string;
   price: string;
   priceUsdc: number;
@@ -136,6 +138,7 @@ function transformListing(listing: Listing): Invite {
   return {
     app: host.charAt(0).toUpperCase() + host.slice(1),
     appIconUrl: listing.appIconUrl,
+    iconNeedsDarkBg: listing.iconNeedsDarkBg,
     description: `Early access invite to ${host}`,
     price: `$${listing.priceUsdc}`,
     priceUsdc: listing.priceUsdc,

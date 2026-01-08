@@ -53,6 +53,7 @@ interface AppData {
   id: string;
   name: string;
   iconUrl: string;
+  iconNeedsDarkBg?: boolean;
   activeListings: number;
 }
 
@@ -487,7 +488,9 @@ export default function ListingsClient() {
                         >
                           {/* App Icon */}
                           <div
-                            className="w-8 h-8 rounded-lg overflow-hidden border shrink-0 bg-white p-0.5"
+                            className={`w-8 h-8 rounded-lg overflow-hidden border shrink-0 p-0.5 ${
+                              app.iconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
+                            }`}
                             style={{
                               borderColor: isSelected
                                 ? gradient.from
@@ -863,7 +866,9 @@ export default function ListingsClient() {
                         <div className="flex items-center gap-2 min-w-0">
                           {listing.appIconUrl ? (
                             <div
-                              className="w-8 h-8 rounded-lg overflow-hidden border shrink-0 bg-white p-0.5"
+                              className={`w-8 h-8 rounded-lg overflow-hidden border shrink-0 p-0.5 ${
+                                listing.iconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
+                              }`}
                               style={{ borderColor: gradient.from }}
                             >
                               <Image
@@ -1057,7 +1062,9 @@ export default function ListingsClient() {
                         <div className="flex items-start gap-3">
                           {listing.appIconUrl ? (
                             <div
-                              className="w-10 h-10 rounded-lg overflow-hidden border shrink-0 bg-white p-0.5"
+                              className={`w-10 h-10 rounded-lg overflow-hidden border shrink-0 p-0.5 ${
+                                listing.iconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
+                              }`}
                               style={{ borderColor: gradient.from }}
                             >
                               <Image

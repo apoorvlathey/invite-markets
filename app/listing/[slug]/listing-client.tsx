@@ -145,15 +145,31 @@ export default function ListingClient() {
 
   // Find cheaper listing for the same app
   const cheaperListing = useMemo(() => {
-    if (!listing || !listingsData?.rawListings || !listing.appId) return null;
+    if (!listing || !listingsData?.rawListings) return null;
 
-    const sameAppListings = listingsData.rawListings.filter(
-      (l) =>
-        l.appId === listing.appId &&
-        l.slug !== listing.slug &&
-        l.status === "active" &&
-        l.priceUsdc < listing.priceUsdc
-    );
+    // Get the app identifier - could be appId (featured/dropdown) or appName (custom)
+    const appId = listing.appId;
+    const appName = listing.appName;
+
+    // Need at least one identifier to find similar listings
+    if (!appId && !appName) return null;
+
+    const sameAppListings = listingsData.rawListings.filter((l) => {
+      // Must be a different listing
+      if (l.slug === listing.slug) return false;
+      // Must be active and cheaper
+      if (l.status !== "active" || l.priceUsdc >= listing.priceUsdc) return false;
+
+      // Match by appId OR appName (handles both featured apps and custom apps)
+      // This ensures we find all listings for the same app regardless of how they were created
+      const matchesAppId = appId && l.appId === appId;
+      const matchesAppName = appName && l.appName === appName;
+      // Also check cross-matches (appId matches other's appName or vice versa)
+      const crossMatchId = appId && l.appName === appId;
+      const crossMatchName = appName && l.appId === appName;
+
+      return matchesAppId || matchesAppName || crossMatchId || crossMatchName;
+    });
 
     if (sameAppListings.length === 0) return null;
 
@@ -393,6 +409,7 @@ export default function ListingClient() {
   // For non-featured apps, appId might contain the app name (when selected from existing apps)
   const appName = app?.appName ?? listing.appName ?? listing.appId ?? "Invite";
   const appIconUrl = app?.appIconUrl ?? listing.appIconUrl;
+  const iconNeedsDarkBg = listing.iconNeedsDarkBg || false;
   // For linking to app page: use appId for featured apps, appName for custom apps
   const appSlug = listing.appId || listing.appName;
   const gradient = getGradientForApp(appName);
@@ -878,7 +895,9 @@ export default function ListingClient() {
                         className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center"
                       >
                         {appIconUrl ? (
-                          <div className="w-full h-full bg-white rounded-lg p-1 sm:p-1.5 flex items-center justify-center">
+                          <div className={`w-full h-full rounded-lg p-1 sm:p-1.5 flex items-center justify-center ${
+                            iconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
+                          }`}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={appIconUrl}
@@ -915,7 +934,9 @@ export default function ListingClient() {
                   {/* Main Icon */}
                   <div className="relative z-10">
                     {appIconUrl ? (
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl overflow-hidden border-2 border-zinc-600 shadow-2xl bg-white p-1.5 sm:p-2 ring-4 ring-black/50">
+                      <div className={`w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-2xl overflow-hidden border-2 border-zinc-600 shadow-2xl p-1.5 sm:p-2 ring-4 ring-black/50 ${
+                        iconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
+                      }`}>
                         <Image
                           src={appIconUrl}
                           alt={`${appName} icon`}

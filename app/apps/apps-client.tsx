@@ -10,6 +10,7 @@ interface AppData {
   id: string;
   name: string;
   iconUrl: string;
+  iconNeedsDarkBg?: boolean;
   description: string;
   siteUrl?: string;
   totalListings: number;
@@ -217,7 +218,9 @@ function AppCard({ app, index }: { app: AppData; index: number }) {
                   key={j}
                   className="w-6 h-6 flex items-center justify-center"
                 >
-                  <div className="w-full h-full bg-white rounded-md p-0.5 flex items-center justify-center overflow-hidden">
+                  <div className={`w-full h-full rounded-md p-0.5 flex items-center justify-center overflow-hidden ${
+                    app.iconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
+                  }`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={app.iconUrl}
@@ -262,7 +265,9 @@ function AppCard({ app, index }: { app: AppData; index: number }) {
           <div className="p-5">
             <div className="flex items-start gap-3 mb-3">
               {/* App icon */}
-              <div className="w-12 h-12 rounded-xl overflow-hidden border border-zinc-700 bg-white p-1 shrink-0 shadow-lg">
+              <div className={`w-12 h-12 rounded-xl overflow-hidden border border-zinc-700 p-1 shrink-0 shadow-lg ${
+                app.iconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
+              }`}>
                 <Image
                   src={app.iconUrl}
                   alt={`${app.name} icon`}

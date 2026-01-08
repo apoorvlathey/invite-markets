@@ -530,7 +530,9 @@ export default function Home() {
                     <div className="p-4 sm:p-6">
                       <div className="flex items-start justify-between mb-4">
                         {invite.appIconUrl ? (
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden border border-zinc-700 bg-white p-1">
+                          <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden border border-zinc-700 p-1 ${
+                            invite.iconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
+                          }`}>
                             <Image
                               src={invite.appIconUrl}
                               alt={`${invite.app} icon`}

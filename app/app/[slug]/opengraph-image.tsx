@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { connectDB } from "@/lib/mongoose";
 import { Listing } from "@/models/listing";
 import { featuredApps } from "@/data/featuredApps";
+import { getAppIconInfo } from "@/lib/url";
 import {
   OG_SIZE,
   OG_CONTENT_TYPE,
@@ -60,17 +61,30 @@ async function getAppData(slug: string) {
   // For non-featured apps, get app info from first listing
   let appName = slug;
   let appIconUrl: string | null = null;
+  let iconNeedsDarkBg = false;
 
   if (featuredApp) {
     appName = featuredApp.appName;
     appIconUrl = featuredApp.appIconUrl;
   } else if (listings.length > 0) {
     const firstListing = listings[0] as {
+      appId?: string;
       appName?: string;
-      appIconUrl?: string;
+      inviteUrl?: string;
+      appUrl?: string;
+      listingType?: "invite_link" | "access_code";
     };
     appName = firstListing.appName || slug;
-    appIconUrl = firstListing.appIconUrl || null;
+    // Use centralized icon resolution
+    const iconInfo = getAppIconInfo({
+      appId: firstListing.appId,
+      appName: firstListing.appName,
+      inviteUrl: firstListing.inviteUrl,
+      appUrl: firstListing.appUrl,
+      listingType: firstListing.listingType,
+    });
+    appIconUrl = iconInfo.url;
+    iconNeedsDarkBg = iconInfo.needsDarkBg || false;
   }
 
   // Get cheapest price
@@ -83,6 +97,7 @@ async function getAppData(slug: string) {
   return {
     appName,
     appIconUrl,
+    iconNeedsDarkBg,
     listingCount,
     cheapestPrice,
     isFeatured: !!featuredApp,
@@ -269,7 +284,7 @@ export default async function Image({
                 width: "120px",
                 height: "120px",
                 borderRadius: "28px",
-                background: "#ffffff",
+                background: appData.iconNeedsDarkBg ? "#18181b" : "#ffffff",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
