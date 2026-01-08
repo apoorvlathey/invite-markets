@@ -43,6 +43,7 @@ export async function GET() {
           // Multi-use listing fields (with backward compatibility defaults)
           maxUses: listing.maxUses ?? 1,
           purchaseCount: listing.purchaseCount ?? 0,
+          description: listing.description,
           createdAt: listing.createdAt,
           updatedAt: listing.updatedAt,
         };
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest) {
       appId,
       appName,
       maxUses = 1, // Default to 1 for single-use listings
+      description,
     } = body;
 
     // Debug logging
@@ -255,6 +257,7 @@ export async function POST(request: NextRequest) {
       ...(listingType === "access_code" ? { appUrl, accessCode } : {}),
       ...(appId && appId.trim() ? { appId: appId.trim() } : {}),
       ...(appName && appName.trim() ? { appName: appName.trim() } : {}),
+      ...(description && description.trim() ? { description: description.trim() } : {}),
     };
 
     const listing = await Listing.create(listingData);
@@ -303,6 +306,7 @@ export async function POST(request: NextRequest) {
           iconNeedsDarkBg: createdListingIconInfo.needsDarkBg || false,
           maxUses: listing.maxUses,
           purchaseCount: listing.purchaseCount,
+          description: listing.description,
           createdAt: listing.createdAt,
         },
       },
