@@ -525,6 +525,15 @@ export default function ListingClient() {
                   : `Early access invite to ${appName}`}
               </p>
 
+              {/* Description */}
+              {listing.description && (
+                <div className="mb-6 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
+                  <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap">
+                    {listing.description}
+                  </p>
+                </div>
+              )}
+
               {/* Listing Type Badge & Inventory */}
               <div className="flex items-center gap-2 mb-6 flex-wrap">
                 <span

@@ -51,6 +51,7 @@ export default function SellClient() {
     priceUsdc: "",
     appInput: "",
     maxUses: "1", // Default to single use
+    description: "",
   });
   const [isUnlimitedUses, setIsUnlimitedUses] = useState(false);
   const [isUsesExpanded, setIsUsesExpanded] = useState(false);
@@ -287,6 +288,7 @@ export default function SellClient() {
           chainId,
           signature,
           maxUses: maxUsesValue,
+          description: formData.description.trim() || undefined,
           // Send appId for featured apps, appName for custom apps
           ...(selectedApp
             ? { appId: selectedApp.id }
@@ -351,7 +353,7 @@ export default function SellClient() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -367,6 +369,7 @@ export default function SellClient() {
       priceUsdc: "",
       appInput: "",
       maxUses: "1",
+      description: "",
     });
     setSelectedApp(null);
     setIsValueConfirmed(false);
@@ -773,6 +776,48 @@ export default function SellClient() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Description Field */}
+            <div>
+              <label
+                htmlFor="description"
+                className="flex items-center gap-2 text-sm font-semibold text-zinc-300 mb-3"
+              >
+                <svg
+                  className="w-4 h-4 text-cyan-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h7"
+                  />
+                </svg>
+                Description
+                <span className="text-zinc-500 font-normal text-xs">(Optional)</span>
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={3}
+                maxLength={500}
+                placeholder="Add details about your invite or access code..."
+                className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-150 hover:border-zinc-600 text-sm sm:text-base resize-none"
+              />
+              <div className="mt-2 flex justify-between items-center">
+                <p className="text-xs text-zinc-500">
+                  Provide additional context about what buyers will get
+                </p>
+                <span className="text-xs text-zinc-500">
+                  {formData.description.length}/500
+                </span>
               </div>
             </div>
 

@@ -22,6 +22,7 @@ export async function PATCH(request: NextRequest) {
       appId,
       appName,
       maxUses,
+      description,
       nonce,
       chainId: clientChainId,
       signature,
@@ -93,6 +94,7 @@ export async function PATCH(request: NextRequest) {
       sellerAddress: sellerAddress as `0x${string}`,
       appName: appName || "",
       maxUses: messageMaxUses,
+      description: description || "",
       nonce: BigInt(nonce),
     };
 
@@ -182,6 +184,11 @@ export async function PATCH(request: NextRequest) {
       listing.appName = appName?.trim() || undefined;
     }
 
+    // Update description if provided (can be empty string to clear it)
+    if (description !== undefined) {
+      listing.description = description?.trim() || undefined;
+    }
+
     // Handle maxUses update (only allow increasing to prevent abuse)
     if (maxUses !== undefined) {
       const newMaxUses =
@@ -240,6 +247,7 @@ export async function PATCH(request: NextRequest) {
         appName: listing.appName,
         maxUses: listing.maxUses ?? 1,
         purchaseCount: listing.purchaseCount ?? 0,
+        description: listing.description,
         status: listing.status,
         updatedAt: listing.updatedAt,
       },
