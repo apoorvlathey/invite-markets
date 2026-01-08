@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/mongoose";
 import { Transaction } from "@/models/transaction";
 import { Listing } from "@/models/listing";
 import { chainId } from "@/lib/chain";
-import { verifyMessage } from "viem";
+import { verifyMessageSignature } from "@/lib/viem";
 
 /**
  * Verify if the request is authenticated as the seller.
@@ -29,7 +29,8 @@ async function verifySellerAuth(
     const message = Buffer.from(encodedMessage, "base64").toString("utf-8");
 
     // Verify the signature matches the expected seller address
-    const isValid = await verifyMessage({
+    // Uses thirdweb's verifySignature which supports both EOAs and smart contract wallets (ERC-1271)
+    const isValid = await verifyMessageSignature({
       address: expectedAddress as `0x${string}`,
       message,
       signature: signature as `0x${string}`,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyMessage } from "viem";
+import { verifyMessageSignature } from "@/lib/viem";
 
 const ADMIN_ETH_ADDRESSES = (process.env.ADMIN_ETH_ADDRESSES || "")
   .split(",")
@@ -28,8 +28,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the signature
+    // Uses thirdweb's verifySignature which supports both EOAs and smart contract wallets (ERC-1271)
     try {
-      const isValid = await verifyMessage({
+      const isValid = await verifyMessageSignature({
         address: address as `0x${string}`,
         message,
         signature: signature as `0x${string}`,

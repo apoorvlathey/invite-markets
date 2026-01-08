@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import { Listing } from "@/models/listing";
 import { customAlphabet } from "nanoid";
-import { verifyTypedData } from "viem";
 import {
   getEIP712Domain,
   EIP712_TYPES,
@@ -11,6 +10,7 @@ import {
 import { getAppIconInfo } from "@/lib/url";
 import { chainId } from "@/lib/chain";
 import { sendNewListingNotification } from "@/lib/discord";
+import { verifyTypedDataSignature } from "@/lib/viem";
 
 // Create a custom nanoid with URL-safe characters
 const nanoid = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 8);
@@ -190,12 +190,15 @@ export async function POST(request: NextRequest) {
       nonce: BigInt(nonce),
     };
 
-    const isValid = await verifyTypedData({
+    // Use thirdweb's verifyTypedData which supports both:
+    // - EOA signatures (standard ECDSA verification)
+    // - Smart contract wallet signatures (ERC-1271 isValidSignature)
+    const isValid = await verifyTypedDataSignature({
       address: sellerAddress as `0x${string}`,
       domain: getEIP712Domain(chainId),
       types: EIP712_TYPES,
       primaryType: "CreateListing",
-      message,
+      message: message as unknown as Record<string, unknown>,
       signature: signature as `0x${string}`,
     });
 
@@ -257,7 +260,9 @@ export async function POST(request: NextRequest) {
       ...(listingType === "access_code" ? { appUrl, accessCode } : {}),
       ...(appId && appId.trim() ? { appId: appId.trim() } : {}),
       ...(appName && appName.trim() ? { appName: appName.trim() } : {}),
-      ...(description && description.trim() ? { description: description.trim() } : {}),
+      ...(description && description.trim()
+        ? { description: description.trim() }
+        : {}),
     };
 
     const listing = await Listing.create(listingData);

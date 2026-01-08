@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import { Waitlist } from "@/models/waitlist";
-import { verifyMessage } from "viem";
+import { verifyMessageSignature } from "@/lib/viem";
 
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 const ADMIN_ETH_ADDRESSES = (process.env.ADMIN_ETH_ADDRESSES || "")
@@ -154,8 +154,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify the signature
+    // Uses thirdweb's verifySignature which supports both EOAs and smart contract wallets (ERC-1271)
     try {
-      const isValid = await verifyMessage({
+      const isValid = await verifyMessageSignature({
         address: address as `0x${string}`,
         message,
         signature: signature as `0x${string}`,

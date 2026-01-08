@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import { Listing, type ListingType } from "@/models/listing";
-import { verifyTypedData } from "viem";
 import {
   getEIP712Domain,
   EIP712_UPDATE_TYPES,
   type UpdateListingMessage,
 } from "@/lib/signature";
 import { chainId } from "@/lib/chain";
+import { verifyTypedDataSignature } from "@/lib/viem";
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -98,12 +98,15 @@ export async function PATCH(request: NextRequest) {
       nonce: BigInt(nonce),
     };
 
-    const isValid = await verifyTypedData({
+    // Use thirdweb's verifyTypedData which supports both:
+    // - EOA signatures (standard ECDSA verification)
+    // - Smart contract wallet signatures (ERC-1271 isValidSignature)
+    const isValid = await verifyTypedDataSignature({
       address: sellerAddress as `0x${string}`,
       domain: getEIP712Domain(chainId),
       types: EIP712_UPDATE_TYPES,
       primaryType: "UpdateListing",
-      message,
+      message: message as unknown as Record<string, unknown>,
       signature: signature as `0x${string}`,
     });
 
