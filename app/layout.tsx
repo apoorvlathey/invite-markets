@@ -4,6 +4,7 @@ import "@/app/globals.css";
 import { Providers } from "@/app/providers";
 import { Navbar } from "@/app/components/Navbar";
 import { Footer } from "@/app/components/Footer";
+import { SalesTicker } from "@/app/components/SalesTicker";
 import { Analytics } from "@/app/components/Analytics";
 import NextTopLoader from "nextjs-toploader";
 
@@ -201,6 +202,7 @@ export default function RootLayout({
         />
         <Providers>
           <Navbar />
+          <SalesTicker />
           <main className="flex-1">{children}</main>
           <Footer />
         </Providers>

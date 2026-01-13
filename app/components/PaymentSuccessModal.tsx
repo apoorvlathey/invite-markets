@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, Copy, Check, X, AlertTriangle, ExternalLink } from "lucide-react";
+import { CheckCircle, Copy, Check, X, ExternalLink } from "lucide-react";
 import { EthosRateButton } from "./EthosRateButton";
 import { type PurchaseResult } from "@/hooks/usePurchase";
 
@@ -97,33 +97,33 @@ export function PaymentSuccessModal({
                     className="relative bg-zinc-900 rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden"
                   >
                     {/* Gradient border effect */}
-                    <div className="absolute inset-0 rounded-2xl p-px bg-linear-to-b from-yellow-500/40 via-yellow-600/20 to-transparent">
+                    <div className="absolute inset-0 rounded-2xl p-px bg-linear-to-b from-cyan-500/40 via-cyan-600/20 to-transparent">
                       <div className="w-full h-full bg-zinc-900 rounded-2xl" />
                     </div>
 
                     {/* Content */}
                     <div className="relative p-6">
-                      {/* Warning icon */}
+                      {/* Info icon */}
                       <div className="flex justify-center mb-4">
                         <div className="relative">
-                          <div className="absolute inset-0 bg-yellow-500/30 rounded-full blur-xl" />
-                          <div className="relative p-4 bg-yellow-500/10 rounded-full border border-yellow-500/30">
-                            <AlertTriangle className="h-8 w-8 text-yellow-400" />
+                          <div className="absolute inset-0 bg-cyan-500/30 rounded-full blur-xl" />
+                          <div className="relative p-4 bg-cyan-500/10 rounded-full border border-cyan-500/30">
+                            <Copy className="h-8 w-8 text-cyan-400" />
                           </div>
                         </div>
                       </div>
 
                       {/* Title */}
                       <h3 className="text-xl font-bold text-center text-zinc-100 mb-3">
-                        Wait! Are you sure?
+                        Copy your {isAccessCode ? "code" : "link"}?
                       </h3>
 
                       {/* Description */}
                       <p className="text-sm text-center text-zinc-400 mb-6 leading-relaxed">
                         You haven&apos;t copied your {isAccessCode ? "access code" : "invite link"} yet.
                         <br />
-                        <span className="text-yellow-400 font-semibold">
-                          This {isAccessCode ? "code" : "link"} will be lost forever.
+                        <span className="text-zinc-300">
+                          You can access it later from your profile page.
                         </span>
                       </p>
 
@@ -137,10 +137,9 @@ export function PaymentSuccessModal({
                         </button>
                         <button
                           onClick={handleConfirmClose}
-                          className="w-full px-4 py-3 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 hover:border-zinc-600 rounded-xl font-medium text-zinc-400 hover:text-zinc-300 transition-all cursor-pointer flex items-center justify-center gap-2"
+                          className="w-full px-4 py-3 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 hover:border-zinc-600 rounded-xl font-medium text-zinc-400 hover:text-zinc-300 transition-all cursor-pointer"
                         >
-                          <AlertTriangle className="h-4 w-4" />
-                          Close Anyway
+                          Close (I&apos;ll copy it later)
                         </button>
                       </div>
                     </div>
@@ -181,14 +180,14 @@ export function PaymentSuccessModal({
 
               {/* Content */}
               <div className="p-6 space-y-4">
-                {/* Warning */}
-                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-                  <p className="text-sm font-semibold text-yellow-400 mb-1">
-                    ⚠️ Important: This {isAccessCode ? "code" : "link"} will only be displayed once
+                {/* Info Notice */}
+                <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
+                  <p className="text-sm font-semibold text-cyan-400 mb-1">
+                    Copy your {isAccessCode ? "code" : "link"} now
                   </p>
-                  <p className="text-xs text-yellow-300/80">
-                    Please copy and save it now. You won&apos;t be able to
-                    access it again.
+                  <p className="text-xs text-cyan-300/80">
+                    You can also access this later from your profile page under
+                    &quot;Purchases&quot;.
                   </p>
                 </div>
 
@@ -221,7 +220,7 @@ export function PaymentSuccessModal({
                       </label>
                       <div className="flex gap-2 items-stretch">
                         {/* Static gradient border - no animation for mobile performance */}
-                        <div className="relative flex-1 p-[2px] rounded-lg bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500">
+                        <div className="relative flex-1 p-[2px] rounded-lg bg-linear-to-r from-cyan-500 via-purple-500 to-cyan-500">
                           {/* Input */}
                           <input
                             type="text"
@@ -261,7 +260,7 @@ export function PaymentSuccessModal({
                     </label>
                     <div className="flex gap-2 items-stretch">
                       {/* Static gradient border - no animation for mobile performance */}
-                      <div className="relative flex-1 p-[2px] rounded-lg bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500">
+                      <div className="relative flex-1 p-[2px] rounded-lg bg-linear-to-r from-cyan-500 via-purple-500 to-cyan-500">
                         {/* Input */}
                         <input
                           type="text"

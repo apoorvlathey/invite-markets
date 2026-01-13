@@ -12,8 +12,8 @@ export function Navbar() {
   const isConnected = !!activeAccount;
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/10">
-      {/* Navbar background - uses solid bg on mobile for performance */}
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-black">
+      {/* Navbar background */}
       <div className="absolute inset-0 navbar-bg" />
 
       <div className="relative max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
