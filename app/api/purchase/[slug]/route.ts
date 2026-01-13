@@ -20,6 +20,9 @@ const client = createThirdwebClient({
 const twFacilitator = facilitator({
   client,
   serverWalletAddress: process.env.SERVER_WALLET!,
+  // Don't wait for full on-chain confirmation to avoid Vercel timeout
+  // "submitted" returns as soon as tx is in mempool (fast & reliable)
+  waitUntil: "submitted",
 });
 
 export async function POST(

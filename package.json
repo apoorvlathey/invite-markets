@@ -9,7 +9,8 @@
     "lint": "eslint",
     "clean": "rm -rf .next",
     "migrate:chainid": "tsx scripts/migrate-chainid.ts",
-    "backfill:discord": "tsx scripts/backfill-discord.ts"
+    "backfill:discord": "tsx scripts/backfill-discord.ts",
+    "backfill:sale": "tsx scripts/backfill-sale.ts"
   },
   "dependencies": {
     "@farcaster/miniapp-sdk": "^0.2.1",
