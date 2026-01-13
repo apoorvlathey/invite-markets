@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import NProgress from "nprogress";
@@ -43,6 +43,11 @@ export default function Home() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
+  // Track if carousel has animated (to prevent re-animation on data changes)
+  const carouselAnimated = useRef(false);
+  // Ref to the carousel scroll container to reset scroll position
+  const carouselRef = useRef<HTMLDivElement>(null);
+
   // Track which listing is currently being purchased
   const [purchasingSlug, setPurchasingSlug] = useState<string | null>(null);
   // Countdown state (calculated from dataUpdatedAt)
@@ -76,16 +81,32 @@ export default function Home() {
   );
 
   // Compute featured apps with their listing counts (filtered by current chain)
+  // Sort so apps with active listings appear first, sold out apps at the end
   const featuredAppsWithCounts: FeaturedAppWithCount[] = useMemo(() => {
-    return getFeaturedAppsForChain().map((app) => {
-      const count = rawListings.filter((l) => l.appId === app.id).length;
-      return {
-        ...app,
-        activeListings: count,
-        gradient: getGradientForApp(app.appName),
-      };
-    });
+    return getFeaturedAppsForChain()
+      .map((app) => {
+        const count = rawListings.filter((l) => l.appId === app.id).length;
+        return {
+          ...app,
+          activeListings: count,
+          gradient: getGradientForApp(app.appName),
+        };
+      })
+      .sort((a, b) => {
+        // Apps with listings come first, sold out apps go to the end
+        if (a.activeListings > 0 && b.activeListings === 0) return -1;
+        if (a.activeListings === 0 && b.activeListings > 0) return 1;
+        // Among apps with listings, sort by listing count (most first)
+        return b.activeListings - a.activeListings;
+      });
   }, [rawListings]);
+
+  // Reset carousel scroll position when data changes to prevent auto-scroll issues
+  useEffect(() => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollLeft = 0;
+    }
+  }, [featuredAppsWithCounts]);
 
   const {
     purchase,
@@ -266,13 +287,21 @@ export default function Home() {
 
           {/* Scrollable carousel */}
           <div className="relative -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8">
-            <div className="flex gap-3 sm:gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+            <div
+              ref={carouselRef}
+              className="flex gap-3 sm:gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+            >
               {featuredAppsWithCounts.map((app, i) => (
                 <motion.div
                   key={app.id}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={carouselAnimated.current ? false : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 + i * 0.05 }}
+                  onAnimationComplete={() => {
+                    if (i === featuredAppsWithCounts.length - 1) {
+                      carouselAnimated.current = true;
+                    }
+                  }}
                   className="snap-start shrink-0"
                 >
                   <Link href={`/app/${app.id}`}>
