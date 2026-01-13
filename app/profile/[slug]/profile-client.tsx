@@ -60,6 +60,14 @@ interface Purchase {
   createdAt: string;
 }
 
+// Data returned when revealing a purchased code
+interface RevealedPurchaseData {
+  listingType: ListingType;
+  inviteUrl?: string;
+  appUrl?: string;
+  accessCode?: string;
+}
+
 interface Listing {
   _id: string;
   slug: string;
@@ -550,6 +558,265 @@ function EditListingModal({
   );
 }
 
+function ViewCodeModal({
+  purchase,
+  revealedData,
+  onClose,
+}: {
+  purchase: Purchase;
+  revealedData: RevealedPurchaseData;
+  onClose: () => void;
+}) {
+  const [copiedInvite, setCopiedInvite] = useState(false);
+  const [copiedAccessCode, setCopiedAccessCode] = useState(false);
+
+  const isAccessCode = revealedData.listingType === "access_code";
+
+  // Disable background scrolling when modal is open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  const handleCopyInvite = async () => {
+    if (!revealedData.inviteUrl) return;
+    try {
+      await navigator.clipboard.writeText(revealedData.inviteUrl);
+      setCopiedInvite(true);
+      setTimeout(() => setCopiedInvite(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  const handleCopyAccessCode = async () => {
+    if (!revealedData.accessCode) return;
+    try {
+      await navigator.clipboard.writeText(revealedData.accessCode);
+      setCopiedAccessCode(true);
+      setTimeout(() => setCopiedAccessCode(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 max-w-md w-full"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-xl font-bold text-white">Your Purchase</h3>
+            <span className="text-xs text-zinc-500">
+              {getAppDisplayName(purchase.appId, undefined, purchase.listingSlug)}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {isAccessCode ? (
+            <>
+              {/* App URL - for access code type */}
+              {revealedData.appUrl && (
+                <div>
+                  <label className="text-sm font-medium text-zinc-400 mb-2 block">
+                    App Link:
+                  </label>
+                  <a
+                    href={revealedData.appUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-cyan-400 hover:text-cyan-300 hover:border-cyan-500/50 transition-all group"
+                  >
+                    <span className="text-sm font-medium truncate flex-1">
+                      {revealedData.appUrl}
+                    </span>
+                    <svg
+                      className="w-4 h-4 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                  </a>
+                </div>
+              )}
+
+              {/* Access Code */}
+              <div>
+                <label className="text-sm font-medium text-zinc-400 mb-2 block">
+                  Your Access Code:
+                </label>
+                <div className="flex gap-2 items-stretch">
+                  <div className="relative flex-1 p-[2px] rounded-lg bg-linear-to-r from-cyan-500 via-purple-500 to-cyan-500">
+                    <input
+                      type="text"
+                      value={revealedData.accessCode || ""}
+                      readOnly
+                      className="relative w-full h-full px-3 py-2.5 bg-zinc-900 rounded-[6px] text-sm font-mono text-zinc-100 focus:outline-none"
+                    />
+                  </div>
+                  <button
+                    onClick={handleCopyAccessCode}
+                    className={`px-4 py-2 border rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer ${
+                      copiedAccessCode
+                        ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                        : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-100"
+                    }`}
+                  >
+                    {copiedAccessCode ? (
+                      <>
+                        <svg
+                          className="w-4 h-4 text-emerald-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Invite URL - for invite link type */
+            <div>
+              <label className="text-sm font-medium text-zinc-400 mb-2 block">
+                Your Invite Link:
+              </label>
+              <div className="flex gap-2 items-stretch">
+                <div className="relative flex-1 p-[2px] rounded-lg bg-linear-to-r from-cyan-500 via-purple-500 to-cyan-500">
+                  <input
+                    type="text"
+                    value={revealedData.inviteUrl || ""}
+                    readOnly
+                    className="relative w-full h-full px-3 py-2.5 bg-zinc-900 rounded-[6px] text-sm font-mono text-zinc-100 focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={handleCopyInvite}
+                  className={`px-4 py-2 border rounded-lg font-medium transition-colors flex items-center gap-2 cursor-pointer ${
+                    copiedInvite
+                      ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                      : "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-100"
+                  }`}
+                >
+                  {copiedInvite ? (
+                    <>
+                      <svg
+                        className="w-4 h-4 text-emerald-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                      Copy
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Info notice */}
+          <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-3">
+            <p className="text-xs text-zinc-500">
+              This is the invite code you purchased. You can copy it anytime from your profile.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <button
+            onClick={onClose}
+            className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-medium transition-colors cursor-pointer"
+          >
+            Close
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function ListingCard({
   listing,
   isOwner,
@@ -818,9 +1085,15 @@ function ListingCard({
 function PurchaseCard({
   purchase,
   sellerInfo,
+  isOwner,
+  onViewCode,
+  isRevealing = false,
 }: {
   purchase: Purchase;
   sellerInfo: ReturnType<typeof getSellerDisplayInfo>;
+  isOwner: boolean;
+  onViewCode: () => void;
+  isRevealing?: boolean;
 }) {
   const date = new Date(purchase.createdAt);
   const formattedDate = date.toLocaleDateString("en-US", {
@@ -909,6 +1182,60 @@ function PurchaseCard({
           </div>
         </div>
         <div className="relative z-10 flex flex-col gap-2">
+          {/* View Code button - only shown to the owner */}
+          {isOwner && (
+            <button
+              onClick={onViewCode}
+              disabled={isRevealing}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 hover:border-purple-500/50 transition-all group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              title={isRevealing ? "Signing..." : "View your purchased code"}
+            >
+              {isRevealing ? (
+                <svg
+                  className="w-4 h-4 text-purple-400 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="w-4 h-4 text-purple-400 group-hover:text-purple-300 transition-colors"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  />
+                </svg>
+              )}
+              <span className="text-xs font-medium text-purple-400 group-hover:text-purple-300 transition-colors">
+                {isRevealing ? "Signing..." : "View Code"}
+              </span>
+            </button>
+          )}
           <a
             href={`https://app.ethos.network/profile/${purchase.sellerAddress}`}
             target="_blank"
@@ -947,6 +1274,14 @@ export default function ProfileClient({ address }: ProfileClientProps) {
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [activeTab, setActiveTab] = useState<"listings" | "purchases">(
     "listings"
+  );
+  // State for viewing purchased codes
+  const [viewingPurchase, setViewingPurchase] = useState<Purchase | null>(null);
+  const [revealedData, setRevealedData] = useState<RevealedPurchaseData | null>(
+    null
+  );
+  const [revealingPurchaseId, setRevealingPurchaseId] = useState<string | null>(
+    null
   );
   const account = useActiveAccount();
   // Always use the server-configured chainId, not the wallet's connected chain
@@ -1000,6 +1335,15 @@ export default function ProfileClient({ address }: ProfileClientProps) {
     string | null
   >(null);
 
+  // Store auth data for authenticated buyer requests (for viewing purchased codes)
+  // Separate from seller auth since message format is different
+  const buyerAuthDataRef = useRef<{
+    signature: string;
+    message: string;
+    walletAddress: string;
+    createdAt: number;
+  } | null>(null);
+
   // Check if cached auth is still valid
   const isAuthCacheValid = useCallback(() => {
     // Cache validity duration (5 minutes in milliseconds)
@@ -1029,6 +1373,31 @@ export default function ProfileClient({ address }: ProfileClientProps) {
         authDataRef.current = null;
       }
     }
+    // Also clear buyer auth cache
+    if (buyerAuthDataRef.current && account) {
+      const cachedWallet = buyerAuthDataRef.current.walletAddress.toLowerCase();
+      const currentWallet = account.address.toLowerCase();
+
+      if (cachedWallet !== currentWallet) {
+        buyerAuthDataRef.current = null;
+      }
+    }
+  }, [account]);
+
+  // Check if cached buyer auth is still valid
+  const isBuyerAuthCacheValid = useCallback(() => {
+    const AUTH_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+    if (!buyerAuthDataRef.current || !account) return false;
+
+    const { walletAddress, createdAt } = buyerAuthDataRef.current;
+    const now = Date.now();
+
+    const isSameWallet =
+      walletAddress.toLowerCase() === account.address.toLowerCase();
+    const isNotExpired = now - createdAt < AUTH_CACHE_DURATION;
+
+    return isSameWallet && isNotExpired;
   }, [account]);
 
   // Function to fetch seller data with optional authentication
@@ -1134,6 +1503,73 @@ export default function ProfileClient({ address }: ProfileClientProps) {
     // Re-fetch with auth if cache is still valid
     fetchSellerData(isAuthCacheValid());
   }, [fetchSellerData, isAuthCacheValid]);
+
+  // Handle view code button click - use cached auth or request new signature
+  const handleViewCodeClick = useCallback(
+    async (purchase: Purchase) => {
+      if (!account) return;
+
+      setRevealingPurchaseId(purchase.id);
+
+      try {
+        let signature: string;
+        let message: string;
+
+        // Check if we have valid cached buyer auth
+        if (isBuyerAuthCacheValid() && buyerAuthDataRef.current) {
+          signature = buyerAuthDataRef.current.signature;
+          message = buyerAuthDataRef.current.message;
+        } else {
+          // No valid cache - request new signature
+          const timestamp = Date.now();
+          message = `View my purchase on invite.markets\nTimestamp: ${timestamp}\nAddress: ${account.address}`;
+
+          signature = await signMessage({
+            account,
+            message,
+          });
+
+          // Store with wallet address and timestamp for cache validation
+          buyerAuthDataRef.current = {
+            signature,
+            message,
+            walletAddress: account.address,
+            createdAt: timestamp,
+          };
+        }
+
+        // Call the reveal API
+        const response = await fetch("/api/buyer/reveal", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            transactionId: purchase.id,
+            signature,
+            message: btoa(message),
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          setRevealedData(data);
+          setViewingPurchase(purchase);
+        } else {
+          console.error("Failed to reveal purchase:", data.error);
+          // If auth failed, clear the cache so user can try again
+          if (response.status === 401) {
+            buyerAuthDataRef.current = null;
+          }
+        }
+      } catch (error) {
+        // User rejected signature - don't show modal
+        console.log("View code authentication cancelled:", error);
+      } finally {
+        setRevealingPurchaseId(null);
+      }
+    },
+    [account, isBuyerAuthCacheValid]
+  );
 
   const trustLevelConfig = ethosData
     ? getTrustLevelConfig(ethosData.level)
@@ -1599,6 +2035,9 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                           purchase.sellerAddress,
                           resolvedSellers
                         )}
+                        isOwner={isOwnProfile}
+                        onViewCode={() => handleViewCodeClick(purchase)}
+                        isRevealing={revealingPurchaseId === purchase.id}
                       />
                     ))}
                   </div>
@@ -1660,6 +2099,19 @@ export default function ProfileClient({ address }: ProfileClientProps) {
             }}
             account={account}
             chainId={chainId}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {viewingPurchase && revealedData && (
+          <ViewCodeModal
+            purchase={viewingPurchase}
+            revealedData={revealedData}
+            onClose={() => {
+              setViewingPurchase(null);
+              setRevealedData(null);
+            }}
           />
         )}
       </AnimatePresence>

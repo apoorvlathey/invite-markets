@@ -272,6 +272,64 @@ x-payment: <x402 payment data>
 }
 ```
 
+#### Reveal Purchased Code - POST `/api/buyer/reveal`
+
+**File**: `app/api/buyer/reveal/route.ts`
+
+Allows buyers to re-view their purchased invite codes from their profile page. Requires signature verification to ensure only the original buyer can access their purchase.
+
+**Request Body**:
+
+```json
+{
+  "transactionId": "507f1f77bcf86cd799439011",
+  "signature": "0x...",
+  "message": "<base64 encoded message>"
+}
+```
+
+**Message Format** (before base64 encoding):
+
+```
+View my purchase on invite.markets
+Timestamp: {timestamp}
+Address: {walletAddress}
+```
+
+**Validation**:
+
+- Signature must match the transaction's `buyerAddress`
+- Timestamp must be within 5 minutes (prevents replay attacks)
+- Address in message must match the buyer's address
+- Supports both EOA and smart contract wallet signatures (ERC-1271)
+
+**Success Response (Invite Link type)**:
+
+```json
+{
+  "success": true,
+  "listingType": "invite_link",
+  "inviteUrl": "https://app.example.com/invite/abc123"
+}
+```
+
+**Success Response (Access Code type)**:
+
+```json
+{
+  "success": true,
+  "listingType": "access_code",
+  "appUrl": "https://app.example.com",
+  "accessCode": "SECRET123"
+}
+```
+
+**Error Responses**:
+
+- `400` - Missing required fields
+- `401` - Invalid signature or unauthorized
+- `404` - Transaction not found
+
 #### Get Seller Data - GET `/api/seller/[address]`
 
 **File**: `app/api/seller/[address]/route.ts`
@@ -549,6 +607,7 @@ The `inviteUrl` and `accessCode` fields are the core assets being sold and are p
 | `PATCH /api/listings/update` | ❌ Never              | ❌ Never              | ✅ Always |
 | `GET /api/seller/[address]`  | 🔐 Authenticated only | 🔐 Authenticated only | ✅ Always |
 | `POST /api/purchase/[slug]`  | ✅ After x402 payment | ✅ After x402 payment | ✅ Always |
+| `POST /api/buyer/reveal`     | 🔐 Authenticated only | 🔐 Authenticated only | ✅ Always |
 
 > **Note**: `appUrl` is public for access_code type listings because buyers need to know which app they're purchasing access to.
 
@@ -600,6 +659,47 @@ Cache validation:
 3. If no cache/expired → Request new signature
 4. If signature rejected → Modal doesn't open
 5. If signature accepted → Fetch authenticated data → Open modal with secrets
+
+**Buyer Authentication for `/api/buyer/reveal`:**
+
+Buyers can re-view their purchased codes on their profile page through signature-based authentication:
+
+1. Request body required:
+
+   - `transactionId`: The MongoDB ObjectId of the transaction record
+   - `signature`: Wallet signature
+   - `message`: Base64-encoded signed message
+
+2. Message format:
+
+   ```
+   View my purchase on invite.markets
+   Timestamp: {timestamp}
+   Address: {walletAddress}
+   ```
+
+3. Validation:
+   - Signature must match the transaction's `buyerAddress`
+   - Timestamp must be within 5 minutes (prevents replay attacks)
+   - Address in message must match the buyer's address
+
+**View Code Flow:**
+
+1. User visits their own profile page and switches to "Purchases" tab
+2. User clicks "View Code" button on a purchase (only visible on own profile)
+3. If valid cached buyer signature exists → Use it, call API immediately
+4. If no cache/expired → Request new signature
+5. If signature rejected → Modal doesn't open
+6. If signature accepted → API returns secret data → Open modal with code
+
+**Multi-Use Listing Support:**
+
+The View Code feature works correctly for multi-use listings because:
+
+- Each purchase creates a unique `Transaction` record with its own `_id`
+- The API looks up the specific transaction by ID
+- Multiple buyers of the same listing each have separate transaction records
+- Each buyer can only view their own purchased code
 
 ### Performance
 
