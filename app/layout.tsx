@@ -6,6 +6,7 @@ import { Navbar } from "@/app/components/Navbar";
 import { Footer } from "@/app/components/Footer";
 import { SalesTicker } from "@/app/components/SalesTicker";
 import { Analytics } from "@/app/components/Analytics";
+import { MobileBottomNav } from "@/app/components/MobileBottomNav";
 import NextTopLoader from "nextjs-toploader";
 
 const geistSans = Geist({
@@ -203,8 +204,9 @@ export default function RootLayout({
         <Providers>
           <Navbar />
           <SalesTicker />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 pb-20 md:pb-0">{children}</main>
           <Footer />
+          <MobileBottomNav />
         </Providers>
       </body>
     </html>
