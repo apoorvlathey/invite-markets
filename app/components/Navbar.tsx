@@ -1,16 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useActiveAccount } from "thirdweb/react";
 import { ConnectButton } from "@/app/components/ConnectButton";
 
 export function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const activeAccount = useActiveAccount();
-  const isConnected = !!activeAccount;
-
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-black">
       {/* Navbar background */}
@@ -116,126 +110,9 @@ export function Navbar() {
             <ConnectButton />
           </div>
 
-          {/* Mobile: Action button + hamburger */}
-          <div className="flex md:hidden items-center gap-2">
-            {/* Show Sell Invite if connected, otherwise show Connect button */}
-            {isConnected ? (
-              <Link
-                href="/sell"
-                className="group relative px-4 py-2 text-xs font-bold rounded-lg overflow-hidden"
-              >
-                {/* Static gradient on mobile for performance */}
-                <div className="absolute inset-0 bg-linear-to-r from-cyan-400 via-blue-500 to-purple-600" />
-                <div className="absolute inset-0 rounded-lg border border-white/20" />
-                <span className="relative z-10 text-white flex items-center gap-1.5 drop-shadow-lg">
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  Sell Invite
-                </span>
-              </Link>
-            ) : (
-              <ConnectButton compact />
-            )}
-
-            {/* Hamburger menu button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? (
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              )}
-            </button>
-          </div>
+          {/* Mobile: Just show nothing (navigation is in bottom nav) */}
+          <div className="md:hidden" />
         </div>
-
-        {/* Mobile menu dropdown */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-white/10 py-4 space-y-2">
-            <Link
-              href="/#latest-listings"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-            >
-              Latest Listings
-            </Link>
-            <Link
-              href="/listings"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-            >
-              All Listings
-            </Link>
-            <Link
-              href="/apps"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-            >
-              All Apps
-            </Link>
-            <Link
-              href="/sales"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-            >
-              All Sales
-            </Link>
-            {/* Show Sell Invite in menu if not connected (since Connect is in navbar) */}
-            {!isConnected && (
-              <Link
-                href="/sell"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-4 py-3 text-sm font-medium text-cyan-400 hover:text-cyan-300 hover:bg-white/5 rounded-lg transition-colors"
-              >
-                Sell Invite
-              </Link>
-            )}
-            {/* Show Connect button in menu if connected (since Sell is in navbar) */}
-            {isConnected && (
-              <div className="px-4 pt-2">
-                <ConnectButton onAction={() => setMobileMenuOpen(false)} />
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </nav>
   );
