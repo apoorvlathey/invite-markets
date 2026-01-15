@@ -7,6 +7,10 @@ import { blo } from "blo";
 import Image from "next/image";
 import { ConnectButton } from "./ConnectButton/ConnectButton";
 import { Home, BarChart3, Zap, Calendar, User } from "lucide-react";
+import {
+  useResolveAddresses,
+  getSellerDisplayInfo,
+} from "@/lib/resolve-addresses";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
@@ -91,8 +95,18 @@ function ProfileNavItem({
   activeAccount: any;
   isActive: boolean;
 }) {
+  // Resolve address to get avatar URL (for Farcaster/ENS profiles)
+  const { resolvedAddresses } = useResolveAddresses(
+    activeAccount?.address ? [activeAccount.address] : []
+  );
+
   if (activeAccount?.address) {
-    const bloAvatar = blo(activeAccount.address as `0x${string}`);
+    const displayInfo = getSellerDisplayInfo(
+      activeAccount.address,
+      resolvedAddresses
+    );
+    const avatarUrl = displayInfo.avatarUrl || blo(activeAccount.address as `0x${string}`);
+
     return (
       <Link
         href={`/profile/${activeAccount.address}`}
@@ -104,7 +118,7 @@ function ProfileNavItem({
           }`}
         >
           <Image
-            src={bloAvatar}
+            src={avatarUrl}
             alt="Profile"
             width={24}
             height={24}
