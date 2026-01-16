@@ -58,16 +58,23 @@ export function usePurchase(): UsePurchaseResult {
     slug: string,
     sellerAddress: string
   ): Promise<PurchaseResult | null> => {
+    console.log(`[x402 CLIENT] Starting purchase for slug: ${slug}, seller: ${sellerAddress}`);
+    
     try {
+      console.log(`[x402 CLIENT] Calling fetchWithPayment...`);
       const res = (await fetchWithPayment(`/api/purchase/${slug}`, {
         method: "POST",
       })) as PurchaseResult | undefined;
+
+      console.log(`[x402 CLIENT] fetchWithPayment response:`, res);
 
       if (res?.listingType) {
         // Check if we got valid data based on listing type
         const hasValidData = 
           (res.listingType === "invite_link" && res.inviteUrl) ||
           (res.listingType === "access_code" && res.appUrl && res.accessCode);
+
+        console.log(`[x402 CLIENT] Response validation:`, { listingType: res.listingType, hasValidData });
 
         if (hasValidData) {
           // Celebrate successful purchase with confetti!
@@ -79,11 +86,22 @@ export function usePurchase(): UsePurchaseResult {
           setPurchaseData(res);
           setPurchasedSellerAddress(sellerAddress);
           setShowSuccessModal(true);
+          console.log(`[x402 CLIENT] Purchase successful!`);
           return res;
         }
       }
+      console.log(`[x402 CLIENT] No valid data in response`);
       return null;
-    } catch {
+    } catch (error) {
+      console.error(`[x402 CLIENT] Purchase error:`, error);
+      // Log more details if it's an Error object
+      if (error instanceof Error) {
+        console.error(`[x402 CLIENT] Error details:`, {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        });
+      }
       showToast("Payment failed or cancelled");
       return null;
     }

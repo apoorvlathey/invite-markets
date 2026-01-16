@@ -32,7 +32,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "recharts": "^3.6.0",
-    "thirdweb": "^5.116.1",
+    "thirdweb": "5.117.2",
     "viem": "2.x",
     "ws": "^8.18.0",
     "x402-axios": "^1.0.0",
@@ -53,7 +53,6 @@
     "typescript": "^5"
   },
   "overrides": {
-    "x402": "0.7.3",
     "@solana/sysvars": "^5.0",
     "ws": "^8.18.0"
   }

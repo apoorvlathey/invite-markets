@@ -776,6 +776,87 @@ NEXT_PUBLIC_THIRDWEB_CLIENT_ID=<thirdweb client id>
 NEXT_PUBLIC_IS_TESTNET=true|false
 ```
 
+## x402 Payment Integration
+
+### Overview
+
+The marketplace uses [thirdweb's x402 protocol](https://portal.thirdweb.com/x402/facilitator) for handling payments. The x402 protocol enables HTTP 402 Payment Required flows where:
+
+1. Client makes request to protected endpoint
+2. Server returns 402 with payment requirements
+3. Client signs payment authorization
+4. Client retries with payment signature
+5. Server settles payment and returns protected content
+
+### Facilitator Configuration
+
+The thirdweb facilitator handles payment verification and settlement:
+
+```typescript
+import { facilitator, settlePayment } from "thirdweb/x402";
+
+const baseFacilitator = facilitator({
+  client: createThirdwebClient({ secretKey: process.env.SECRET_KEY }),
+  serverWalletAddress: process.env.SERVER_WALLET,
+  waitUntil: "simulated", // Fast response, doesn't wait for on-chain confirmation
+});
+```
+
+### SDK Bug Workaround
+
+**Issue**: The thirdweb SDK (as of v5.117.2) has a bug where `facilitator.settle()` sends `paymentRequirements` to the `/settle` API without the `x402Version` field, but the API validation expects `paymentRequirements.x402Version` to be either `1` or `2`.
+
+**Error**: `"Invalid literal value, expected 1"` or `"expected 2"` at path `["paymentRequirements", "x402Version"]`
+
+**Solution**: Wrap the facilitator's `settle` method to inject `x402Version` from the payment payload:
+
+```typescript
+const twFacilitator = {
+  ...baseFacilitator,
+  settle: async (payload, paymentRequirements, waitUntil) => {
+    // Add x402Version to paymentRequirements (fixes thirdweb SDK bug)
+    const patchedPaymentRequirements = {
+      ...paymentRequirements,
+      x402Version: payload.x402Version ?? 2,
+    };
+    return baseFacilitator.settle(payload, patchedPaymentRequirements, waitUntil);
+  },
+};
+```
+
+### Client-Side Integration
+
+The client uses `useFetchWithPayment` hook from thirdweb/react:
+
+```typescript
+import { useFetchWithPayment } from "thirdweb/react";
+
+const { fetchWithPayment, isPending } = useFetchWithPayment(client);
+
+// Automatically handles 402 → sign → retry flow
+const result = await fetchWithPayment(`/api/purchase/${slug}`, {
+  method: "POST",
+});
+```
+
+### x402 Protocol Versions
+
+The integration supports both x402 v1 and v2 protocols:
+
+| Version | Request Header      | Response Header      |
+| ------- | ------------------- | -------------------- |
+| v1      | `X-PAYMENT`         | `X-PAYMENT-RESPONSE` |
+| v2      | `PAYMENT-SIGNATURE` | `PAYMENT-RESPONSE`   |
+
+Server-side header detection:
+
+```typescript
+const paymentDataV1 = req.headers.get("x-payment");
+const paymentDataV2 = req.headers.get("payment-signature");
+const paymentData = paymentDataV2 || paymentDataV1;
+const x402Version = paymentDataV2 ? 2 : 1;
+```
+
 ## Dependencies Added
 
 - `mongoose` - MongoDB ODM
