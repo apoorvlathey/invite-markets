@@ -6,11 +6,30 @@ import { useActiveAccount } from "thirdweb/react";
 import { blo } from "blo";
 import Image from "next/image";
 import { ConnectButton } from "./ConnectButton/ConnectButton";
-import { Home, BarChart3, Zap, Calendar, User } from "lucide-react";
+import { Home, BarChart3, Zap, Calendar, Sun, Moon } from "lucide-react";
 import {
   useResolveAddresses,
   getSellerDisplayInfo,
 } from "@/lib/resolve-addresses";
+import { useTheme } from "@/app/contexts/ThemeContext";
+
+function ThemeNavItem() {
+  const { resolvedTheme, toggleTheme } = useTheme();
+
+  return (
+    <button
+      onClick={toggleTheme}
+      className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg transition-colors"
+    >
+      {resolvedTheme === "dark" ? (
+        <Sun className="w-5 h-5 text-zinc-500" />
+      ) : (
+        <Moon className="w-5 h-5 text-zinc-500" />
+      )}
+      <span className="text-xs font-medium text-zinc-500">Theme</span>
+    </button>
+  );
+}
 
 export function MobileBottomNav() {
   const pathname = usePathname();
@@ -22,8 +41,8 @@ export function MobileBottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-lg shadow-[0_-4px_12px_rgba(0,0,0,0.4)]">
-      <div className="flex items-center justify-around px-4 py-3 max-w-screen-sm mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur-lg shadow-[0_-4px_12px_rgba(0,0,0,0.4)]">
+      <div className="flex items-center justify-around px-2 py-3 max-w-screen-sm mx-auto">
         <NavItem icon={Home} label="Home" href="/" isActive={isActive("/")} />
         <NavItem
           icon={BarChart3}
@@ -43,6 +62,7 @@ export function MobileBottomNav() {
           href="/sales"
           isActive={isActive("/sales")}
         />
+        <ThemeNavItem />
         <ProfileNavItem
           activeAccount={activeAccount}
           isActive={

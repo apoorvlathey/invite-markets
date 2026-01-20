@@ -98,8 +98,26 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const stored = localStorage.getItem('theme-preference');
+                  const theme = stored || 'system';
+                  let resolved = theme === 'system'
+                    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+                    : theme;
+                  document.documentElement.setAttribute('data-theme', resolved);
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-zinc-100 min-h-screen overflow-x-hidden flex flex-col`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--background)] text-[var(--foreground)] min-h-screen overflow-x-hidden flex flex-col`}
       >
         <Analytics />
         {/* Background container */}
@@ -109,66 +127,133 @@ export default function RootLayout({
 
           {/* Animated gradient orbs - hidden on mobile via CSS for performance */}
           <div className="bg-orbs-container">
-            {/* Primary cyan orb - top left */}
-            <div
-              className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full opacity-40"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(6, 182, 212, 0.8) 0%, rgba(6, 182, 212, 0) 70%)",
-                filter: "blur(60px)",
-                animation: "float 20s ease-in-out infinite",
-              }}
-            />
-            {/* Purple orb - top right */}
-            <div
-              className="absolute -top-20 -right-32 w-[700px] h-[700px] rounded-full opacity-35"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(168, 85, 247, 0.8) 0%, rgba(168, 85, 247, 0) 70%)",
-                filter: "blur(60px)",
-                animation: "float-slow 25s ease-in-out infinite 2s",
-              }}
-            />
-            {/* Blue orb - center */}
-            <div
-              className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full opacity-25"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(59, 130, 246, 0.6) 0%, rgba(59, 130, 246, 0) 70%)",
-                filter: "blur(80px)",
-                animation: "pulse 8s ease-in-out infinite",
-              }}
-            />
-            {/* Cyan orb - bottom left */}
-            <div
-              className="absolute -bottom-32 -left-20 w-[550px] h-[550px] rounded-full opacity-35"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(34, 211, 238, 0.7) 0%, rgba(34, 211, 238, 0) 70%)",
-                filter: "blur(50px)",
-                animation: "float 22s ease-in-out infinite 1s",
-              }}
-            />
-            {/* Purple/magenta orb - bottom right */}
-            <div
-              className="absolute -bottom-48 -right-32 w-[650px] h-[650px] rounded-full opacity-30"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(192, 132, 252, 0.7) 0%, rgba(139, 92, 246, 0) 70%)",
-                filter: "blur(70px)",
-                animation: "float-slow 28s ease-in-out infinite 3s",
-              }}
-            />
-            {/* Extra accent orb - mid-right */}
-            <div
-              className="absolute top-1/2 -right-48 w-[500px] h-[500px] rounded-full opacity-30"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(6, 182, 212, 0.6) 0%, rgba(59, 130, 246, 0.3) 50%, transparent 70%)",
-                filter: "blur(50px)",
-                animation: "float 18s ease-in-out infinite 4s",
-              }}
-            />
+            {/* Dark mode orbs */}
+            <div className="dark-orbs">
+              {/* Primary cyan orb - top left */}
+              <div
+                className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full opacity-40"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(6, 182, 212, 0.8) 0%, rgba(6, 182, 212, 0) 70%)",
+                  filter: "blur(60px)",
+                  animation: "float 20s ease-in-out infinite",
+                }}
+              />
+              {/* Purple orb - top right */}
+              <div
+                className="absolute -top-20 -right-32 w-[700px] h-[700px] rounded-full opacity-35"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(168, 85, 247, 0.8) 0%, rgba(168, 85, 247, 0) 70%)",
+                  filter: "blur(60px)",
+                  animation: "float-slow 25s ease-in-out infinite 2s",
+                }}
+              />
+              {/* Blue orb - center */}
+              <div
+                className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full opacity-25"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(59, 130, 246, 0.6) 0%, rgba(59, 130, 246, 0) 70%)",
+                  filter: "blur(80px)",
+                  animation: "pulse 8s ease-in-out infinite",
+                }}
+              />
+              {/* Cyan orb - bottom left */}
+              <div
+                className="absolute -bottom-32 -left-20 w-[550px] h-[550px] rounded-full opacity-35"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(34, 211, 238, 0.7) 0%, rgba(34, 211, 238, 0) 70%)",
+                  filter: "blur(50px)",
+                  animation: "float 22s ease-in-out infinite 1s",
+                }}
+              />
+              {/* Purple/magenta orb - bottom right */}
+              <div
+                className="absolute -bottom-48 -right-32 w-[650px] h-[650px] rounded-full opacity-30"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(192, 132, 252, 0.7) 0%, rgba(139, 92, 246, 0) 70%)",
+                  filter: "blur(70px)",
+                  animation: "float-slow 28s ease-in-out infinite 3s",
+                }}
+              />
+              {/* Extra accent orb - mid-right */}
+              <div
+                className="absolute top-1/2 -right-48 w-[500px] h-[500px] rounded-full opacity-30"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(6, 182, 212, 0.6) 0%, rgba(59, 130, 246, 0.3) 50%, transparent 70%)",
+                  filter: "blur(50px)",
+                  animation: "float 18s ease-in-out infinite 4s",
+                }}
+              />
+            </div>
+
+            {/* Light mode orbs - softer, more pastel */}
+            <div className="light-orbs">
+              {/* Pastel cyan orb - top left */}
+              <div
+                className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full opacity-15"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, rgba(6, 182, 212, 0) 70%)",
+                  filter: "blur(60px)",
+                  animation: "float 20s ease-in-out infinite",
+                }}
+              />
+              {/* Pastel purple orb - top right */}
+              <div
+                className="absolute -top-20 -right-32 w-[700px] h-[700px] rounded-full opacity-12"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, rgba(168, 85, 247, 0) 70%)",
+                  filter: "blur(60px)",
+                  animation: "float-slow 25s ease-in-out infinite 2s",
+                }}
+              />
+              {/* Pastel blue orb - center */}
+              <div
+                className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full opacity-10"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, rgba(59, 130, 246, 0) 70%)",
+                  filter: "blur(80px)",
+                  animation: "pulse 8s ease-in-out infinite",
+                }}
+              />
+              {/* Pastel cyan orb - bottom left */}
+              <div
+                className="absolute -bottom-32 -left-20 w-[550px] h-[550px] rounded-full opacity-12"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(34, 211, 238, 0.3) 0%, rgba(34, 211, 238, 0) 70%)",
+                  filter: "blur(50px)",
+                  animation: "float 22s ease-in-out infinite 1s",
+                }}
+              />
+              {/* Pastel purple/magenta orb - bottom right */}
+              <div
+                className="absolute -bottom-48 -right-32 w-[650px] h-[650px] rounded-full opacity-10"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(192, 132, 252, 0.3) 0%, rgba(139, 92, 246, 0) 70%)",
+                  filter: "blur(70px)",
+                  animation: "float-slow 28s ease-in-out infinite 3s",
+                }}
+              />
+              {/* Pastel accent orb - mid-right */}
+              <div
+                className="absolute top-1/2 -right-48 w-[500px] h-[500px] rounded-full opacity-10"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(6, 182, 212, 0.25) 0%, rgba(59, 130, 246, 0.15) 50%, transparent 70%)",
+                  filter: "blur(50px)",
+                  animation: "float 18s ease-in-out infinite 4s",
+                }}
+              />
+            </div>
 
             {/* Subtle grid overlay - desktop only */}
             <div
