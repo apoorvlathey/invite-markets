@@ -91,6 +91,35 @@
   /* These accent colors have good contrast on light backgrounds */
 }
 
+/* Yellow/gold colors - darken for light mode readability */
+[data-theme="light"] .text-yellow-400 {
+  color: #a16207 !important; /* yellow-700 for better contrast */
+}
+
+[data-theme="light"] .text-yellow-300 {
+  color: #a16207 !important; /* yellow-700 */
+}
+
+[data-theme="light"] .bg-yellow-500\/20 {
+  background-color: rgba(161, 98, 7, 0.2) !important; /* yellow-700 based */
+}
+
+[data-theme="light"] .bg-yellow-500\/10 {
+  background-color: rgba(161, 98, 7, 0.15) !important; /* yellow-700 based */
+}
+
+[data-theme="light"] .border-yellow-500\/30 {
+  border-color: rgba(161, 98, 7, 0.4) !important; /* yellow-700 based */
+}
+
+[data-theme="light"] .border-yellow-500\/20 {
+  border-color: rgba(161, 98, 7, 0.3) !important; /* yellow-700 based */
+}
+
+[data-theme="light"] .bg-yellow-400 {
+  background-color: #ca8a04 !important; /* yellow-600 */
+}
+
 /* Cyan badge backgrounds and borders in light mode */
 [data-theme="light"] .bg-cyan-500\/10 {
   background-color: rgba(6, 182, 212, 0.15) !important;
