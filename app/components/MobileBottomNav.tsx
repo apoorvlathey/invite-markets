@@ -62,7 +62,7 @@ export function MobileBottomNav() {
           href="/sales"
           isActive={isActive("/sales")}
         />
-        <ThemeNavItem />
+        {process.env.NEXT_PUBLIC_IS_TESTNET === "true" && <ThemeNavItem />}
         <ProfileNavItem
           activeAccount={activeAccount}
           isActive={

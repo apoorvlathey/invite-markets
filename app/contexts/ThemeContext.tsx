@@ -20,15 +20,11 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-function resolveTheme(theme: Theme): ResolvedTheme {
+function getSystemTheme(): ResolvedTheme {
   if (typeof window === "undefined") return "dark";
-
-  if (theme === "system") {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
-  }
-  return theme;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -36,51 +32,38 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("dark");
   const [mounted, setMounted] = useState(false);
 
-  // Initialize theme on mount
+  // Initialize theme on mount - always use system preference
   useEffect(() => {
     setMounted(true);
-
-    try {
-      const stored = localStorage.getItem(
-        "@invite-market/theme-preference",
-      ) as Theme | null;
-      const initialTheme = stored || "system";
-      setThemeState(initialTheme);
-
-      const resolved = resolveTheme(initialTheme);
-      setResolvedTheme(resolved);
-      document.documentElement.setAttribute("data-theme", resolved);
-    } catch (e) {
-      console.error("Failed to load theme from localStorage:", e);
-    }
+    const systemTheme = getSystemTheme();
+    setResolvedTheme(systemTheme);
+    document.documentElement.setAttribute("data-theme", systemTheme);
   }, []);
 
   // Listen for system preference changes
   useEffect(() => {
-    if (!mounted || theme !== "system") return;
+    if (!mounted) return;
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     const handleChange = (e: MediaQueryListEvent) => {
-      const newResolved = e.matches ? "dark" : "light";
-      setResolvedTheme(newResolved);
-      document.documentElement.setAttribute("data-theme", newResolved);
+      // Only auto-update if theme is set to "system"
+      if (theme === "system") {
+        const newResolved = e.matches ? "dark" : "light";
+        setResolvedTheme(newResolved);
+        document.documentElement.setAttribute("data-theme", newResolved);
+      }
     };
 
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, [theme, mounted]);
 
+  // setTheme is only used for testnet testing purposes
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
 
-    try {
-      localStorage.setItem("@invite-market/theme-preference", newTheme);
-    } catch (e) {
-      console.error("Failed to save theme to localStorage:", e);
-    }
-
-    const resolved = resolveTheme(newTheme);
+    const resolved = newTheme === "system" ? getSystemTheme() : newTheme;
     setResolvedTheme(resolved);
     document.documentElement.setAttribute("data-theme", resolved);
   };
