@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
 import { getGradientForApp } from "@/lib/listings";
+import { useTheme } from "@/app/contexts/ThemeContext";
 
 interface AppData {
   id: string;
@@ -187,6 +188,8 @@ export default function AppsClient() {
 
 function AppCard({ app, index }: { app: AppData; index: number }) {
   const gradient = getGradientForApp(app.name);
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   return (
     <motion.div
@@ -195,7 +198,7 @@ function AppCard({ app, index }: { app: AppData; index: number }) {
       transition={{ delay: index * 0.05, duration: 0.4 }}
     >
       <Link href={`/app/${app.id}`}>
-        <div className="group relative rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 cursor-pointer hover:-translate-y-1">
+        <div className="group relative rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 cursor-pointer hover:-translate-y-1 featured-app-card">
           {/* Gradient accent bar */}
           <div
             className="h-1"
@@ -205,12 +208,13 @@ function AppCard({ app, index }: { app: AppData; index: number }) {
           />
 
           {/* Tiled background header */}
-          <div className="relative h-28 overflow-hidden bg-zinc-900/50">
+          <div className="relative h-28 overflow-hidden card-header">
             {/* Tiled pattern */}
             <div
-              className="absolute inset-0 grid grid-cols-6 gap-2 opacity-[0.12] p-2"
+              className="absolute inset-0 grid grid-cols-6 gap-2 p-2"
               style={{
                 transform: "rotate(-12deg) scale(1.4)",
+                opacity: isLight ? 0.15 : 0.12,
               }}
             >
               {[...Array(18)].map((_, j) => (
@@ -218,9 +222,10 @@ function AppCard({ app, index }: { app: AppData; index: number }) {
                   key={j}
                   className="w-6 h-6 flex items-center justify-center"
                 >
-                  <div className={`w-full h-full rounded-md p-0.5 flex items-center justify-center overflow-hidden ${
-                    app.iconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
-                  }`}>
+                  <div 
+                    className="w-full h-full rounded-md p-0.5 flex items-center justify-center overflow-hidden"
+                    style={{ background: isLight ? '#d4d4d8' : (app.iconNeedsDarkBg ? '#18181b' : '#ffffff') }}
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={app.iconUrl}
@@ -236,13 +241,29 @@ function AppCard({ app, index }: { app: AppData; index: number }) {
             <div
               className="absolute inset-0"
               style={{
-                background: `linear-gradient(135deg, ${gradient.from}15 0%, ${gradient.to}20 100%)`,
+                background: isLight 
+                  ? `linear-gradient(135deg, ${gradient.from}50 0%, ${gradient.to}60 100%)`
+                  : `linear-gradient(135deg, ${gradient.from}15 0%, ${gradient.to}20 100%)`,
               }}
             />
 
-            {/* Vignette */}
-            <div className="absolute inset-0 bg-linear-to-t from-zinc-950 via-transparent to-zinc-950/50" />
-            <div className="absolute inset-0 bg-linear-to-r from-zinc-950/60 via-transparent to-zinc-950/60" />
+            {/* Vignette - theme aware */}
+            <div 
+              className="absolute inset-0" 
+              style={{ 
+                background: isLight 
+                  ? 'linear-gradient(to top, rgba(255,255,255,0.85), transparent 60%, rgba(255,255,255,0.3))'
+                  : 'linear-gradient(to top, #09090b, transparent, rgba(9, 9, 11, 0.5))' 
+              }} 
+            />
+            <div 
+              className="absolute inset-0" 
+              style={{ 
+                background: isLight
+                  ? 'linear-gradient(to right, rgba(255,255,255,0.5), transparent, rgba(255,255,255,0.5))'
+                  : 'linear-gradient(to right, rgba(9, 9, 11, 0.6), transparent, rgba(9, 9, 11, 0.6))' 
+              }} 
+            />
 
             {/* Featured badge */}
             {app.isFeatured && (
