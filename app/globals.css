@@ -770,6 +770,46 @@ html {
   background: #18181b !important; /* zinc-900 */
 }
 
+/* Featured app cards - light mode styling */
+[data-theme="light"] .featured-app-card {
+  background: #ffffff !important;
+  border-color: #e4e4e7 !important; /* zinc-200 */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .featured-app-card:hover {
+  border-color: #d4d4d8 !important; /* zinc-300 */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+[data-theme="light"] .featured-app-card .card-header {
+  background: linear-gradient(180deg, rgba(244, 244, 245, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%) !important;
+}
+
+[data-theme="light"] .featured-app-card h3 {
+  color: #18181b !important; /* zinc-900 */
+}
+
+[data-theme="light"] .featured-app-card .group-hover\:text-cyan-400:hover {
+  color: #0891b2 !important; /* cyan-600 */
+}
+
+[data-theme="light"] .featured-app-card .text-zinc-500 {
+  color: #71717a !important;
+}
+
+[data-theme="light"] .featured-app-card .text-zinc-400 {
+  color: #52525b !important; /* zinc-600 */
+}
+
+[data-theme="light"] .featured-app-card .bg-zinc-800 {
+  background-color: #f4f4f5 !important; /* zinc-100 */
+}
+
+[data-theme="light"] .featured-app-card .border-zinc-700 {
+  border-color: #d4d4d8 !important; /* zinc-300 */
+}
+
 /* Modal backdrop optimization */
 .modal-backdrop {
   background: rgba(0, 0, 0, 0.8);

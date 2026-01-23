@@ -25,6 +25,7 @@ import {
 } from "@/lib/listings";
 import { getTrustLevelConfig } from "@/lib/ethos-scores";
 import { blo } from "blo";
+import { useTheme } from "@/app/contexts/ThemeContext";
 
 /* ---------- Types ---------- */
 
@@ -42,6 +43,8 @@ interface FeaturedAppWithCount {
 export default function Home() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   // Track if carousel has animated (to prevent re-animation on data changes)
   const carouselAnimated = useRef(false);
@@ -306,7 +309,7 @@ export default function Home() {
                 >
                   <Link href={`/app/${app.id}`}>
                     {/* Use CSS hover-lift for mobile performance */}
-                    <div className="hover-lift group relative w-[260px] sm:w-[320px] md:w-[380px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 cursor-pointer">
+                    <div className="hover-lift group relative w-[260px] sm:w-[320px] md:w-[380px] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 cursor-pointer featured-app-card">
                       {/* Gradient accent bar */}
                       <div
                         className="h-1"
@@ -316,12 +319,13 @@ export default function Home() {
                       />
 
                       {/* Tiled background header */}
-                      <div className="relative h-20 sm:h-24 md:h-28 overflow-hidden bg-zinc-900/50">
+                      <div className="relative h-20 sm:h-24 md:h-28 overflow-hidden card-header">
                         {/* Tiled pattern */}
                         <div
-                          className="absolute inset-0 grid grid-cols-5 sm:grid-cols-8 gap-2 sm:gap-3 opacity-[0.12] p-2"
+                          className="absolute inset-0 grid grid-cols-5 sm:grid-cols-8 gap-2 sm:gap-3 p-2"
                           style={{
                             transform: "rotate(-12deg) scale(1.3)",
+                            opacity: isLight ? 0.15 : 0.12,
                           }}
                         >
                           {[...Array(24)].map((_, j) => (
@@ -329,7 +333,10 @@ export default function Home() {
                               key={j}
                               className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center"
                             >
-                              <div className="w-full h-full bg-white rounded-md p-0.5 sm:p-1 flex items-center justify-center">
+                              <div 
+                                className="w-full h-full rounded-md p-0.5 sm:p-1 flex items-center justify-center"
+                                style={{ background: isLight ? '#d4d4d8' : '#ffffff' }}
+                              >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                   src={app.appIconUrl}
@@ -341,17 +348,33 @@ export default function Home() {
                           ))}
                         </div>
 
-                        {/* Gradient overlay */}
+                        {/* Gradient overlay - stronger for light mode */}
                         <div
                           className="absolute inset-0"
                           style={{
-                            background: `linear-gradient(135deg, ${app.gradient.from}15 0%, ${app.gradient.to}20 100%)`,
+                            background: isLight 
+                              ? `linear-gradient(135deg, ${app.gradient.from}50 0%, ${app.gradient.to}60 100%)`
+                              : `linear-gradient(135deg, ${app.gradient.from}15 0%, ${app.gradient.to}20 100%)`,
                           }}
                         />
 
-                        {/* Vignette */}
-                        <div className="absolute inset-0 bg-linear-to-t from-zinc-950 via-transparent to-zinc-950/50" />
-                        <div className="absolute inset-0 bg-linear-to-r from-zinc-950/60 via-transparent to-zinc-950/60" />
+                        {/* Vignette - softer for light mode to let gradient show */}
+                        <div 
+                          className="absolute inset-0" 
+                          style={{ 
+                            background: isLight 
+                              ? 'linear-gradient(to top, rgba(255,255,255,0.85), transparent 60%, rgba(255,255,255,0.3))'
+                              : 'linear-gradient(to top, #09090b, transparent, rgba(9, 9, 11, 0.5))' 
+                          }} 
+                        />
+                        <div 
+                          className="absolute inset-0" 
+                          style={{ 
+                            background: isLight
+                              ? 'linear-gradient(to right, rgba(255,255,255,0.5), transparent, rgba(255,255,255,0.5))'
+                              : 'linear-gradient(to right, rgba(9, 9, 11, 0.6), transparent, rgba(9, 9, 11, 0.6))' 
+                          }} 
+                        />
                       </div>
 
                       {/* Card content */}
