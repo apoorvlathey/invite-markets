@@ -37,7 +37,7 @@ export function Footer() {
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg transition-all flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg transition-all flex items-center justify-center logo-bg">
                 <Image
                   src="/icon.png"
                   alt="Invite.markets"
