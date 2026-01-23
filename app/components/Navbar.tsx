@@ -15,7 +15,7 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link href="/" className="group flex items-center gap-2">
-            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg overflow-hidden shadow-lg transition-all flex items-center justify-center">
+            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg overflow-hidden shadow-lg transition-all flex items-center justify-center logo-bg">
               <Image
                 src="/icon.png"
                 alt="Invite.markets"

@@ -77,12 +77,27 @@
   color: #3f3f46 !important; /* zinc-700 */
 }
 
-/* Keep cyan/purple accents visible in light mode (they work on both) */
-[data-theme="light"] .text-cyan-400,
-[data-theme="light"] .text-cyan-300,
+/* Keep cyan/purple accents visible in light mode - darken light variants for contrast */
+[data-theme="light"] .text-cyan-400 {
+  color: #0891b2 !important; /* cyan-600 for better visibility */
+}
+
+[data-theme="light"] .text-cyan-300 {
+  color: #0e7490 !important; /* cyan-700 for good contrast on light bg */
+}
+
 [data-theme="light"] .text-purple-400,
 [data-theme="light"] .text-emerald-400 {
-  /* Accent colors remain unchanged - they have good contrast on light backgrounds */
+  /* These accent colors have good contrast on light backgrounds */
+}
+
+/* Cyan badge backgrounds and borders in light mode */
+[data-theme="light"] .bg-cyan-500\/10 {
+  background-color: rgba(6, 182, 212, 0.15) !important;
+}
+
+[data-theme="light"] .border-cyan-500\/30 {
+  border-color: rgba(6, 182, 212, 0.5) !important;
 }
 
 /* Adjust gradient text for light mode */
@@ -748,6 +763,11 @@ html {
 /* Light mode navbar */
 [data-theme="light"] .navbar-bg {
   background: #ffffff;
+}
+
+/* Logo background - stays dark in both themes */
+.logo-bg {
+  background: #18181b !important; /* zinc-900 */
 }
 
 /* Modal backdrop optimization */
