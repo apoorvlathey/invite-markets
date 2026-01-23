@@ -104,7 +104,7 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  const stored = localStorage.getItem('theme-preference');
+                  const stored = localStorage.getItem('@invite-market/theme-preference');
                   const theme = stored || 'system';
                   let resolved = theme === 'system'
                     ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')

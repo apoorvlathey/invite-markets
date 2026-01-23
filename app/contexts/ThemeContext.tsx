@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 
 type Theme = "light" | "dark" | "system";
 type ResolvedTheme = "light" | "dark";
@@ -35,7 +41,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setMounted(true);
 
     try {
-      const stored = localStorage.getItem("theme-preference") as Theme | null;
+      const stored = localStorage.getItem(
+        "@invite-market/theme-preference",
+      ) as Theme | null;
       const initialTheme = stored || "system";
       setThemeState(initialTheme);
 
@@ -67,7 +75,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setThemeState(newTheme);
 
     try {
-      localStorage.setItem("theme-preference", newTheme);
+      localStorage.setItem("@invite-market/theme-preference", newTheme);
     } catch (e) {
       console.error("Failed to save theme to localStorage:", e);
     }
