@@ -11,17 +11,25 @@ interface ThemeToggleProps {
 
 export function ThemeToggle({ compact = false, showLabel = false }: ThemeToggleProps) {
   const { resolvedTheme, toggleTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   const buttonClass = compact
-    ? "p-2 rounded-lg border border-zinc-700 data-[theme=light]:border-zinc-300 bg-zinc-800 data-[theme=light]:bg-zinc-100 hover:bg-zinc-700 data-[theme=light]:hover:bg-zinc-200 transition-all"
-    : "flex items-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-700 data-[theme=light]:border-zinc-300 bg-zinc-800 data-[theme=light]:bg-zinc-100 hover:bg-zinc-700 data-[theme=light]:hover:bg-zinc-200 transition-all";
+    ? `p-2 rounded-lg border transition-all ${
+        isLight
+          ? "border-zinc-300 bg-zinc-100 hover:bg-zinc-200"
+          : "border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
+      }`
+    : `flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${
+        isLight
+          ? "border-zinc-300 bg-zinc-100 hover:bg-zinc-200"
+          : "border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
+      }`;
 
   return (
     <button
       onClick={toggleTheme}
       aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
       className={buttonClass}
-      data-theme={resolvedTheme}
     >
       <AnimatePresence mode="wait">
         {resolvedTheme === "dark" ? (
@@ -47,7 +55,7 @@ export function ThemeToggle({ compact = false, showLabel = false }: ThemeToggleP
         )}
       </AnimatePresence>
       {showLabel && (
-        <span className="text-sm font-medium text-zinc-100 data-[theme=light]:text-zinc-900">
+        <span className={`text-sm font-medium ${isLight ? "text-zinc-900" : "text-zinc-100"}`}>
           Theme
         </span>
       )}
