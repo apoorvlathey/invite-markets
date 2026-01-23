@@ -28,6 +28,7 @@ import {
   type ListingType,
 } from "@/lib/signature";
 import { EthosRateButton } from "@/app/components/EthosRateButton";
+import { useTheme } from "@/app/contexts/ThemeContext";
 
 // Helper to resolve appId to proper app name
 function getAppDisplayName(
@@ -1264,6 +1265,8 @@ export default function ProfileClient({ address }: ProfileClientProps) {
   const router = useRouter();
   const { resolvedAddresses, isLoading } = useResolveAddresses([address]);
   const displayInfo = getSellerDisplayInfo(address, resolvedAddresses);
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
   const [ethosData, setEthosData] = useState<EthosData | null>(null);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [purchasesLoading, setPurchasesLoading] = useState(true);
@@ -1622,10 +1625,13 @@ export default function ProfileClient({ address }: ProfileClientProps) {
           transition={{ delay: 0.1 }}
           className="rounded-2xl bg-zinc-950 border border-zinc-800 shadow-premium overflow-hidden"
         >
-          <div className="h-28 sm:h-36 bg-zinc-950 relative overflow-hidden">
+          <div 
+            className="h-28 sm:h-36 relative overflow-hidden"
+            style={{ background: isLight ? '#f4f4f5' : '#09090b' }}
+          >
             {/* Tiled Avatar Pattern Background */}
             <div
-              className="absolute grid grid-cols-6 sm:grid-cols-10 gap-3 sm:gap-4 opacity-[0.15]"
+              className="absolute grid grid-cols-6 sm:grid-cols-10 gap-3 sm:gap-4"
               style={{
                 transform: "rotate(-20deg) scale(1.8)",
                 transformOrigin: "center center",
@@ -1633,6 +1639,7 @@ export default function ProfileClient({ address }: ProfileClientProps) {
                 left: "-25%",
                 right: "-25%",
                 bottom: "-50%",
+                opacity: isLight ? 0.25 : 0.15,
               }}
             >
               {[...Array(70)].map((_, i) => (
@@ -1654,26 +1661,59 @@ export default function ProfileClient({ address }: ProfileClientProps) {
             <div
               className="absolute inset-0"
               style={{
-                background: `radial-gradient(ellipse at center, transparent 0%, rgba(9, 9, 11, 0.4) 50%, rgba(9, 9, 11, 0.9) 100%)`,
+                background: isLight 
+                  ? `radial-gradient(ellipse at center, transparent 0%, rgba(244, 244, 245, 0.3) 50%, rgba(244, 244, 245, 0.85) 100%)`
+                  : `radial-gradient(ellipse at center, transparent 0%, rgba(9, 9, 11, 0.4) 50%, rgba(9, 9, 11, 0.9) 100%)`,
               }}
             />
 
-            {/* Vignette Effects */}
-            <div className="absolute inset-0 bg-linear-to-b from-zinc-950/70 via-transparent to-zinc-950/90" />
-            <div className="absolute inset-0 bg-linear-to-r from-zinc-950/70 via-transparent to-zinc-950/70" />
+            {/* Vignette Effects - theme aware */}
+            <div 
+              className="absolute inset-0" 
+              style={{ 
+                background: isLight 
+                  ? 'linear-gradient(to bottom, rgba(244,244,245,0.5), transparent 50%, rgba(244,244,245,0.85))'
+                  : 'linear-gradient(to bottom, rgba(9, 9, 11, 0.7), transparent, rgba(9, 9, 11, 0.9))' 
+              }} 
+            />
+            <div 
+              className="absolute inset-0" 
+              style={{ 
+                background: isLight
+                  ? 'linear-gradient(to right, rgba(244,244,245,0.5), transparent, rgba(244,244,245,0.5))'
+                  : 'linear-gradient(to right, rgba(9, 9, 11, 0.7), transparent, rgba(9, 9, 11, 0.7))' 
+              }} 
+            />
 
             {/* Subtle color accent based on resolution type */}
             <div
-              className={`absolute inset-0 mix-blend-overlay ${
-                displayInfo.resolvedType === "farcaster"
-                  ? "bg-purple-500/10"
-                  : displayInfo.resolvedType === "basename"
-                  ? "bg-blue-500/10"
-                  : displayInfo.resolvedType === "ens"
-                  ? "bg-cyan-500/10"
-                  : "bg-cyan-500/8"
-              }`}
+              className="absolute inset-0"
+              style={{
+                background: isLight
+                  ? displayInfo.resolvedType === "farcaster"
+                    ? 'rgba(168, 85, 247, 0.15)'
+                    : displayInfo.resolvedType === "basename"
+                    ? 'rgba(59, 130, 246, 0.15)'
+                    : displayInfo.resolvedType === "ens"
+                    ? 'rgba(6, 182, 212, 0.15)'
+                    : 'rgba(6, 182, 212, 0.12)'
+                  : undefined,
+                mixBlendMode: isLight ? 'normal' : 'overlay',
+              }}
             />
+            {!isLight && (
+              <div
+                className={`absolute inset-0 mix-blend-overlay ${
+                  displayInfo.resolvedType === "farcaster"
+                    ? "bg-purple-500/10"
+                    : displayInfo.resolvedType === "basename"
+                    ? "bg-blue-500/10"
+                    : displayInfo.resolvedType === "ens"
+                    ? "bg-cyan-500/10"
+                    : "bg-cyan-500/8"
+                }`}
+              />
+            )}
           </div>
 
           <div className="px-4 sm:px-6 md:px-8 -mt-14 sm:-mt-16 relative z-10">

@@ -3,10 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ConnectButton } from "@/app/components/ConnectButton";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
 
 export function Navbar() {
   return (
-    <nav className="sticky top-0 z-50 border-b border-white/10 bg-black">
+    <nav className="sticky top-0 z-50 border-b border-[var(--border)]">
       {/* Navbar background */}
       <div className="absolute inset-0 navbar-bg" />
 
@@ -14,7 +15,7 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link href="/" className="group flex items-center gap-2">
-            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg overflow-hidden shadow-lg transition-all flex items-center justify-center">
+            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg overflow-hidden shadow-lg transition-all flex items-center justify-center logo-bg">
               <Image
                 src="/icon.png"
                 alt="Invite.markets"
@@ -23,7 +24,7 @@ export function Navbar() {
                 className="w-5 h-5 md:w-6 md:h-6 object-cover"
               />
             </div>
-            <span className="text-lg md:text-xl font-bold tracking-tight bg-linear-to-r from-white to-zinc-400 bg-clip-text text-transparent group-hover:from-cyan-400 group-hover:to-blue-400 transition-all">
+            <span className="text-lg md:text-xl font-bold tracking-tight text-theme-primary group-hover:text-cyan-400 transition-all">
               invite.markets
             </span>
           </Link>
@@ -32,28 +33,29 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             <Link
               href="/#latest-listings"
-              className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-150 rounded-lg hover:bg-white/5"
+              className="px-4 py-2 text-sm font-medium text-theme-secondary hover:text-theme-primary transition-colors duration-150 rounded-lg hover:bg-[var(--surface-elevated)]"
             >
               Latest Listings
             </Link>
             <Link
               href="/listings"
-              className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-150 rounded-lg hover:bg-white/5"
+              className="px-4 py-2 text-sm font-medium text-theme-secondary hover:text-theme-primary transition-colors duration-150 rounded-lg hover:bg-[var(--surface-elevated)]"
             >
               All Listings
             </Link>
             <Link
               href="/apps"
-              className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-150 rounded-lg hover:bg-white/5"
+              className="px-4 py-2 text-sm font-medium text-theme-secondary hover:text-theme-primary transition-colors duration-150 rounded-lg hover:bg-[var(--surface-elevated)]"
             >
               All Apps
             </Link>
             <Link
               href="/sales"
-              className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-150 rounded-lg hover:bg-white/5"
+              className="px-4 py-2 text-sm font-medium text-theme-secondary hover:text-theme-primary transition-colors duration-150 rounded-lg hover:bg-[var(--surface-elevated)]"
             >
               All Sales
             </Link>
+            {process.env.NEXT_PUBLIC_IS_TESTNET === "true" && <ThemeToggle />}
             <Link
               href="/sell"
               className="group relative px-6 py-3 text-sm font-bold rounded-xl overflow-hidden transition-all duration-300 hover:scale-105"

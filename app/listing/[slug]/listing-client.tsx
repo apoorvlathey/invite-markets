@@ -28,6 +28,7 @@ import {
   type ListingsData,
 } from "@/lib/listings";
 import { blo } from "blo";
+import { useTheme } from "@/app/contexts/ThemeContext";
 
 // Fetch a single listing by slug from the API
 async function fetchSingleListing(slug: string): Promise<Listing | null> {
@@ -57,6 +58,8 @@ export default function ListingClient() {
   const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   const [ethosData, setEthosData] = useState<EthosData | null>(null);
   const [cheaperListingEthosData, setCheaperListingEthosData] =
@@ -880,7 +883,7 @@ export default function ListingClient() {
               className="order-2 lg:order-none"
             >
               {/* App Icon Card - Horizontal banner on mobile, square on desktop */}
-              <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden">
+              <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden featured-app-card">
                 {/* Gradient Header Bar */}
                 <div
                   className="h-1.5"
@@ -890,12 +893,13 @@ export default function ListingClient() {
                 />
 
                 {/* Icon Display - Horizontal on mobile, square on desktop */}
-                <div className="relative flex items-center justify-center bg-zinc-950 overflow-hidden h-32 sm:h-40 lg:aspect-square lg:h-auto">
+                <div className="relative flex items-center justify-center overflow-hidden h-32 sm:h-40 lg:aspect-square lg:h-auto card-header" style={{ background: isLight ? '#ffffff' : '#09090b' }}>
                   {/* Tiled Pattern Background */}
                   <div
-                    className="absolute grid grid-cols-5 sm:grid-cols-7 gap-3 sm:gap-6 opacity-[0.15]"
+                    className="absolute grid grid-cols-5 sm:grid-cols-7 gap-3 sm:gap-6"
                     style={{
                       transform: "rotate(-20deg) scale(1.8)",
+                      opacity: isLight ? 0.15 : 0.15,
                     }}
                   >
                     {[...Array(35)].map((_, i) => (
@@ -904,9 +908,10 @@ export default function ListingClient() {
                         className="w-8 h-8 sm:w-12 sm:h-12 flex items-center justify-center"
                       >
                         {appIconUrl ? (
-                          <div className={`w-full h-full rounded-lg p-1 sm:p-1.5 flex items-center justify-center ${
-                            iconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
-                          }`}>
+                          <div 
+                            className="w-full h-full rounded-lg p-1 sm:p-1.5 flex items-center justify-center"
+                            style={{ background: isLight ? '#d4d4d8' : (iconNeedsDarkBg ? '#18181b' : '#ffffff') }}
+                          >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={appIconUrl}
@@ -932,13 +937,29 @@ export default function ListingClient() {
                   <div
                     className="absolute inset-0"
                     style={{
-                      background: `radial-gradient(circle at center, transparent 0%, ${gradient.from}15 60%, ${gradient.to}25 100%)`,
+                      background: isLight 
+                        ? `radial-gradient(circle at center, transparent 0%, ${gradient.from}40 60%, ${gradient.to}50 100%)`
+                        : `radial-gradient(circle at center, transparent 0%, ${gradient.from}15 60%, ${gradient.to}25 100%)`,
                     }}
                   />
 
-                  {/* Vignette Effect */}
-                  <div className="absolute inset-0 bg-linear-to-b from-zinc-950/80 via-transparent to-zinc-950/80" />
-                  <div className="absolute inset-0 bg-linear-to-r from-zinc-950/80 via-transparent to-zinc-950/80" />
+                  {/* Vignette Effect - theme aware */}
+                  <div 
+                    className="absolute inset-0" 
+                    style={{ 
+                      background: isLight 
+                        ? 'linear-gradient(to bottom, rgba(255,255,255,0.7), transparent, rgba(255,255,255,0.7))'
+                        : 'linear-gradient(to bottom, rgba(9, 9, 11, 0.8), transparent, rgba(9, 9, 11, 0.8))' 
+                    }} 
+                  />
+                  <div 
+                    className="absolute inset-0" 
+                    style={{ 
+                      background: isLight
+                        ? 'linear-gradient(to right, rgba(255,255,255,0.7), transparent, rgba(255,255,255,0.7))'
+                        : 'linear-gradient(to right, rgba(9, 9, 11, 0.8), transparent, rgba(9, 9, 11, 0.8))' 
+                    }} 
+                  />
 
                   {/* Main Icon */}
                   <div className="relative z-10">

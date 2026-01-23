@@ -34,6 +34,7 @@ import {
   type ListingsData,
 } from "@/lib/listings";
 import { blo } from "blo";
+import { useTheme } from "@/app/contexts/ThemeContext";
 
 /* ---------- App Data Types ---------- */
 
@@ -138,6 +139,8 @@ export default function AppPageClient() {
   const slug = params.slug ? decodeURIComponent(params.slug) : "";
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { resolvedTheme } = useTheme();
+  const isLight = resolvedTheme === "light";
 
   const [activeTab, setActiveTab] = useState<"listings" | "sales">("listings");
   const [sortField, setSortField] = useState<SortField>("price");
@@ -499,7 +502,7 @@ export default function AppPageClient() {
             transition={{ delay: 0.1 }}
             className="lg:col-span-1 flex"
           >
-            <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden flex flex-col flex-1">
+            <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden flex flex-col flex-1 featured-app-card">
               {/* Gradient Header Bar */}
               <div
                 className="h-1.5"
@@ -511,12 +514,13 @@ export default function AppPageClient() {
               {/* Header - Tiled background if icon available, otherwise simple gradient */}
               {displayIconUrl ? (
                 /* Tiled Background Header */
-                <div className="relative h-32 md:h-40 overflow-hidden bg-zinc-900/50">
+                <div className="relative h-32 md:h-40 overflow-hidden card-header">
                   {/* Tiled pattern */}
                   <div
-                    className="absolute inset-0 grid grid-cols-6 gap-4 opacity-[0.12] p-3"
+                    className="absolute inset-0 grid grid-cols-6 gap-4 p-3"
                     style={{
                       transform: "rotate(-15deg) scale(1.5)",
+                      opacity: isLight ? 0.15 : 0.12,
                     }}
                   >
                     {[...Array(30)].map((_, i) => (
@@ -525,9 +529,8 @@ export default function AppPageClient() {
                         className="w-10 h-10 flex items-center justify-center"
                       >
                         <div
-                          className={`w-full h-full rounded-lg p-1.5 flex items-center justify-center ${
-                            displayIconNeedsDarkBg ? "bg-zinc-900" : "bg-white"
-                          }`}
+                          className="w-full h-full rounded-lg p-1.5 flex items-center justify-center"
+                          style={{ background: isLight ? '#d4d4d8' : (displayIconNeedsDarkBg ? '#18181b' : '#ffffff') }}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
@@ -544,13 +547,29 @@ export default function AppPageClient() {
                   <div
                     className="absolute inset-0"
                     style={{
-                      background: `linear-gradient(135deg, ${gradient.from}15 0%, ${gradient.to}20 100%)`,
+                      background: isLight 
+                        ? `linear-gradient(135deg, ${gradient.from}50 0%, ${gradient.to}60 100%)`
+                        : `linear-gradient(135deg, ${gradient.from}15 0%, ${gradient.to}20 100%)`,
                     }}
                   />
 
-                  {/* Vignette */}
-                  <div className="absolute inset-0 bg-linear-to-t from-zinc-950 via-transparent to-zinc-950/50" />
-                  <div className="absolute inset-0 bg-linear-to-r from-zinc-950/60 via-transparent to-zinc-950/60" />
+                  {/* Vignette - theme aware */}
+                  <div 
+                    className="absolute inset-0" 
+                    style={{ 
+                      background: isLight 
+                        ? 'linear-gradient(to top, rgba(255,255,255,0.85), transparent 60%, rgba(255,255,255,0.3))'
+                        : 'linear-gradient(to top, #09090b, transparent, rgba(9, 9, 11, 0.5))' 
+                    }} 
+                  />
+                  <div 
+                    className="absolute inset-0" 
+                    style={{ 
+                      background: isLight
+                        ? 'linear-gradient(to right, rgba(255,255,255,0.5), transparent, rgba(255,255,255,0.5))'
+                        : 'linear-gradient(to right, rgba(9, 9, 11, 0.6), transparent, rgba(9, 9, 11, 0.6))' 
+                    }} 
+                  />
 
                   {/* Main Icon */}
                   <div className="absolute inset-0 flex items-center justify-center">
